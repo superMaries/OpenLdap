@@ -27,6 +27,11 @@ public class UserModel {
     @TableField("cert_sn")
     private String certSn;
     /**
+     * 证书名称
+     */
+    @TableField(value = "cert_name")
+    private String certName;
+    /**
      * 签名证书
      */
     @TableField("sign_cert")
