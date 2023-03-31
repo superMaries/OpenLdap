@@ -9,7 +9,7 @@ import lombok.Data;
  * @Version 1.0
  */
 @Data
-public class UserDto {
+public class UserDto extends SrcModel {
       private String signCert;
       private String certSn;
       /**
