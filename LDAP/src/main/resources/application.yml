@@ -1,1 +1,32 @@
+#开启端口
+server:
+  port: 8879
 
+#数据库配置
+spring:
+  datasource:
+    url: jdbc:sqlite:D:\工具\ldap.sqlite
+    username:
+    password:
+    driver-class-name: org.sqlite.JDBC
+  servlet:
+    multipart:
+      max-request-size: 1024MB
+      max-file-size: 1024MB
+
+
+
+filePath:
+  clientToolPath: C:\Users\77512\Desktop\数字证书管理工具V1.12.22.1024-1.exe
+  manualPath: C:\Users\77512\Desktop\安全备份系统安装手册-V3tax.docx
+
+version:
+  serviceVersion: "服务版本-2023-03-31 V1.0"
+  clientVersion: "客户端版本-2023-03-31 V1.0"
+
+
+login:
+  timeout: 10000
+
+token:
+  validTime: 100

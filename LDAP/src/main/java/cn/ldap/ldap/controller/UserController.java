@@ -36,7 +36,7 @@ public class UserController {
         return userService.isInit();
     }
 
-    @PostMapping("importAdminKey")
+    @PostMapping("importConfig")
     public boolean importConfig(@RequestBody UserDto userDto){
         return userService.importConfig(userDto);
     }

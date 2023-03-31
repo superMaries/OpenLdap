@@ -1,9 +1,10 @@
 package cn.ldap.ldap.common.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class UserRedisInfo {
+public class UserTokenInfo {
 
     private Integer id;
     private Integer roleId;
@@ -15,5 +16,7 @@ public class UserRedisInfo {
     private  String certNum;
 
     private String roleName;
+    @JsonProperty("TOKEN")
+    private String token;
 
 }

@@ -4,6 +4,7 @@ import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
@@ -62,6 +63,14 @@ public interface LoginService {
      * @return
      */
     String login(LoginDto loginDto);
+
+    /**
+     * 退出登录
+     * @param request
+     * @param userDto
+     * @return
+     */
+    boolean logout(HttpServletRequest request);
 
 
 }

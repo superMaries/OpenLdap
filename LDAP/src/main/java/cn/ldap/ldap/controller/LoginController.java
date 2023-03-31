@@ -1,18 +1,15 @@
 package cn.ldap.ldap.controller;
 
-import cn.hutool.crypto.SecureUtil;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.service.LoginService;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.etsi.uri.x01903.v13.SignedSignaturePropertiesType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -101,4 +98,14 @@ public class LoginController {
         return loginService.login(loginDto);
     }
 
+    /**
+     * 退出登录
+     * @param
+     * @param request
+     * @return
+     */
+    @PostMapping("logout")
+    public boolean logout(HttpServletRequest request) {
+        return loginService.logout(request);
+    }
 }
