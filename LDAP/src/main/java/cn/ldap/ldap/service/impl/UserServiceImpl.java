@@ -42,7 +42,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
     @Override
     public Map<String, Object> isInit() {
         log.info("是否初始化");
-        Map<Boolean, List<Map<Integer, String>>> map = new HashMap<>();
         Map<String, Object> mapVo = new HashMap<>();
         mapVo.put("isInit", false);
         List<ConfigModel> configLists = configService.list();
