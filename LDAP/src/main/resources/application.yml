@@ -5,10 +5,11 @@ server:
 #数据库配置
 spring:
   datasource:
-    url: jdbc:sqlite:D:\工具\ldap.sqlite
+    url: jdbc:sqlite:E:\博雅\项目\LDAP\项目\ldap\ldap.sqlite
+    driver-class-name: org.sqlite.JDBC
     username:
     password:
-    driver-class-name: org.sqlite.JDBC
+
   servlet:
     multipart:
       max-request-size: 1024MB
