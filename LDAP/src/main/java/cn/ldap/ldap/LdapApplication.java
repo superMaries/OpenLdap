@@ -3,7 +3,7 @@ package cn.ldap.ldap;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "cn.ldap.ldap")
 public class LdapApplication {
 
     public static void main(String[] args) {

@@ -17,4 +17,5 @@ public class UserDto extends SrcModel {
        * 1, "从服务器"
        */
       private Integer serviceType;
+
 }

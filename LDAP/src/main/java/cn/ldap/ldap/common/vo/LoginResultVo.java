@@ -21,5 +21,5 @@ public class LoginResultVo {
      * 用户信息
      */
     @JsonUnwrapped
-    private UserRedisInfo userInfo;
+    private UserTokenInfo userInfo;
 }
