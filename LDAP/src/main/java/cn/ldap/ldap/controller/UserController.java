@@ -1,6 +1,9 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.UserDto;
+import cn.ldap.ldap.common.enums.OperateMenuEnum;
+import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,7 @@ public class UserController {
      * @return
      */
     @PostMapping("isInit")
+    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_IS_INIT)
     public ResultVo isInit() {
         return userService.isInit();
     }
@@ -43,10 +47,18 @@ public class UserController {
      * @return
      */
     @PostMapping("importConfig")
+    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.IMPORT_CONFIG)
     public ResultVo importConfig(@RequestBody UserDto userDto){
         return userService.importConfig(userDto);
     }
+
+    /**
+     * 导出管理员key接口
+     * @param userDto
+     * @return
+     */
     @PostMapping("importAdminKey")
+    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.IMPORT_ADMIN_KEY)
     public ResultVo importAdminKey(@RequestBody UserDto userDto) {
        return userService.importAdminKey(userDto);
     }

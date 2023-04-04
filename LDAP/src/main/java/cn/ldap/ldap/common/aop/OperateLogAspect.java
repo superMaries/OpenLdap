@@ -6,6 +6,7 @@ import cn.ldap.ldap.common.entity.OperationLogModel;
 import cn.ldap.ldap.common.enums.LogStateTypeEnum;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
+import cn.ldap.ldap.common.enums.UserRoleEnum;
 import cn.ldap.ldap.common.mapper.OperationMapper;
 import cn.ldap.ldap.common.util.ClientInfo;
 import cn.ldap.ldap.common.util.SessionUtil;
@@ -72,42 +73,33 @@ public class OperateLogAspect {
         StringBuffer remark = new StringBuffer();
         //操作中文名称
         String name = operateAnnotation.operateType().getName();
-        //记录日志时  登录登出 初始化需要特殊处理 并且不喜欢需要操作员验签
+        //记录日志时  登录登出 初始化需要特殊处理 并且不需要操作员验签
         boolean isLogin = false;
-        String certData = "";
-        String signOriginalData = "";
-        //获取当前用户 如果是登录 注册 初始化
-        if (operateAnnotation.operateModel().getCode().equals(OperateMenuEnum.USER_MANAGER.getCode())
-                && !operateAnnotation.operateType().equals(OperateTypeEnum.USER_LOGOUT)) {
-
-            if (operateAnnotation.operateType().equals(OperateTypeEnum.USER_LOGIN)) {
-                UserDto userDto = (UserDto) param;
-                if (OperateTypeEnum.USER_LOGIN.equals(operateAnnotation.operateType())) {
-                    isLogin = true;
-                    remark.append(OperateTypeEnum.USER_INIT.getName());
+        /**
+         * 如果是用户管理
+         */
+        if (OperateMenuEnum.USER_MANAGER.equals(operateAnnotation.operateModel())) {
+            //除了登出 其余不需要记录哪个用户操作
+            if (OperateTypeEnum.USER_LOGOUT.equals(operateAnnotation.operateType())) {
+                if (UserRoleEnum.ACCOUNT_ADMIN.getCode().equals(userInfo.getUserInfo().getRoleId())) {
+                    //说明是admin 登录
+                    operationLogModel.setUserId(0);
+                    remark.append("用户：").append(userInfo.getUserInfo().getRoleName()).append(name);
                 } else {
-                    //获取用户信息Id 登录的操作
-                    operationLogModel.setUserId(1);
-                    remark.append("用户：").append("").append(name);
+                    operationLogModel.setUserId(userInfo.getUserInfo().getId());
+                    remark.append("用户：").append(userInfo.getUserInfo().getRoleName()).append(name);
                 }
-            }
-            if (operateAnnotation.operateType().equals(OperateTypeEnum.USER_REGIS)) {
+            } else {
+                //session 中 没有值
                 isLogin = true;
-                remark.append(OperateTypeEnum.USER_REGIS.getName());
+                remark.append(name);
             }
-            if (operateAnnotation.operateType().equals(OperateTypeEnum.USER_INIT)) {
-                isLogin = true;
-                remark.append(OperateTypeEnum.USER_INIT.getName());
-            }
-        } else {
-            operationLogModel.setUserId(1);
-            remark.append("用户：").append("").append(name);
         }
+
         String clientIP = ClientInfo.getIpAdrress(request);
         operationLogModel.setClientIp(clientIP);
         operationLogModel.setOperateType(operateAnnotation.operateType().getName());
         operationLogModel.setOperateMenu(operateAnnotation.operateModel().getName());
-        operationLogModel.setRemark(operateAnnotation.remark());
         operationLogModel.setRemark(remark.toString());
 
         log.info(!ObjectUtils.isEmpty(operateAnnotation.remark()) ?
@@ -136,6 +128,21 @@ public class OperateLogAspect {
                     case OPERATE_QUERY:
                         threadLocal.set(operationLogModel);
                         break;
+                    case QUERY_VERSION:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case QUERY_MENUS:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case USER_IS_INIT:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case SERVICE_MODEL:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case IMPORT_CONFIG:
+                        threadLocal.set(operationLogModel);
+                        break;
                     default:
                         log.warn("未知类型操作：{}", operateAnnotation.operateType().getName());
                 }
@@ -152,7 +159,6 @@ public class OperateLogAspect {
                         break;
                 }
                 break;
-
             case PARAM_MANAGER:
                 switch (operateAnnotation.operateType()) {
                     case LOOK_PARAM:
@@ -161,6 +167,13 @@ public class OperateLogAspect {
                     case UPDATE_PARAM:
                         threadLocal.set(operationLogModel);
                         break;
+                    case UPLOAD_FILE:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case OPEN_SERVICE:
+                        threadLocal.set(operationLogModel);
+                        break;
+
                 }
                 threadLocal.set(operationLogModel);
                 break;
@@ -209,6 +222,7 @@ public class OperateLogAspect {
         operationMapper.insert(operationLog);
 
     }
+
     /**
      * 异常后记录日志
      *

@@ -1,7 +1,10 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
+import cn.ldap.ldap.common.enums.OperateMenuEnum;
+import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.IndexVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexService;
@@ -36,7 +39,7 @@ public class IndexController {
      */
     @PostMapping("device/status/list")
     public ResultVo listDeviceStatus() {
-        return  indexService.listDeviceStatus();
+        return indexService.listDeviceStatus();
     }
 
     /**
@@ -46,7 +49,7 @@ public class IndexController {
      */
     @PostMapping("net/speed/list")
     public ResultVo getNetSpeed() {
-        return  indexService.getNetSpeed();
+        return indexService.getNetSpeed();
     }
 
     /**
@@ -55,8 +58,8 @@ public class IndexController {
      * 查询CRL接口
      */
     @PostMapping("ldap/info")
-    public ResultVo ldapInfo(){
-        return  indexService.ldapInfo();
+    public ResultVo ldapInfo() {
+        return indexService.ldapInfo();
     }
 }
 
