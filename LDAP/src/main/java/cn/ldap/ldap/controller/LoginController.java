@@ -3,6 +3,8 @@ package cn.ldap.ldap.controller;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
+import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +38,8 @@ public class LoginController {
      * * @return
      */
     @GetMapping("getVersion")
-    public Map<String,String> getVersion(){
-        return loginService.getVersion();
+    public ResultVo getVersion(){
+        return ResultUtil.success(loginService.getVersion());
     }
 
     /**
@@ -94,7 +96,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("login")
-    public String login(@RequestBody LoginDto loginDto) {
+    public ResultVo login(@RequestBody LoginDto loginDto) {
         return loginService.login(loginDto);
     }
 

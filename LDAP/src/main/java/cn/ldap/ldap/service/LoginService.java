@@ -3,6 +3,7 @@ package cn.ldap.ldap.service;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
+import cn.ldap.ldap.common.vo.ResultVo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -62,7 +63,7 @@ public interface LoginService {
      * @param loginDto
      * @return
      */
-    String login(LoginDto loginDto);
+    ResultVo login(LoginDto loginDto);
 
     /**
      * 退出登录
