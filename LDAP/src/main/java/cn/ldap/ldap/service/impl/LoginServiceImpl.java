@@ -149,7 +149,7 @@ public class LoginServiceImpl implements LoginService {
     private UserMapper userMapper;
 
     @Resource
-    private UserService userService;
+    private UserServiceImpl userService;
 
 
     /**
@@ -263,9 +263,9 @@ public class LoginServiceImpl implements LoginService {
         if (ObjectUtils.isEmpty(config)) {
             throw new SystemException(NO_CONFIG);
         }
-        if(config.getIsInit() ==IS_INIT ){
+        if (config.getIsInit() == IS_INIT) {
             return ResultUtil.success(IS_INIT_STR);
-        }else {
+        } else {
             return ResultUtil.success(IS_NOT_INIT_STR);
         }
 
@@ -282,9 +282,9 @@ public class LoginServiceImpl implements LoginService {
         if (ObjectUtils.isEmpty(config)) {
             throw new SystemException(NO_CONFIG);
         }
-        if (MAIN_SERVICE_STATUS == config.getServiceType()){
+        if (MAIN_SERVICE_STATUS == config.getServiceType()) {
             return ResultUtil.success(MAIN_SERVICE_STR);
-        }else {
+        } else {
             return ResultUtil.success(FOLLOW_SERVICE_STR);
 
         }
@@ -293,7 +293,7 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public Map<String, Object> certLogin(UserDto userDto) {
         log.info(userDto.toString());
-        Map<String, Object> mapObj = userService.isInit();
+        Map<String, Object> mapObj = userService.init();
         boolean isInit = (boolean) mapObj.get("isInit");
         if (isInit) {
             return mapObj;
@@ -361,11 +361,15 @@ public class LoginServiceImpl implements LoginService {
         if (ObjectUtils.isEmpty(loginDto.getPassword())) {
             throw new SystemException(USER_PASSWORD_FAIL);
         }
-        if ( PASSWORD_LENGTH < loginDto.getPassword().length()){
+        if (PASSWORD_LENGTH < loginDto.getPassword().length()) {
             throw new SystemException(MORE_PASSWORD_LENGTH);
         }
-        if (!USER_NAME.equals(loginDto.getUserName())) return ResultUtil.fail(RESULT_USER_NAME_ERR);
-        if (!USER_PASSWORD.equals(loginDto.getPassword())) return ResultUtil.fail(RESULT_PASSWORD_REE);
+        if (!USER_NAME.equals(loginDto.getUserName())) {
+            return ResultUtil.fail(RESULT_USER_NAME_ERR);
+        }
+        if (!USER_PASSWORD.equals(loginDto.getPassword())) {
+            return ResultUtil.fail(RESULT_PASSWORD_REE);
+        }
         return ResultUtil.success(LOGIN_SUCCESS);
     }
 

@@ -4,9 +4,12 @@ import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.ConfigModel;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ConfigEnum;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserEnableEnum;
 import cn.ldap.ldap.common.enums.UserRoleEnum;
 import cn.ldap.ldap.common.mapper.UserMapper;
+import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.UserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -40,13 +43,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
      * @return
      */
     @Override
-    public Map<String, Object> isInit() {
+    public ResultVo isInit() {
+        return ResultUtil.success(init());
+    }
+
+    public Map<String, Object> init() {
         log.info("是否初始化");
         Map<String, Object> mapVo = new HashMap<>();
         mapVo.put("isInit", false);
         List<ConfigModel> configLists = configService.list();
         //系统未初始化,在第一步
-        if (ObjectUtils.isEmpty(configLists)||1 != configLists.get(0).getIsInit()) {
+        if (ObjectUtils.isEmpty(configLists)) {
             log.info("系统未初始化,在第一步");
             mapVo.put("isInit", true);
             mapVo.put("step", 0);
@@ -70,31 +77,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
     }
 
     @Override
-    public boolean importConfig(UserDto userDto) {
+    public ResultVo importConfig(UserDto userDto) {
         if (ObjectUtils.isEmpty(userDto)
                 || ObjectUtils.isEmpty(userDto.getServiceType())) {
             log.error("参数异常");
-            return false;
+            return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         ConfigModel configModel = new ConfigModel();
         configModel.setIsInit(1);
         configModel.setServiceType(userDto.getServiceType());
         try {
             configService.save(configModel);
-            return true;
+            return ResultUtil.success(true);
         } catch (Exception e) {
-            return false;
+            return ResultUtil.fail(ExceptionEnum.SQL_SAVA_ERROR);
         }
     }
 
     @Override
-    public boolean importAdminKey(UserDto userDto) {
+    public ResultVo importAdminKey(UserDto userDto) {
         log.info("导出管理员key接口");
         if (ObjectUtils.isEmpty(userDto)
                 || ObjectUtils.isEmpty(userDto.getCertSn())
                 || ObjectUtils.isEmpty(userDto.getSignCert())) {
             log.error("参数异常");
-            return false;
+            return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
 
         UserModel userModel = new UserModel();
@@ -104,9 +111,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
         userModel.setRoleId(UserRoleEnum.USER_ADMIN.getCode());
         try {
             save(userModel);
-            return true;
+            return ResultUtil.success(true);
         } catch (Exception e) {
-            return false;
+            return ResultUtil.fail(ExceptionEnum.SQL_SAVA_ERROR);
         }
     }
 }

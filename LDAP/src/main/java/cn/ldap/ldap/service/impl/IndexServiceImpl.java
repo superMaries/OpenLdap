@@ -3,9 +3,12 @@ package cn.ldap.ldap.service.impl;
 import cn.hutool.core.lang.copier.SrcToDestCopier;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.NetWorkUtil;
+import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.IndexVo;
+import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexService;
 import com.google.common.collect.EvictingQueue;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +52,7 @@ public class IndexServiceImpl implements IndexService {
      * @return
      */
     @Override
-    public DeviceStatusRespVo listDeviceStatus() {
+    public ResultVo listDeviceStatus() {
         log.info("获取设备状态信息:");
         float cpuInfo = NetWorkUtil.getCpuInfo();
         log.info("获取cpu信息:" + cpuInfo);
@@ -78,7 +81,7 @@ public class IndexServiceImpl implements IndexService {
         deviceStatusRespVo.setMemoryRate(memInfo);
         deviceStatusRespVo.setServerStatus(true);
         log.info("获取设备状态信息:" + deviceStatusRespVo);
-        return deviceStatusRespVo;
+        return ResultUtil.success(deviceStatusRespVo);
     }
 
     /**
@@ -90,7 +93,7 @@ public class IndexServiceImpl implements IndexService {
     EvictingQueue<NetSpeedRespVo> queue = EvictingQueue.create(10);
 
     @Override
-    public EvictingQueue<NetSpeedRespVo> getNetSpeed() {
+    public ResultVo getNetSpeed() {
         log.info("获取网络吞吐量");
         Map<String, String> netWorkDownUp = NetWorkUtil.getNetWorkDownUp();
         LocalDateTime now = LocalDateTime.now();
@@ -119,7 +122,7 @@ public class IndexServiceImpl implements IndexService {
         netSpeedRespVo.setUpSpeed(netWorkDownUp.get("txPercent"));
         queue.add(netSpeedRespVo);
         log.info("获取网络吞吐量：" + netSpeedRespVo);
-        return queue;
+        return ResultUtil.success(queue);
     }
 
     /**
@@ -128,7 +131,7 @@ public class IndexServiceImpl implements IndexService {
      * 查询CRL接口
      */
     @Override
-    public IndexVo ldapInfo() {
+    public ResultVo ldapInfo() {
         IndexVo indexVo = new IndexVo();
         Field[] fields = IndexVo.class.getDeclaredFields();
         for (Field field : fields) {
@@ -140,9 +143,9 @@ public class IndexServiceImpl implements IndexService {
         try {
             Thread.sleep(7000);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            ResultUtil.fail();
         }
-        return indexVo;
+        return ResultUtil.success(indexVo);
     }
 
     private long queryFieldNum(Field field, IndexVo indexVo) {

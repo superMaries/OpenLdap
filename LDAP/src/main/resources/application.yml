@@ -24,6 +24,8 @@ spring:
 filePath:
   clientToolPath: C:\Users\77512\Desktop\数字证书管理工具V1.12.22.1024-1.exe
   manualPath: C:\Users\77512\Desktop\安全备份系统安装手册-V3tax.docx
+  configPath: C:\Users\77512\Desktop\aaaa\slapd.conf
+  certPath: D:\工具\
 
 version:
   serviceVersion: "服务版本-2023-03-31 V1.0"

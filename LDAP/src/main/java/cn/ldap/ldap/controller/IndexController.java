@@ -3,6 +3,7 @@ package cn.ldap.ldap.controller;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
 import cn.ldap.ldap.common.vo.IndexVo;
+import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexService;
 import com.google.common.collect.EvictingQueue;
 import lombok.Data;
@@ -34,7 +35,7 @@ public class IndexController {
      * @return
      */
     @PostMapping("device/status/list")
-    public DeviceStatusRespVo listDeviceStatus() {
+    public ResultVo listDeviceStatus() {
         return  indexService.listDeviceStatus();
     }
 
@@ -44,7 +45,7 @@ public class IndexController {
      * @return
      */
     @PostMapping("net/speed/list")
-    public EvictingQueue<NetSpeedRespVo> getNetSpeed() {
+    public ResultVo getNetSpeed() {
         return  indexService.getNetSpeed();
     }
 
@@ -54,7 +55,7 @@ public class IndexController {
      * 查询CRL接口
      */
     @PostMapping("ldap/info")
-    public IndexVo ldapInfo(){
+    public ResultVo ldapInfo(){
         return  indexService.ldapInfo();
     }
 }

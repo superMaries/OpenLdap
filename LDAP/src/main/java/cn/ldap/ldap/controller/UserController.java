@@ -1,6 +1,7 @@
 package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.dto.UserDto;
+import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,16 +33,21 @@ public class UserController {
      * @return
      */
     @PostMapping("isInit")
-    public Map<String, Object> isInit() {
+    public ResultVo isInit() {
         return userService.isInit();
     }
 
+    /**
+     * 导入服务配置接口
+     * @param userDto
+     * @return
+     */
     @PostMapping("importConfig")
-    public boolean importConfig(@RequestBody UserDto userDto){
+    public ResultVo importConfig(@RequestBody UserDto userDto){
         return userService.importConfig(userDto);
     }
     @PostMapping("importAdminKey")
-    public boolean importAdminKey(@RequestBody UserDto userDto) {
+    public ResultVo importAdminKey(@RequestBody UserDto userDto) {
        return userService.importAdminKey(userDto);
     }
 
