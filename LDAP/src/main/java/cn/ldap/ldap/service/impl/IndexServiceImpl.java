@@ -99,6 +99,7 @@ public class IndexServiceImpl implements IndexService {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         if (queue.size() == 0) {
+            Integer length = 10;
             for (int j = 10; j > 0; j--) {
                 NetSpeedRespVo netSpeedRespVo;
                 if (j == 1) {

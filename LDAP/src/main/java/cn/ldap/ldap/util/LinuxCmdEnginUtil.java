@@ -49,14 +49,6 @@ public final class LinuxCmdEnginUtil {
             }
 
             return sb.toString();
-//			String rtnStr = "";
-//			try{
-//				rtnStr = new String(sb.toString().getBytes("iso8859-1"),"UTF-8");
-//			}catch (UnsupportedEncodingException e){
-//				rtnStr = "4::字符转换异常！";
-//				return rtnStr;
-//			}
-//			return rtnStr;
         }
     }
 
@@ -92,14 +84,6 @@ public final class LinuxCmdEnginUtil {
                 e.printStackTrace();
             }
             return sb.toString();//安可GBK--UTF-8
-//			String rtnStr = "";
-//			try{
-//				rtnStr = new String(sb.toString().getBytes("iso8859-1"),"UTF-8");
-//			}catch (UnsupportedEncodingException e){
-//				rtnStr = "4::字符转换异常！";
-//				return rtnStr;
-//			}
-//			return rtnStr;
         }
     }
 

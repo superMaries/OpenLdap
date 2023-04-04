@@ -4,6 +4,7 @@ import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
@@ -86,8 +87,8 @@ public class LoginController {
      * @return
      */
     @PostMapping("certLogin")
-    public Map<String, Object> certLogin(@RequestBody UserDto userDto) {
-        return loginService.certLogin(userDto);
+    public Map<String, Object> certLogin(@RequestBody UserDto userDto, HttpServletRequest  request) {
+        return loginService.certLogin(userDto,request);
     }
 
     /**

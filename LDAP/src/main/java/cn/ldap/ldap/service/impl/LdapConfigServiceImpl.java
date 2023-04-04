@@ -45,7 +45,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     @Override
     public ResultVo addConfig(MainConfig mainConfig) {
         File file = new File(configPath);
-        if (!file.exists()){
+        if (!file.exists()) {
             throw new SystemException(FILE_NOT_EXIST);
         }
         String fileName = configPath;
@@ -62,22 +62,24 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     /**
      * 设置服务状态
+     *
      * @param openOrClose
      * @return
      * @throws IOException
      */
     @Override
     public ResultVo setServerStatus(Boolean openOrClose) throws IOException {
-        if (openOrClose){
-            Runtime.getRuntime().exec("./slapd",null,new File(System.getProperty("user.dir")));
-        }else {
-            Runtime.getRuntime().exec("./slapd stop",null,new File(System.getProperty("user.dir")));
+        if (openOrClose) {
+            Runtime.getRuntime().exec("./slapd", null, new File(System.getProperty("user.dir")));
+        } else {
+            Runtime.getRuntime().exec("./slapd stop", null, new File(System.getProperty("user.dir")));
         }
         return ResultUtil.success();
     }
 
     /**
      * 判断服务状态
+     *
      * @return
      */
     @Override
@@ -85,35 +87,37 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         String runStr = "ps -ef|grep slapd";
         ResultVo resultVo = null;
         try {
-            resultVo =  LinuxCmdEnginUtil.listInfo(runStr);
+            resultVo = LinuxCmdEnginUtil.listInfo(runStr);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (resultVo.getCode() != 1000){
+        Integer successCode = 1000;
+        if (resultVo.getCode() != successCode) {
             return false;
         }
-       List list = (List)resultVo.getData();
-        if (list.size()>2){
+        List list = (List) resultVo.getData();
+        if (list.size() > 2) {
             return true;
-        }else {
+        } else {
             return false;
         }
     }
 
     /**
      * 上传文件
+     *
      * @param multipartFile
      * @return
      */
     @Override
     public ResultVo uploadFile(MultipartFile multipartFile) {
-        if (multipartFile.isEmpty()){
+        if (multipartFile.isEmpty()) {
             throw new SystemException(FILE_IS_EMPTY);
         }
         String fileName = multipartFile.getOriginalFilename();
         String filePath = certPath + fileName;
         File file = new File(filePath);
-        if (!file.exists()){
+        if (!file.exists()) {
             try {
                 file.createNewFile();
             } catch (IOException e) {

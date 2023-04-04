@@ -8,6 +8,8 @@ import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.mapper.OperationMapper;
 import cn.ldap.ldap.common.util.ClientInfo;
+import cn.ldap.ldap.common.util.SessionUtil;
+import cn.ldap.ldap.common.vo.LoginResultVo;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -64,7 +66,7 @@ public class OperateLogAspect {
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         //获取登录的信息
-
+        LoginResultVo userInfo = SessionUtil.getUserInfo(request);
         // 构建日志实体
         OperationLogModel operationLogModel = new OperationLogModel();
         StringBuffer remark = new StringBuffer();

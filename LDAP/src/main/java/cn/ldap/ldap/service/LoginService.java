@@ -56,7 +56,7 @@ public interface LoginService {
      * @param userDto
      * @return
      */
-    Map<String,Object> certLogin(UserDto userDto);
+    Map<String,Object> certLogin(UserDto userDto,HttpServletRequest  request);
 
     /**
      * 账号密码登录
