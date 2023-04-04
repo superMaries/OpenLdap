@@ -2,6 +2,7 @@ package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
+import cn.ldap.ldap.common.vo.IndexVo;
 import cn.ldap.ldap.service.IndexService;
 import com.google.common.collect.EvictingQueue;
 import lombok.Data;
@@ -26,14 +27,6 @@ public class IndexController {
 
     @Autowired
     private IndexService indexService;
-    /**
-     * 获取LDAP 基本信息
-     * @return
-     */
-    @PostMapping("ldapInfo")
-    public Object list() {
-            return  indexService.list();
-    }
 
     /**
      * 获取信息信息
@@ -53,6 +46,16 @@ public class IndexController {
     @PostMapping("net/speed/list")
     public EvictingQueue<NetSpeedRespVo> getNetSpeed() {
         return  indexService.getNetSpeed();
+    }
+
+    /**
+     * 查询总量接口
+     * 查询证书接口
+     * 查询CRL接口
+     */
+    @PostMapping("ldap/info")
+    public IndexVo ldapInfo(){
+        return  indexService.ldapInfo();
     }
 }
 

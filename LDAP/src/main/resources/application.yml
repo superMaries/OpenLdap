@@ -1,9 +1,13 @@
 #开启端口
 server:
   port: 8879
-
 #数据库配置
 spring:
+  ldap:
+    urls: ldap://39.98.83.34:389/ #openldap连接地址
+    username: cn=root,dc=super,dc=com #用户名
+    password: 123456 #密码
+    base: #dc=super
   datasource:
     url: jdbc:sqlite:E:\博雅\项目\LDAP\项目\ldap\ldap.sqlite
     driver-class-name: org.sqlite.JDBC
