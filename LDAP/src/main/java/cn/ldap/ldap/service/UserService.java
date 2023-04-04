@@ -1,6 +1,7 @@
 package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.dto.UserDto;
+import cn.ldap.ldap.common.vo.ResultVo;
 
 import java.util.Map;
 
@@ -11,7 +12,7 @@ import java.util.Map;
  * @Version 1.0
  */
 public interface UserService {
-    Map<String,Object> isInit();
-    boolean importConfig(UserDto userDto);
-    boolean importAdminKey(UserDto userDto);
+    ResultVo isInit();
+    ResultVo importConfig(UserDto userDto);
+    ResultVo importAdminKey(UserDto userDto);
 }

@@ -18,6 +18,7 @@ import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.UserTokenInfo;
 import cn.ldap.ldap.service.LoginService;
 import cn.ldap.ldap.service.UserService;
+import cn.ldap.ldap.service.impl.UserServiceImpl;
 import cn.ldap.ldap.util.UserInfoUtils;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -112,7 +113,7 @@ public class LoginServiceImpl implements LoginService {
     private UserMapper userMapper;
 
     @Resource
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Resource
     private UserInfoUtils userInfoUtils;
@@ -264,7 +265,7 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public Map<String, Object> certLogin(UserDto userDto) {
         log.info(userDto.toString());
-        Map<String, Object> mapObj = userService.isInit();
+        Map<String, Object> mapObj = userService.init();
         boolean isInit = (boolean) mapObj.get("isInit");
         if (isInit) {
             return mapObj;
