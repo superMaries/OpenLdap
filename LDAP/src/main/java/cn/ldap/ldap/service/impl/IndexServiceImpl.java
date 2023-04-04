@@ -27,9 +27,14 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.stream.Collectors;
 
 import static org.springframework.ldap.query.LdapQueryBuilder.query;
 
@@ -135,21 +140,31 @@ public class IndexServiceImpl implements IndexService {
     public ResultVo ldapInfo() {
         IndexVo indexVo = new IndexVo();
         Field[] fields = IndexVo.class.getDeclaredFields();
+
+        List<CompletableFuture<Long>> futures = new ArrayList<>();
         for (Field field : fields) {
             System.out.println(field.getName());
-            CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> {
                 return queryFieldNum(field, indexVo);
             });
+            futures.add(future);
         }
-        try {
-            Thread.sleep(7000);
-        } catch (InterruptedException e) {
-            ResultUtil.fail();
-        }
+        // 使用allOf方法来表示所有的并行任务
+        CompletableFuture<Void> allFutures = CompletableFuture.allOf(
+                futures.toArray(new CompletableFuture[futures.size()]));
+
+        // 下面的方法可以帮助我们获得所有子任务的处理结果
+        CompletableFuture<List<Long>> finalResults = allFutures.thenApply(v ->
+                futures.stream().map(CompletableFuture::join).collect(Collectors.toList())
+        );
+        //等待返回数据
+        List<Long> resultList =  finalResults.join();
+        System.out.println(resultList);
         return ResultUtil.success(indexVo);
     }
 
-    private long queryFieldNum(Field field, IndexVo indexVo) {
+    private long queryFieldNum( Field field, IndexVo indexVo) {
+
         switch (field.getName()) {
             case "total":
                 long queryTotal = queryTotal();
@@ -169,6 +184,7 @@ public class IndexServiceImpl implements IndexService {
             default:
                 return 0;
         }
+
     }
 
     /**
@@ -230,8 +246,6 @@ public class IndexServiceImpl implements IndexService {
      * @return
      */
     private long queryTotal() {
-
-
         SearchControls sc = new SearchControls();
         switch ("base") {
             case "base":

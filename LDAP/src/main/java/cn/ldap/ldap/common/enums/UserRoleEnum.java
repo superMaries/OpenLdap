@@ -1,7 +1,8 @@
 package cn.ldap.ldap.common.enums;
 
 public enum UserRoleEnum {
-    USER_ADMIN(0, "管理员"),
+    ACCOUNT_ADMIN(0, "Admin"),
+    USER_ADMIN(1, "管理员"),
     ;
     private Integer code;
     private String msg;
@@ -10,10 +11,12 @@ public enum UserRoleEnum {
         this.code = code;
         this.msg = msg;
     }
-    public  Integer getCode(){
-        return  code;
+
+    public Integer getCode() {
+        return code;
     }
-    public String getMsg(){
+
+    public String getMsg() {
         return msg;
     }
 }

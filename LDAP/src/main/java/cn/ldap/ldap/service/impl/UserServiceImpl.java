@@ -7,10 +7,12 @@ import cn.ldap.ldap.common.enums.ConfigEnum;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserEnableEnum;
 import cn.ldap.ldap.common.enums.UserRoleEnum;
+import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.UserService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
@@ -99,14 +101,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
         log.info("导出管理员key接口");
         if (ObjectUtils.isEmpty(userDto)
                 || ObjectUtils.isEmpty(userDto.getCertSn())
-                || ObjectUtils.isEmpty(userDto.getSignCert())) {
+                || ObjectUtils.isEmpty(userDto.getSignCert())
+                || ObjectUtils.isEmpty(userDto.getCertName())) {
             log.error("参数异常");
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
+        }
+
+        //判断该key 是否被初始化
+        if (!adminKeyIsInit(userDto)) {
+            log.info("该Key" + userDto.getCertName() + "已被初始化");
+           return  ResultUtil.fail(ExceptionEnum.USER_INIT,"该Key" + userDto.getCertName() + "已被初始化");
         }
 
         UserModel userModel = new UserModel();
         userModel.setCertSn(userDto.getCertSn());
         userModel.setSignCert(userDto.getSignCert());
+        userModel.setCertName(userDto.getCertName());
         userModel.setIsEnable(UserEnableEnum.USER_ENALE.getCode());
         userModel.setRoleId(UserRoleEnum.USER_ADMIN.getCode());
         try {
@@ -115,5 +125,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
         } catch (Exception e) {
             return ResultUtil.fail(ExceptionEnum.SQL_SAVA_ERROR);
         }
+    }
+
+    private boolean adminKeyIsInit(UserDto userDto) {
+        LambdaQueryWrapper userWrapper = new LambdaQueryWrapper<UserModel>()
+                .eq(UserModel::getCertSn, userDto.getCertSn())
+                .eq(UserModel::getSignCert, userDto.getSignCert())
+                .ne(UserModel::getIsEnable, UserEnableEnum.USER_DISABLE.getCode());
+        List userList = this.list(userWrapper);
+        if (ObjectUtils.isEmpty(userList)) {
+            //未初始化
+            return true;
+        }
+        return false;
     }
 }

@@ -10,12 +10,26 @@ import lombok.Data;
  */
 @Data
 public class UserDto extends SrcModel {
-      private String signCert;
-      private String certSn;
-      /**
-       * 0, "主服务器"
-       * 1, "从服务器"
-       */
-      private Integer serviceType;
+    /**
+     * 签名证书
+     */
+    private String signCert;
+    /**
+     * 证书序列号
+     */
+    private String certSn;
+    /**
+     * 角色
+     */
+    private Integer roleId = 1;
+    /**
+     * 证书名称
+     */
+    private String certName;
+    /**
+     * 0, "主服务器"
+     * 1, "从服务器"
+     */
+    private Integer serviceType;
 
 }
