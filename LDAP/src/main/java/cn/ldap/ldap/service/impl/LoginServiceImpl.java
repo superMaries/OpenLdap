@@ -2,19 +2,22 @@ package cn.ldap.ldap.service.impl;
 
 import cn.hutool.crypto.SmUtil;
 import cn.hutool.crypto.asymmetric.SM2;
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.LoginDto;
-import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.ConfigModel;
 import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.enums.OperateMenuEnum;
+import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.enums.UserTypeEnum;
 import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.mapper.ConfigMapper;
 import cn.ldap.ldap.common.mapper.PermissionMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.SessionUtil;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.UserTokenInfo;
@@ -31,8 +34,10 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
@@ -263,7 +268,7 @@ public class LoginServiceImpl implements LoginService {
         if (ObjectUtils.isEmpty(config)) {
             throw new SystemException(NO_CONFIG);
         }
-        if (config.getIsInit() == IS_INIT) {
+        if (IS_INIT.equals(config.getIsInit())) {
             return ResultUtil.success(IS_INIT_STR);
         } else {
             return ResultUtil.success(IS_NOT_INIT_STR);
@@ -291,22 +296,23 @@ public class LoginServiceImpl implements LoginService {
     }
 
     @Override
-    public Map<String, Object> certLogin(UserDto userDto) {
+    public Map<String, Object> certLogin(UserDto userDto,HttpServletRequest  request) {
         log.info(userDto.toString());
-        Map<String, Object> mapObj = userService.init();
-        boolean isInit = (boolean) mapObj.get("isInit");
-        if (isInit) {
-            return mapObj;
-        }
-
+//        Map<String, Object> mapObj = userService.init();
+//        boolean isInit = (boolean) mapObj.get("isInit");
+//        if (isInit) {
+//            return mapObj;
+//        }
+        Map<String, Object> mapObj=new HashMap<>();
         if (com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull(userDto, userDto.getCertSn())) {
             log.error(ExceptionEnum.USER_LOGIN_ERROR.getMessage());
             throw new SystemException(ExceptionEnum.USER_LOGIN_ERROR);
         }
 
-        List<UserModel> users = userMapper.selectList(new LambdaQueryWrapper<UserModel>()
+        LambdaQueryWrapper<UserModel> lambdaQueryWrapper = new LambdaQueryWrapper<UserModel>()
                 .eq(UserModel::getCertSn, userDto.getCertSn())
-                .eq(UserModel::getIsEnable, 1));
+                .eq(UserModel::getIsEnable, 1);
+        List<UserModel> users = userMapper.selectList(lambdaQueryWrapper);
 
         if (1 != users.size()) {
             //失敗  返回
@@ -320,13 +326,14 @@ public class LoginServiceImpl implements LoginService {
         Map<String, Object> map = new HashMap<>();
         Calendar instance = Calendar.getInstance();
         instance.add(Calendar.MINUTE, tokenValidTime);
-        String certNumber = JWT.create().withHeader(map).withClaim("certNumber", userInfo.getSignCert())
+        String certNumber = JWT.create().withHeader(map)
+                .withClaim("certNumber", userInfo.getSignCert())
                 .withExpiresAt(instance.getTime()).sign(Algorithm.HMAC256(TOKEN_SECRET_KEY));
 
         log.info("验签开始");
 
-        SM2 sm2 = SmUtil.sm2();
-        sm2.verify(userInfo.getSignCert().getBytes(), userDto.getSignData().getBytes(), userDto.getCertSn().getBytes());
+//        SM2 sm2 = SmUtil.sm2();
+//        sm2.verify(userInfo.getSignCert().getBytes(), userDto.getSignData().getBytes(), userDto.getCertSn().getBytes());
         log.info("验签成功");
         UserTokenInfo tokenInfo = new UserTokenInfo();
         tokenInfo.setToken(certNumber);
@@ -343,8 +350,10 @@ public class LoginServiceImpl implements LoginService {
         log.info("获取token" + token);
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
         mapObj.put("data", loginResultVo);
+        HttpSession session=request.getSession();
+        session.setAttribute(AUTHORIZATION,loginResultVo);
         return mapObj;
-    }
+    }/**/
 
     /**
      * 账号密码登录
@@ -370,10 +379,14 @@ public class LoginServiceImpl implements LoginService {
         if (!USER_PASSWORD.equals(loginDto.getPassword())) {
             return ResultUtil.fail(RESULT_PASSWORD_REE);
         }
+
+
+
         return ResultUtil.success(LOGIN_SUCCESS);
     }
 
     @Override
+    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER,operateType = OperateTypeEnum.USER_LOGOUT)
     public boolean logout(HttpServletRequest request) {
         request.getSession().invalidate();
         return true;

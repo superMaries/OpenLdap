@@ -67,7 +67,8 @@ public class NetWorkUtil {
         long arr[] = new long[2];
         StringTokenizer tokenStat = null;
         try {
-            if (osType.equals("linux")) {
+            String linux = "linux";
+            if (osType.equals(linux)) {
                 long rx = 0, tx = 0;
                 String line = null;
                 //RX packets:4171603 errors:0 dropped:0 overruns:0 frame:0
@@ -248,7 +249,7 @@ public class NetWorkUtil {
                     for (String para : s) {
                         boolean info = false;
                         if (count == 0) {
-                            if (!para.equals("0")) {
+                            if (!"0".equals(para)) {
                                 Float aFloat = 0f;
                                 if (para.endsWith("G")) {
                                     info = true;
@@ -262,7 +263,7 @@ public class NetWorkUtil {
                                 }
                                 diskInfo += aFloat;
                             } else if (count == 1) {
-                                if (!para.equals("0")) {
+                                if (!"0".equals(para)) {
                                     Float aFloat = 0f;
                                     if (para.endsWith("G")) {
                                         info = false;
