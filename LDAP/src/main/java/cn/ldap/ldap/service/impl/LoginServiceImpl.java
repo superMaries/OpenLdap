@@ -1,12 +1,12 @@
-package cn.ldap.ldap.service.serviceImpl;
+package cn.ldap.ldap.service.impl;
 
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.crypto.SmUtil;
 import cn.hutool.crypto.asymmetric.SM2;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.ConfigModel;
+import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserTypeEnum;
@@ -19,12 +19,11 @@ import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.UserTokenInfo;
 import cn.ldap.ldap.service.LoginService;
+import cn.ldap.ldap.service.PermissionService;
 import cn.ldap.ldap.service.UserService;
-import cn.ldap.ldap.util.UserInfoUtils;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -74,6 +73,10 @@ public class LoginServiceImpl implements LoginService {
     private Integer tokenValidTime;
 
     static final String TOKEN_SECRET_KEY = "ldapKey";
+    /**
+     * 密码长度限制
+     */
+    static final Integer PASSWORD_LENGTH = 16;
 
     /**
      * 客户端版本key值
@@ -103,10 +106,41 @@ public class LoginServiceImpl implements LoginService {
      * 登录成功返回值
      */
     private static final String LOGIN_SUCCESS = "登录成功";
+    /**
+     * 初始化
+     */
+    private static final Integer IS_INIT = 1;
+
+    /**
+     * 已经初始化描述
+     */
+    private static final String IS_INIT_STR = "已初始化";
+
+    /**
+     * 未初始化
+     */
+    private static final Integer IS_NOT_INIT = 0;
+    /**
+     * 未初始化描述
+     */
+    private static final String IS_NOT_INIT_STR = "未初始化";
+    /**
+     * 主服务器描述
+     */
+    private static final String MAIN_SERVICE_STR = "主服务器";
+
+    /**
+     * 从服务器描述
+     */
+    private static final String FOLLOW_SERVICE_STR = "从服务器";
+
+    private static final Integer MAIN_SERVICE_STATUS = 0;
+
+    private static final Integer FOLLOW_SERVICE_STATUS = 1;
 
     static final String AUTHORIZATION = "Authorization";
     @Resource
-    private PermissionMapper permissionMapper;
+    private PermissionService permissionService;
 
     @Resource
     private ConfigMapper configMapper;
@@ -117,8 +151,6 @@ public class LoginServiceImpl implements LoginService {
     @Resource
     private UserService userService;
 
-    @Resource
-    private UserInfoUtils userInfoUtils;
 
     /**
      * 下载客户端工具实现类
@@ -212,28 +244,12 @@ public class LoginServiceImpl implements LoginService {
     /**
      * 查看菜单
      *
-     * @param roleId
+     * @param
      * @return
      */
     @Override
-    public List<PermissionDto> queryMenus(Integer roleId) {
-        List<PermissionDto> permissions = permissionMapper.queryPermissionList(roleId);
-        List<PermissionDto> permissionList = new ArrayList<>();
-        for (PermissionDto dto : permissions) {
-            if (ObjectUtil.isNull(dto.getParentId())) {
-                permissionList.add(dto);
-            } else {
-                for (PermissionDto it : permissionList) {
-                    if (dto.getParentId().equals(it.getId())) {
-                        List<PermissionDto> perList = ObjectUtil.isNull(it.getPermissionDtoList()) ? new ArrayList<>() : it.getPermissionDtoList();
-                        perList.add(perList.size(), dto);
-                        it.setPermissionDtoList(perList);
-                        break;
-                    }
-                }
-            }
-        }
-        return permissionList;
+    public List<Permission> queryMenus() {
+        return permissionService.list();
     }
 
     /**
@@ -242,12 +258,17 @@ public class LoginServiceImpl implements LoginService {
      * @return
      */
     @Override
-    public Integer whetherInit() {
+    public ResultVo whetherInit() {
         ConfigModel config = configMapper.getConfig();
         if (ObjectUtils.isEmpty(config)) {
             throw new SystemException(NO_CONFIG);
         }
-        return config.getIsInit();
+        if(config.getIsInit() ==IS_INIT ){
+            return ResultUtil.success(IS_INIT_STR);
+        }else {
+            return ResultUtil.success(IS_NOT_INIT_STR);
+        }
+
     }
 
     /**
@@ -256,12 +277,17 @@ public class LoginServiceImpl implements LoginService {
      * @return
      */
     @Override
-    public Integer getServerConfig() {
+    public ResultVo getServerConfig() {
         ConfigModel config = configMapper.getConfig();
         if (ObjectUtils.isEmpty(config)) {
             throw new SystemException(NO_CONFIG);
         }
-        return config.getServiceType();
+        if (MAIN_SERVICE_STATUS == config.getServiceType()){
+            return ResultUtil.success(MAIN_SERVICE_STR);
+        }else {
+            return ResultUtil.success(FOLLOW_SERVICE_STR);
+
+        }
     }
 
     @Override
@@ -313,7 +339,6 @@ public class LoginServiceImpl implements LoginService {
         //签名证书
         tokenInfo.setCertData(userInfo.getSignCert());
         tokenInfo.setId(userInfo.getId());
-        log.info("redis 信息" + tokenInfo);
         String token = UUID.randomUUID().toString();
         log.info("获取token" + token);
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
@@ -329,11 +354,15 @@ public class LoginServiceImpl implements LoginService {
      */
     @Override
     public ResultVo login(LoginDto loginDto) {
+
         if (ObjectUtils.isEmpty(loginDto.getUserName())) {
             throw new SystemException(USER_NAME_FAIL);
         }
         if (ObjectUtils.isEmpty(loginDto.getPassword())) {
             throw new SystemException(USER_PASSWORD_FAIL);
+        }
+        if ( PASSWORD_LENGTH < loginDto.getPassword().length()){
+            throw new SystemException(MORE_PASSWORD_LENGTH);
         }
         if (!USER_NAME.equals(loginDto.getUserName())) return ResultUtil.fail(RESULT_USER_NAME_ERR);
         if (!USER_PASSWORD.equals(loginDto.getPassword())) return ResultUtil.fail(RESULT_PASSWORD_REE);

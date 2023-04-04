@@ -5,8 +5,10 @@ public enum ExceptionEnum {
     NO_CONFIG(800,"未获取到配置文件信息"),
     USER_LOGIN_ERROR(581, "登录失败"),
     USER_FAIL(583, "用户不存在或已被禁用"),
-    USER_NAME_FAIL(584, "用户不存在"),
-    USER_PASSWORD_FAIL(585, "密码不正确"),
+    USER_NAME_FAIL(584, "用户名为空"),
+    USER_PASSWORD_FAIL(585, "密码为空"),
+
+    MORE_PASSWORD_LENGTH(586,"密码超过长度限制"),
     SYSTEM_ERROR(500, "系统异常"),
 
     LINUX_ERROR(5007,"失败"),
