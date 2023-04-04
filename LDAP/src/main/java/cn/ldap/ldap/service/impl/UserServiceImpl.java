@@ -55,7 +55,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
         mapVo.put("isInit", false);
         List<ConfigModel> configLists = configService.list();
         //系统未初始化,在第一步
-        if (ObjectUtils.isEmpty(configLists) || 1 != configLists.get(0).getIsInit()) {
+        if (ObjectUtils.isEmpty(configLists)) {
             log.info("系统未初始化,在第一步");
             mapVo.put("isInit", true);
             mapVo.put("step", 0);
