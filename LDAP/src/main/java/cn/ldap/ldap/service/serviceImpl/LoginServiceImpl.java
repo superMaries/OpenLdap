@@ -14,7 +14,9 @@ import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.mapper.ConfigMapper;
 import cn.ldap.ldap.common.mapper.PermissionMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
+import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.LoginResultVo;
+import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.UserTokenInfo;
 import cn.ldap.ldap.service.LoginService;
 import cn.ldap.ldap.service.UserService;
@@ -23,6 +25,7 @@ import cn.ldap.ldap.util.UserInfoUtils;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -326,16 +329,16 @@ public class LoginServiceImpl implements LoginService {
      * @return
      */
     @Override
-    public String login(LoginDto loginDto) {
+    public ResultVo login(LoginDto loginDto) {
         if (ObjectUtils.isEmpty(loginDto.getUserName())) {
             throw new SystemException(USER_NAME_FAIL);
         }
         if (ObjectUtils.isEmpty(loginDto.getPassword())) {
             throw new SystemException(USER_PASSWORD_FAIL);
         }
-        if (!USER_NAME.equals(loginDto.getUserName())) return RESULT_USER_NAME_ERR;
-        if (!USER_PASSWORD.equals(loginDto.getPassword())) return RESULT_PASSWORD_REE;
-        return LOGIN_SUCCESS;
+        if (!USER_NAME.equals(loginDto.getUserName())) return ResultUtil.fail(RESULT_USER_NAME_ERR);
+        if (!USER_PASSWORD.equals(loginDto.getPassword())) return ResultUtil.fail(RESULT_PASSWORD_REE);
+        return ResultUtil.success(LOGIN_SUCCESS);
     }
 
     @Override
