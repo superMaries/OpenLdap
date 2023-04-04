@@ -1,8 +1,8 @@
 package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.dto.LoginDto;
-import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
+import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.vo.ResultVo;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,22 +34,22 @@ public interface LoginService {
 
     /**
      * 查看菜单
-     * @param roleId
+     * @param
      * @return
      */
-    List<PermissionDto> queryMenus(Integer roleId);
+    List<Permission> queryMenus();
 
     /**
      * 是否初始化
      * @return
      */
-    Integer whetherInit();
+    ResultVo whetherInit();
 
     /**
      * 获取服务模式
      * @return
      */
-    Integer getServerConfig();
+    ResultVo getServerConfig();
 
     /**
      * USBKey登录
@@ -68,7 +68,7 @@ public interface LoginService {
     /**
      * 退出登录
      * @param request
-     * @param userDto
+     * @param
      * @return
      */
     boolean logout(HttpServletRequest request);

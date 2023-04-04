@@ -1,8 +1,8 @@
 package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.dto.LoginDto;
-import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
+import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LoginService;
@@ -54,12 +54,12 @@ public class LoginController {
 
     /**
      * 查看所有菜单接口
-     * @param roleId
+     * @param
      * @return
      */
-    @GetMapping("menus/{roleId}")
-    public List<PermissionDto> queryMenus(Integer roleId){
-        return loginService.queryMenus(roleId);
+    @GetMapping("menus")
+    public List<Permission> queryMenus(){
+        return loginService.queryMenus();
     }
 
     /**
@@ -67,7 +67,7 @@ public class LoginController {
      * @return
      */
     @GetMapping("whetherInit")
-    public Integer whetherInit(){
+    public ResultVo whetherInit(){
         return loginService.whetherInit();
     }
 
@@ -76,7 +76,7 @@ public class LoginController {
      * @return
      */
     @GetMapping("getServerConfig")
-    public Integer getServerConfig(){
+    public ResultVo getServerConfig(){
         return loginService.getServerConfig();
     }
 

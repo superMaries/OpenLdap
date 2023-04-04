@@ -7,6 +7,7 @@ import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.PermissionDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.ConfigModel;
+import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserTypeEnum;
@@ -25,7 +26,6 @@ import cn.ldap.ldap.util.UserInfoUtils;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -116,7 +116,7 @@ public class LoginServiceImpl implements LoginService {
     private UserMapper userMapper;
 
     @Resource
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @Resource
     private UserInfoUtils userInfoUtils;
@@ -268,7 +268,7 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public Map<String, Object> certLogin(UserDto userDto) {
         log.info(userDto.toString());
-        Map<String, Object> mapObj = userService.init();
+        Map<String, Object> mapObj = userService.isInit();
         boolean isInit = (boolean) mapObj.get("isInit");
         if (isInit) {
             return mapObj;
