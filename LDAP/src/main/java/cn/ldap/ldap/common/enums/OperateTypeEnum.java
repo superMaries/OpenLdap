@@ -19,12 +19,15 @@ public enum OperateTypeEnum {
     OPERATE_QUERY(501,"查询日志"),
 
 
+    UPLOAD_FILE(502,"上传文件"),
     //    目录树
     LOOK_DATA(601,"查询数据"),
 
     //参数配置
     LOOK_PARAM(701,"查询参数配置"),
     UPDATE_PARAM(702,"更新参数配置"),
+    //启停服务
+    START_AND_STOP_SERVER(703,"启停服务"),
     ;
     public static Map<String,String> getMap(){
         java.util.Map<java.lang.String, java.lang.String> maps=new HashMap<>();

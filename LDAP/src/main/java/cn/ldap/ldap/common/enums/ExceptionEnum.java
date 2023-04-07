@@ -9,14 +9,18 @@ public enum ExceptionEnum {
     USER_LOGIN_ERROR(581, "登录失败"),
     USER_FAIL(583, "用户不存在或已被禁用"),
     USER_NAME_FAIL(584, "用户不存在"),
-    USER_PASSWORD_FAIL(585, "密码不正确"),
+    USER_PASSWORD_FAIL(585, "密码为空"),
+    MORE_PASSWORD_LENGTH(586,"密码超过长度限制"),
     NO_CONFIG(800,"未获取到配置文件信息"),
 
-    MORE_PASSWORD_LENGTH(586,"密码超过长度限制"),
+
     LINUX_ERROR(5007,"失败"),
     UPLOAD_ERR(5008,"上传失败"),
     FILE_NOT_EXIST(5009,"文件不存在"),
     FILE_IS_EMPTY(5010,"文件为空"),
+    COLLECTION_EMPTY(5011,"数据为空"),
+
+    VERIFY_FAIL(5012,"验签失败"),
     ;
 
 

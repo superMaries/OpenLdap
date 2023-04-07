@@ -1,6 +1,5 @@
 package cn.ldap.ldap.common.dto;
 
-import com.sun.xml.internal.ws.server.ServerRtException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

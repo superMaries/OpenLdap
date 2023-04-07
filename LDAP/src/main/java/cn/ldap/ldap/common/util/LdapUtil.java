@@ -2,7 +2,6 @@ package cn.ldap.ldap.common.util;
 
 import org.springframework.ldap.core.LdapTemplate;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**

@@ -1,40 +1,36 @@
 package cn.ldap.ldap.service.impl;
 
-import cn.hutool.crypto.SmUtil;
+import cn.hutool.core.util.HexUtil;
+import cn.hutool.crypto.BCUtil;
 import cn.hutool.crypto.asymmetric.SM2;
-import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.ConfigModel;
 import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
-import cn.ldap.ldap.common.enums.OperateMenuEnum;
-import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.enums.UserTypeEnum;
 import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.mapper.ConfigMapper;
-import cn.ldap.ldap.common.mapper.PermissionMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
-import cn.ldap.ldap.common.util.SessionUtil;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.UserTokenInfo;
 import cn.ldap.ldap.service.LoginService;
 import cn.ldap.ldap.service.PermissionService;
-import cn.ldap.ldap.service.UserService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.crypto.engines.SM2Engine;
+import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -83,6 +79,8 @@ public class LoginServiceImpl implements LoginService {
      */
     static final Integer PASSWORD_LENGTH = 16;
 
+    private static final Integer TOKEN_ID = 0;
+
     /**
      * 客户端版本key值
      */
@@ -122,10 +120,6 @@ public class LoginServiceImpl implements LoginService {
     private static final String IS_INIT_STR = "已初始化";
 
     /**
-     * 未初始化
-     */
-    private static final Integer IS_NOT_INIT = 0;
-    /**
      * 未初始化描述
      */
     private static final String IS_NOT_INIT_STR = "未初始化";
@@ -141,7 +135,6 @@ public class LoginServiceImpl implements LoginService {
 
     private static final Integer MAIN_SERVICE_STATUS = 0;
 
-    private static final Integer FOLLOW_SERVICE_STATUS = 1;
 
     static final String AUTHORIZATION = "Authorization";
     @Resource
@@ -152,9 +145,6 @@ public class LoginServiceImpl implements LoginService {
 
     @Resource
     private UserMapper userMapper;
-
-    @Resource
-    private UserServiceImpl userService;
 
 
     /**
@@ -220,11 +210,11 @@ public class LoginServiceImpl implements LoginService {
      * @return
      */
     @Override
-    public Map<String, String> getVersion() {
+    public ResultVo<Map<String, String>> getVersion() {
         Map<String, String> versionResultMap = new HashMap<>();
         versionResultMap.put(CLIENT_VERSION, clientVersion);
         versionResultMap.put(SERVICE_VERSION, serviceVersion);
-        return versionResultMap;
+        return ResultUtil.success(versionResultMap);
     }
 
     /**
@@ -263,7 +253,7 @@ public class LoginServiceImpl implements LoginService {
      * @return
      */
     @Override
-    public ResultVo whetherInit() {
+    public ResultVo<String> whetherInit() {
         ConfigModel config = configMapper.getConfig();
         if (ObjectUtils.isEmpty(config)) {
             throw new SystemException(NO_CONFIG);
@@ -273,7 +263,6 @@ public class LoginServiceImpl implements LoginService {
         } else {
             return ResultUtil.success(IS_NOT_INIT_STR);
         }
-
     }
 
     /**
@@ -282,7 +271,7 @@ public class LoginServiceImpl implements LoginService {
      * @return
      */
     @Override
-    public ResultVo getServerConfig() {
+    public ResultVo<String> getServerConfig() {
         ConfigModel config = configMapper.getConfig();
         if (ObjectUtils.isEmpty(config)) {
             throw new SystemException(NO_CONFIG);
@@ -291,19 +280,18 @@ public class LoginServiceImpl implements LoginService {
             return ResultUtil.success(MAIN_SERVICE_STR);
         } else {
             return ResultUtil.success(FOLLOW_SERVICE_STR);
-
         }
     }
 
     @Override
-    public Map<String, Object> certLogin(UserDto userDto,HttpServletRequest  request) {
+    public ResultVo<Map<String, Object>> certLogin(UserDto userDto, HttpServletRequest request) {
         log.info(userDto.toString());
 //        Map<String, Object> mapObj = userService.init();
 //        boolean isInit = (boolean) mapObj.get("isInit");
 //        if (isInit) {
 //            return mapObj;
 //        }
-        Map<String, Object> mapObj=new HashMap<>();
+        Map<String, Object> mapObj = new HashMap<>();
         if (com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull(userDto, userDto.getCertSn())) {
             log.error(ExceptionEnum.USER_LOGIN_ERROR.getMessage());
             throw new SystemException(ExceptionEnum.USER_LOGIN_ERROR);
@@ -332,8 +320,25 @@ public class LoginServiceImpl implements LoginService {
 
         log.info("验签开始");
 
-//        SM2 sm2 = SmUtil.sm2();
-//        sm2.verify(userInfo.getSignCert().getBytes(), userDto.getSignData().getBytes(), userDto.getCertSn().getBytes());
+
+        String key = "0444270bd267987f13b32846abb09c34c7c865b4d1559946b5734275ffc7cbcc932909eb815430ada80537bcd02f094dd1c79b04d90105923f57183ab9f076d36a";
+
+        if (key.length() == 130) {
+            //这里需要去掉开始第一个字节 第一个字节表示标记
+            key = key.substring(2);
+        }
+        String xhex = key.substring(0, 64);
+        String yhex = key.substring(64, 128);
+        ECPublicKeyParameters ecPublicKeyParameters = BCUtil.toSm2Params(xhex, yhex);
+        //创建sm2 对象
+        SM2 sm2 = new SM2(null, ecPublicKeyParameters);
+        //这里需要手动设置，sm2 对象的默认值与我们期望的不一致 , 使用明文编码
+        sm2.usePlainEncoding();
+        sm2.setMode(SM2Engine.Mode.C1C2C3);
+        boolean verify = sm2.verify(userDto.getSignCert().getBytes(), HexUtil.decodeHex(userDto.getSignData()));
+        if (!verify) {
+            throw new SystemException(VERIFY_FAIL);
+        }
         log.info("验签成功");
         UserTokenInfo tokenInfo = new UserTokenInfo();
         tokenInfo.setToken(certNumber);
@@ -350,9 +355,9 @@ public class LoginServiceImpl implements LoginService {
         log.info("获取token" + token);
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
         mapObj.put("data", loginResultVo);
-        HttpSession session=request.getSession();
-        session.setAttribute(AUTHORIZATION,loginResultVo);
-        return mapObj;
+        HttpSession session = request.getSession();
+        session.setAttribute(AUTHORIZATION, loginResultVo);
+        return ResultUtil.success(mapObj);
     }/**/
 
     /**
@@ -362,16 +367,17 @@ public class LoginServiceImpl implements LoginService {
      * @return
      */
     @Override
-    public ResultVo login(LoginDto loginDto) {
+    public ResultVo<Object> login(LoginDto loginDto, HttpServletRequest request) {
 
+        Map<String, Object> resultMap = new HashMap<>();
         if (ObjectUtils.isEmpty(loginDto.getUserName())) {
-            throw new SystemException(USER_NAME_FAIL);
+            return ResultUtil.fail(USER_NAME_FAIL);
         }
         if (ObjectUtils.isEmpty(loginDto.getPassword())) {
-            throw new SystemException(USER_PASSWORD_FAIL);
+            return ResultUtil.fail(USER_PASSWORD_FAIL);
         }
         if (PASSWORD_LENGTH < loginDto.getPassword().length()) {
-            throw new SystemException(MORE_PASSWORD_LENGTH);
+            return ResultUtil.fail(MORE_PASSWORD_LENGTH);
         }
         if (!USER_NAME.equals(loginDto.getUserName())) {
             return ResultUtil.fail(RESULT_USER_NAME_ERR);
@@ -379,15 +385,26 @@ public class LoginServiceImpl implements LoginService {
         if (!USER_PASSWORD.equals(loginDto.getPassword())) {
             return ResultUtil.fail(RESULT_PASSWORD_REE);
         }
-
-
-
-        return ResultUtil.success(LOGIN_SUCCESS);
+        Map<String, Object> hashMap = new HashMap<>();
+        Calendar instance = Calendar.getInstance();
+        instance.add(Calendar.MINUTE, tokenValidTime);
+        String token = JWT.create().withHeader(hashMap)
+                .withClaim("userName", loginDto.getUserName())
+                .withExpiresAt(instance.getTime()).sign(Algorithm.HMAC256(TOKEN_SECRET_KEY));
+        UserTokenInfo tokenInfo = new UserTokenInfo();
+        tokenInfo.setId(TOKEN_ID);
+        tokenInfo.setRoleId(TOKEN_ID);
+        tokenInfo.setRoleName(loginDto.getUserName());
+        tokenInfo.setToken(token);
+        LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
+        resultMap.put("data", loginResultVo);
+        HttpSession session = request.getSession();
+        session.setAttribute(AUTHORIZATION, loginResultVo);
+        return ResultUtil.success(loginResultVo);
     }
 
     @Override
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER,operateType = OperateTypeEnum.USER_LOGOUT)
-    public boolean logout(HttpServletRequest request) {
+    public Boolean logout(HttpServletRequest request) {
         request.getSession().invalidate();
         return true;
     }

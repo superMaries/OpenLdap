@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.bouncycastle.cert.dane.DANECertificateFetcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -22,6 +23,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @title: OperateLogAspect
@@ -109,6 +112,8 @@ public class OperateLogAspect {
         operationLogModel.setOperateMenu(operateAnnotation.operateModel().getName());
         operationLogModel.setRemark(operateAnnotation.remark());
         operationLogModel.setRemark(remark.toString());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        operationLogModel.setCreateTime(simpleDateFormat.format(new Date()));
 
         log.info(!ObjectUtils.isEmpty(operateAnnotation.remark()) ?
                 operateAnnotation.remark() : name);
