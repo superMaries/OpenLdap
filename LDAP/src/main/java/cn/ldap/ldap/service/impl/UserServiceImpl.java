@@ -62,7 +62,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
         } else {
             List<UserModel> users = list(null);
             //系统未初始化,在第二步
-            if (ObjectUtils.isEmpty(users) || users.size() == 0) {
+            if (ObjectUtils.isEmpty(users)) {
                 log.info("系统未初始化,在第二步");
                 mapVo.put("isInit", true);
                 mapVo.put("step", 1);
@@ -92,6 +92,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
             configService.save(configModel);
             return ResultUtil.success(true);
         } catch (Exception e) {
+            //日志
             return ResultUtil.fail(ExceptionEnum.SQL_SAVA_ERROR);
         }
     }
@@ -110,7 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
         //判断该key 是否被初始化
         if (!adminKeyIsInit(userDto)) {
             log.info("该Key" + userDto.getCertName() + "已被初始化");
-           return  ResultUtil.fail(ExceptionEnum.USER_INIT,"该Key" + userDto.getCertName() + "已被初始化");
+            return ResultUtil.fail(ExceptionEnum.USER_INIT, "该Key" + userDto.getCertName() + "已被初始化");
         }
 
         UserModel userModel = new UserModel();

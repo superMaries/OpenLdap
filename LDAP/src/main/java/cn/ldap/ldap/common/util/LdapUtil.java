@@ -73,14 +73,17 @@ public class LdapUtil {
         searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
         int totalNodeCount = 0;
-        int pageSize = 1000;
+        int pageSize = StaticValue.LDAP_PAGE_SIZE;
         try {
+            //设置每页查询的数量
             Control[] controls = new Control[]{new PagedResultsControl(pageSize, Control.CRITICAL)};
             ctx.setRequestControls(controls);
 
             byte[] cookie = null;
             do {
+                //分页查询
                 NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, ldapSearchFilter, searchControls);
+                //统计总数
                 while (results.hasMore()) {
                     SearchResult result = results.next();
                     String name = result.getName();
@@ -95,6 +98,7 @@ public class LdapUtil {
                     }
                 }
                 Control[] responseControls = ctx.getResponseControls();
+                //设置Cookies
                 if (responseControls != null) {
                     for (Control control : responseControls) {
                         if (control instanceof PagedResultsResponseControl) {

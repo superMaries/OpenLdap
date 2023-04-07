@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_IS_EMPTY;
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
@@ -92,7 +93,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             e.printStackTrace();
         }
         Integer successCode = 1000;
-        if (resultVo.getCode() != successCode) {
+        if (!Objects.equals(resultVo.getCode(), successCode)) {
             return false;
         }
         List list = (List) resultVo.getData();

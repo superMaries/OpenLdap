@@ -1,5 +1,12 @@
 package cn.ldap.ldap.common.enums;
 
+/**
+ * 异常枚举
+ * @title: UserServiceImpl
+ * @Author Wy
+ * @Date: 2023/3/31 8:58
+ * @Version 1.0
+ */
 public enum ExceptionEnum {
     SUCCESS(200, "操作成功"),
     USER_NOT_LOGIN(800, "用户未登录"),
@@ -20,20 +27,35 @@ public enum ExceptionEnum {
     FILE_IS_EMPTY(5010, "文件为空"),
     ;
 
-
+    /**
+     * code
+     */
     private Integer code;
 
+    /**
+     * 提示信息
+     */
     private String message;
-
+    /**
+     *
+     * @param code code
+     * @param message 提示信息
+     */
     ExceptionEnum(Integer code, String message) {
         this.code = code;
         this.message = message;
     }
-
+    /**
+     * 获取对应的code
+     * @return code
+     */
     public Integer getCode() {
         return code;
     }
-
+    /**
+     * 获取对应的提示信息
+     * @return 提示信息
+     */
     public String getMessage() {
         return message;
     }

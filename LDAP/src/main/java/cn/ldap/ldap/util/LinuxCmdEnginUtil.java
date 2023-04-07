@@ -48,8 +48,9 @@ public final class LinuxCmdEnginUtil {
                 sb.append(e.getMessage());
             }
 
-            return sb.toString();
+
         }
+        return sb.toString();
     }
 
 
@@ -83,8 +84,9 @@ public final class LinuxCmdEnginUtil {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
             }
-            return sb.toString();//安可GBK--UTF-8
+
         }
+        return sb.toString();//安可GBK--UTF-8
     }
 
     public static String processUserCmd(String cmd) {
@@ -217,8 +219,9 @@ public final class LinuxCmdEnginUtil {
             if (sb.length() > 0) {
                 sb.deleteCharAt(sb.length() - 1);
             }
-            return sb.toString();
+
         }
+        return sb.toString();
     }
 
 
@@ -469,7 +472,7 @@ public final class LinuxCmdEnginUtil {
             while ((line = bufrIn.readLine()) != null) {
                 str.append(line).append("\n");
             }
-            return ResultUtil.success( str.toString());
+            return ResultUtil.success(str.toString());
         } finally {
             closeStream(bufrIn);
             closeStream(bufrError);

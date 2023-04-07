@@ -96,8 +96,8 @@ public class OperateLogAspect {
             }
         }
 
-        String clientIP = ClientInfo.getIpAdrress(request);
-        operationLogModel.setClientIp(clientIP);
+        String clientIp = ClientInfo.getIpAdrress(request);
+        operationLogModel.setClientIp(clientIp);
         operationLogModel.setOperateType(operateAnnotation.operateType().getName());
         operationLogModel.setOperateMenu(operateAnnotation.operateModel().getName());
         operationLogModel.setRemark(remark.toString());
@@ -150,12 +150,15 @@ public class OperateLogAspect {
             case INDEX_MANAGER:
                 switch (operateAnnotation.operateType()) {
                     //暂无
+                    default:break;
                 }
                 break;
             case CATALOGUE_MANAGER:
                 switch (operateAnnotation.operateType()) {
                     case LOOK_DATA:
                         threadLocal.set(operationLogModel);
+                        break;
+                    default:
                         break;
                 }
                 break;
@@ -173,6 +176,7 @@ public class OperateLogAspect {
                     case OPEN_SERVICE:
                         threadLocal.set(operationLogModel);
                         break;
+                    default:break;
 
                 }
                 threadLocal.set(operationLogModel);
@@ -180,6 +184,7 @@ public class OperateLogAspect {
             case LOG_MANAGER:
                 switch (operateAnnotation.operateType()) {
                     //暂无
+                    default:break;
                 }
                 break;
             default:

@@ -83,7 +83,6 @@ public class IndexServiceImpl implements IndexService {
         log.info("获取设备状态信息:");
         float cpuInfo = NetWorkUtil.getCpuInfo();
         log.info("获取cpu信息:" + cpuInfo);
-        int diskInfo = 0;
         int memInfo = 0;
         try {
             memInfo = NetWorkUtil.getMemInfo();
@@ -92,20 +91,19 @@ public class IndexServiceImpl implements IndexService {
             memInfo = 0;
             log.error("获取内存信息:" + 0);
         }
-        float diskInfos;
+        float diskInfos=0f;
         try {
             diskInfos = NetWorkUtil.getDiskInfo();
             log.info("获取硬盘信息:" + diskInfos);
         } catch (IOException e) {
             log.error("获取硬盘信息:" + e.getMessage());
-            diskInfos = 0f;
         } catch (InterruptedException e) {
             log.error("获取硬盘信息:" + e.getMessage());
-            diskInfos = 0f;
         }
         DeviceStatusRespVo deviceStatusRespVo = new DeviceStatusRespVo();
         deviceStatusRespVo.setCpuRate(cpuInfo);
         deviceStatusRespVo.setMemoryRate(memInfo);
+        deviceStatusRespVo.setDisRate(diskInfos);
         deviceStatusRespVo.setServerStatus(true);
         log.info("获取设备状态信息:" + deviceStatusRespVo);
         return ResultUtil.success(deviceStatusRespVo);
@@ -127,7 +125,7 @@ public class IndexServiceImpl implements IndexService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(StaticValue.TIME_FORMAT);
         if (queue.size() == 0) {
             Integer length = 10;
-            for (int j = 10; j > 0; j--) {
+            for (int j = StaticValue.LENGTH; j > 0; j--) {
                 NetSpeedRespVo netSpeedRespVo;
                 if (j == 1) {
                     netSpeedRespVo = new NetSpeedRespVo();
@@ -164,6 +162,8 @@ public class IndexServiceImpl implements IndexService {
         Field[] fields = IndexVo.class.getDeclaredFields();
 
         List<CompletableFuture<Long>> futures = new ArrayList<>();
+
+        //根据字段名称查询对应的总数
         for (Field field : fields) {
             System.out.println(field.getName());
             CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> {
@@ -185,20 +185,30 @@ public class IndexServiceImpl implements IndexService {
         return ResultUtil.success(indexVo);
     }
 
+    /**
+     * 根据字段名称查询对应的总数
+     *
+     * @param field   字段名称
+     * @param indexVo 返回的实体
+     * @return
+     */
     private long queryFieldNum(Field field, IndexVo indexVo) {
         switch (field.getName()) {
             case StaticValue.TOTAL:
+                //查询总数
                 long queryTotal = 0;
                 queryTotal = queryTotal();
                 System.out.println(queryTotal);
                 indexVo.setTotal(queryTotal);
                 return queryTotal;
             case StaticValue.CERT_TOTAL:
+                //查询CERT 总数
                 long queryCertTotal = queryCertTotal();
                 System.out.println(queryCertTotal);
                 indexVo.setCertTotal(queryCertTotal);
                 return queryCertTotal;
             case StaticValue.CRL_TOTAL:
+                //查询CRL 总数
                 long queryCrlTotal = queryCrlTotal();
                 System.out.println(queryCrlTotal);
                 indexVo.setCrlTotal(queryCrlTotal);

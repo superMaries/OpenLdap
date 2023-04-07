@@ -19,6 +19,10 @@ public enum OperateMenuEnum {
 
     ;
 
+    /**
+     *
+     * @return 返回所有的数据
+     */
     public static Map<String,String> getMap(){
         Map<String,String> maps=new HashMap<>();
         for (OperateMenuEnum operateMenuEnum : values()) {
@@ -27,20 +31,36 @@ public enum OperateMenuEnum {
         return  maps;
     }
 
+    /**
+     * code
+     */
     private Integer code;
+    /**
+     * 提示信息
+     */
     private String name;
 
-
+    /**
+     *
+     * @param code code
+     * @param name 提示信息
+     */
     OperateMenuEnum(Integer code,String name) {
         this.code = code;
         this.name = name;
     }
 
-
+    /**
+     * 获取对应的code
+     * @return code
+     */
     public Integer getCode() {
         return code;
     }
-
+    /**
+     * 获取对应的提示信息
+     * @return  提示信息
+     */
     public String getName() {
         return name;
     }

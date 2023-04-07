@@ -287,7 +287,7 @@ public class LoginServiceImpl implements LoginService {
         if (ObjectUtils.isEmpty(config)) {
             throw new SystemException(NO_CONFIG);
         }
-        if (MAIN_SERVICE_STATUS == config.getServiceType()) {
+        if (MAIN_SERVICE_STATUS.equals(config.getServiceType())) {
             return ResultUtil.success(MAIN_SERVICE_STR);
         } else {
             return ResultUtil.success(FOLLOW_SERVICE_STR);
