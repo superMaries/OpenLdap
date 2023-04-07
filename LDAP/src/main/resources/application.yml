@@ -26,6 +26,7 @@ filePath:
   manualPath: C:\Users\77512\Desktop\安全备份系统安装手册-V3tax.docx
   configPath: C:\Users\77512\Desktop\aaaa\slapd.conf
   certPath: D:\工具\
+  runPath: 
 ldap:
   searchFilter: (objectClass=*)
   searchBase: dc=super,dc=com

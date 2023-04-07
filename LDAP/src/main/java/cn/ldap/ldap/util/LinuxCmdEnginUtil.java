@@ -21,7 +21,6 @@ public final class LinuxCmdEnginUtil {
         try {
             String[] comands = new String[]{"/bin/sh", "-c", "sudo " + command};
 
-//			System.out.println("Process comands:" + command);
             p = Runtime.getRuntime().exec(comands);
             String outInfo = read(p.getInputStream());
             String error = read(p.getErrorStream());

@@ -37,7 +37,7 @@ public class UserController {
      */
     @PostMapping("isInit")
     @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_IS_INIT)
-    public ResultVo isInit() {
+    public ResultVo<Map<String, Object> > isInit() {
         return userService.isInit();
     }
 
@@ -48,7 +48,7 @@ public class UserController {
      */
     @PostMapping("importConfig")
     @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.IMPORT_CONFIG)
-    public ResultVo importConfig(@RequestBody UserDto userDto){
+    public ResultVo<Boolean> importConfig(@RequestBody UserDto userDto){
         return userService.importConfig(userDto);
     }
 
@@ -59,7 +59,7 @@ public class UserController {
      */
     @PostMapping("importAdminKey")
     @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.IMPORT_ADMIN_KEY)
-    public ResultVo importAdminKey(@RequestBody UserDto userDto) {
+    public ResultVo<Boolean> importAdminKey(@RequestBody UserDto userDto) {
        return userService.importAdminKey(userDto);
     }
 

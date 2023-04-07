@@ -10,12 +10,12 @@ import cn.ldap.ldap.common.enums.UserRoleEnum;
 import cn.ldap.ldap.common.mapper.OperationMapper;
 import cn.ldap.ldap.common.util.ClientInfo;
 import cn.ldap.ldap.common.util.SessionUtil;
+import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
-import org.bouncycastle.cert.dane.DANECertificateFetcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -155,7 +155,8 @@ public class OperateLogAspect {
             case INDEX_MANAGER:
                 switch (operateAnnotation.operateType()) {
                     //暂无
-                    default:break;
+                    default:
+                        break;
                 }
                 break;
             case CATALOGUE_MANAGER:
@@ -181,7 +182,8 @@ public class OperateLogAspect {
                     case OPEN_SERVICE:
                         threadLocal.set(operationLogModel);
                         break;
-                    default:break;
+                    default:
+                        break;
 
                 }
                 threadLocal.set(operationLogModel);
@@ -189,12 +191,12 @@ public class OperateLogAspect {
             case LOG_MANAGER:
                 switch (operateAnnotation.operateType()) {
                     //暂无
-                    default:break;
+                    default:
+                        break;
                 }
                 break;
             default:
                 log.info("无法识别操作");
-//                remark.append("用户：").append(userInfo.getCertName()).append(",无法识别当前操作");
                 operationLogModel.setRemark(remark.toString());
                 threadLocal.set(operationLogModel);
                 break;
@@ -261,7 +263,7 @@ public class OperateLogAspect {
          * 最大截取200长度.
          */
         String remark = "";
-        if (!ObjectUtils.isEmpty(ex.getMessage()) && ex.getMessage().length() > 200) {
+        if (!ObjectUtils.isEmpty(ex.getMessage()) && ex.getMessage().length() > StaticValue.MSG_LENGTH) {
             if (!ObjectUtils.isEmpty(operateAnnotation.remark())) {
                 remark = operateAnnotation.remark() + ex.getMessage().substring(0, 199);
             } else {

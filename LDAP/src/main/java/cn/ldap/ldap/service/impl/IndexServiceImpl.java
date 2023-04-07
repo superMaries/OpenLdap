@@ -79,7 +79,7 @@ public class IndexServiceImpl implements IndexService {
      * @return
      */
     @Override
-    public ResultVo listDeviceStatus() {
+    public ResultVo<DeviceStatusRespVo> listDeviceStatus() {
         log.info("获取设备状态信息:");
         float cpuInfo = NetWorkUtil.getCpuInfo();
         log.info("获取cpu信息:" + cpuInfo);
@@ -91,7 +91,7 @@ public class IndexServiceImpl implements IndexService {
             memInfo = 0;
             log.error("获取内存信息:" + 0);
         }
-        float diskInfos=0f;
+        float diskInfos = 0f;
         try {
             diskInfos = NetWorkUtil.getDiskInfo();
             log.info("获取硬盘信息:" + diskInfos);
@@ -118,7 +118,7 @@ public class IndexServiceImpl implements IndexService {
     EvictingQueue<NetSpeedRespVo> queue = EvictingQueue.create(10);
 
     @Override
-    public ResultVo getNetSpeed() {
+    public ResultVo<EvictingQueue<NetSpeedRespVo>> getNetSpeed() {
         log.info("获取网络吞吐量");
         Map<String, String> netWorkDownUp = NetWorkUtil.getNetWorkDownUp();
         LocalDateTime now = LocalDateTime.now();
@@ -157,7 +157,7 @@ public class IndexServiceImpl implements IndexService {
      * 查询CRL接口
      */
     @Override
-    public ResultVo ldapInfo() {
+    public ResultVo<IndexVo> ldapInfo() {
         IndexVo indexVo = new IndexVo();
         Field[] fields = IndexVo.class.getDeclaredFields();
 

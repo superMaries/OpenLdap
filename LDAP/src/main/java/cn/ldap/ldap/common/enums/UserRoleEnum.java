@@ -7,7 +7,9 @@ package cn.ldap.ldap.common.enums;
  * @Version 1.0
  */
 public enum UserRoleEnum {
+    //Admin
     ACCOUNT_ADMIN(0, "Admin"),
+    //管理员
     USER_ADMIN(1, "管理员"),
     ;
     /**

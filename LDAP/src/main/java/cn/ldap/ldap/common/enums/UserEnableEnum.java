@@ -9,7 +9,9 @@ package cn.ldap.ldap.common.enums;
  * @Version 1.0
  */
 public enum UserEnableEnum {
+    //禁用
     USER_DISABLE(0, "禁用"),
+    //启用
     USER_ENALE(1, "启用"),
     ;
     private Integer code;

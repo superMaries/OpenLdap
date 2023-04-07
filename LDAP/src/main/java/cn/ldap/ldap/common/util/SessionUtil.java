@@ -4,15 +4,9 @@ import cn.hutool.json.JSONUtil;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.vo.LoginResultVo;
-import org.apache.commons.fileupload.RequestContext;
-import org.springframework.util.ObjectUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import sun.nio.ch.ThreadPool;
+
 
 import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import java.util.Objects;
 
 /**
  * @title: SessionUtil

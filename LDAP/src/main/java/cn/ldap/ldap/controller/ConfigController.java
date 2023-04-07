@@ -1,6 +1,11 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
+import cn.ldap.ldap.common.dto.LogDto;
 import cn.ldap.ldap.common.entity.MainConfig;
+import cn.ldap.ldap.common.entity.OperationLogModel;
+import cn.ldap.ldap.common.enums.OperateMenuEnum;
+import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LdapConfigService;
 import cn.ldap.ldap.service.OperationLogService;
@@ -42,7 +47,7 @@ public class ConfigController {
      * @throws IOException
      */
     @PostMapping("setServerStatus/{openOrClose}")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.START_AND_STOP_SERVER)
+    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.OPEN_SERVICE)
     public ResultVo<String> setServerStatus(@PathVariable("openOrClose") Boolean openOrClose) throws IOException {
        return ldapConfigService.setServerStatus(openOrClose);
     }

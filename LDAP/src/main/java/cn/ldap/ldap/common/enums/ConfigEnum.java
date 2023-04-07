@@ -7,7 +7,9 @@ package cn.ldap.ldap.common.enums;
  * @Version 1.0
  */
 public enum ConfigEnum {
+    //主服务器
     MAIN_SERVICE(0, "主服务器"),
+    //从服务器
     FORM_SERVICE(1, "从服务器"),
     ;
     /**

@@ -11,10 +11,15 @@ import java.util.Map;
  */
 public enum OperateMenuEnum {
 
+    //用户管理
     USER_MANAGER(1,"用户管理"),
+    //首页
     INDEX_MANAGER(2,"首页"),
+    //目录树
     CATALOGUE_MANAGER(3,"目录树"),
+    //参数配置
     PARAM_MANAGER(4,"参数配置"),
+    //日志管理
     LOG_MANAGER(5,"日志管理"),
 
 

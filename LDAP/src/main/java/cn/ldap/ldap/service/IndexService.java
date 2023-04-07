@@ -15,19 +15,20 @@ import com.google.common.collect.EvictingQueue;
 public interface IndexService {
     /**
      * 获取信息信息
-     * @return
+     * @return 获取信息信息
      */
-    ResultVo listDeviceStatus() ;
+    ResultVo<DeviceStatusRespVo> listDeviceStatus() ;
     /**
      * 获取网络吞吐量
-     * @return
+     * @return 获取网络吞吐量
      */
-    ResultVo getNetSpeed();
+    ResultVo< EvictingQueue<NetSpeedRespVo>> getNetSpeed();
 
     /**
      * 查询总量接口
      * 查询证书接口
      * 查询CRL接口
+     * @return 总数接口
      */
-    ResultVo ldapInfo();
+    ResultVo<IndexVo>  ldapInfo();
 }

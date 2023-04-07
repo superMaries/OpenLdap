@@ -37,15 +37,15 @@ public class NetWorkUtil {
             String command = "windows".equals(os) ? "netstat -e" : "ifconfig";
             pro = r.exec(command);
             input = new BufferedReader(new InputStreamReader(pro.getInputStream()));
-            long result1[] = readInLine(input, os);
+            long resultLine[] = readInLine(input, os);
             Thread.sleep(SLEEP_TIME);
             pro.destroy();
             input.close();
             pro = r.exec(command);
             input = new BufferedReader(new InputStreamReader(pro.getInputStream()));
-            long result2[] = readInLine(input, os);
-            rxPercent = formatNumber((result2[0] - result1[0]) / (1024.0 * (SLEEP_TIME / 1000)));
-            txPercent = formatNumber((result2[1] - result1[1]) / (1024.0 * (SLEEP_TIME / 1000)));
+            long resuReadLine[] = readInLine(input, os);
+            rxPercent = formatNumber((resuReadLine[0] - resultLine[0]) / (1024.0 * (SLEEP_TIME / 1000)));
+            txPercent = formatNumber((resuReadLine[1] - resultLine[1]) / (1024.0 * (SLEEP_TIME / 1000)));
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -298,10 +298,11 @@ public class NetWorkUtil {
                 }
             }
         }
-        if (diskInfo == 0f) {
-            return 0f;
+        //diskInfo 为0
+        if (Math.abs(diskInfo - StaticValue.FLOAT) < StaticValue.FLOAT_EQUALS) {
+            return StaticValue.FLOAT;
         }
-        float yRate = yDiskInfo / diskInfo / 100;
+        float yRate = yDiskInfo / diskInfo / StaticValue.DISK_INFO_NUM;
         return yRate;
     }
 }

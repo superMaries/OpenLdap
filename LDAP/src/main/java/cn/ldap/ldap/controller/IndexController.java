@@ -38,7 +38,7 @@ public class IndexController {
      * @return
      */
     @PostMapping("device/status/list")
-    public ResultVo listDeviceStatus() {
+    public ResultVo<DeviceStatusRespVo> listDeviceStatus() {
         return indexService.listDeviceStatus();
     }
 
@@ -48,7 +48,7 @@ public class IndexController {
      * @return
      */
     @PostMapping("net/speed/list")
-    public ResultVo getNetSpeed() {
+    public ResultVo< EvictingQueue<NetSpeedRespVo>> getNetSpeed() {
         return indexService.getNetSpeed();
     }
 
@@ -58,7 +58,7 @@ public class IndexController {
      * 查询CRL接口
      */
     @PostMapping("ldap/info")
-    public ResultVo ldapInfo() {
+    public ResultVo<IndexVo>  ldapInfo() {
         return indexService.ldapInfo();
     }
 }

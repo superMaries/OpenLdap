@@ -36,7 +36,7 @@ public class MainConfig {
     /**
      * 是否开启ssl认证
      */
-    private Boolean SSL;
+    private Boolean ssl;
 
     /**
      * SSL认证策略 never单向 demand 双向

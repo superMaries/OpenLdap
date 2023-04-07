@@ -8,8 +8,11 @@ package cn.ldap.ldap.common.enums;
  * @Version 1.0
  */
 public enum QueryEnum {
+    //查询LDAP数量
     TOTAL("total", "查询LDAP数量"),
-    CERT_TOTAL("certTotal", "获取网络吞吐量"),
+    //获取网络吞吐量
+    CERT_TOTAL("certTotal", "获取证书信息"),
+    //获取信息信息
     CRL_TOTAL("crlTotal", "获取信息信息"),
     ;
     /**

@@ -45,7 +45,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
      * @return
      */
     @Override
-    public ResultVo isInit() {
+    public ResultVo<Map<String, Object>> isInit() {
         return ResultUtil.success(init());
     }
 
@@ -79,7 +79,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
     }
 
     @Override
-    public ResultVo importConfig(UserDto userDto) {
+    public ResultVo<Boolean> importConfig(UserDto userDto) {
         if (ObjectUtils.isEmpty(userDto)
                 || ObjectUtils.isEmpty(userDto.getServiceType())) {
             log.error("参数异常");
@@ -98,7 +98,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
     }
 
     @Override
-    public ResultVo importAdminKey(UserDto userDto) {
+    public ResultVo<Boolean> importAdminKey(UserDto userDto) {
         log.info("导出管理员key接口");
         if (ObjectUtils.isEmpty(userDto)
                 || ObjectUtils.isEmpty(userDto.getCertSn())
