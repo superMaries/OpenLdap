@@ -26,7 +26,9 @@ filePath:
   manualPath: C:\Users\77512\Desktop\安全备份系统安装手册-V3tax.docx
   configPath: C:\Users\77512\Desktop\aaaa\slapd.conf
   certPath: D:\工具\
-
+ldap:
+  searchFilter: (objectClass=*)
+  searchBase: dc=super,dc=com
 version:
   serviceVersion: "服务版本-2023-03-31 V1.0"
   clientVersion: "客户端版本-2023-03-31 V1.0"

@@ -1,33 +1,45 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.copier.SrcToDestCopier;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.enums.QueryEnum;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.NetWorkUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.IndexVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexService;
 import com.google.common.collect.EvictingQueue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ldap.core.ContextMapper;
-import org.springframework.ldap.core.DirContextAdapter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ldap.control.PagedResultsCookie;
+import org.springframework.ldap.control.PagedResultsDirContextProcessor;
+import org.springframework.ldap.core.*;
 import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.query.LdapQuery;
 import org.springframework.stereotype.Service;
-import org.springframework.ldap.core.LdapTemplate;
 
 
 import javax.naming.Name;
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.naming.directory.*;
+import javax.naming.ldap.Control;
+import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.PagedResultsControl;
+import javax.naming.ldap.PagedResultsResponseControl;
+import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -47,6 +59,16 @@ import static org.springframework.ldap.query.LdapQueryBuilder.query;
 @Service
 @Slf4j
 public class IndexServiceImpl implements IndexService {
+    /**
+     * 设置过滤器
+     */
+    @Value("${ldap.searchFilter}")
+    private String ldapSearchFilter;
+    /**
+     * 设置要查询的基本DN
+     */
+    @Value("${ldap.searchBase}")
+    private String ldapSearchBase;
 
     @Autowired
     private LdapTemplate ldapTemplate;
@@ -102,7 +124,7 @@ public class IndexServiceImpl implements IndexService {
         log.info("获取网络吞吐量");
         Map<String, String> netWorkDownUp = NetWorkUtil.getNetWorkDownUp();
         LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(StaticValue.TIME_FORMAT);
         if (queue.size() == 0) {
             Integer length = 10;
             for (int j = 10; j > 0; j--) {
@@ -110,8 +132,8 @@ public class IndexServiceImpl implements IndexService {
                 if (j == 1) {
                     netSpeedRespVo = new NetSpeedRespVo();
                     netSpeedRespVo.setDateTime(now.format(dateTimeFormatter));
-                    netSpeedRespVo.setDownSpeed(netWorkDownUp.get("rxPercent"));
-                    netSpeedRespVo.setUpSpeed(netWorkDownUp.get("txPercent"));
+                    netSpeedRespVo.setDownSpeed(netWorkDownUp.get(StaticValue.RX_PERCENT));
+                    netSpeedRespVo.setUpSpeed(netWorkDownUp.get(StaticValue.TX_PERCENT));
                 } else {
                     netSpeedRespVo = new NetSpeedRespVo();
                     String format = now.minusSeconds((j - 1) * 5).format(dateTimeFormatter);
@@ -124,8 +146,8 @@ public class IndexServiceImpl implements IndexService {
         }
         NetSpeedRespVo netSpeedRespVo = new NetSpeedRespVo();
         netSpeedRespVo.setDateTime(now.format(dateTimeFormatter));
-        netSpeedRespVo.setDownSpeed(netWorkDownUp.get("rxPercent"));
-        netSpeedRespVo.setUpSpeed(netWorkDownUp.get("txPercent"));
+        netSpeedRespVo.setDownSpeed(netWorkDownUp.get(StaticValue.RX_PERCENT));
+        netSpeedRespVo.setUpSpeed(netWorkDownUp.get(StaticValue.TX_PERCENT));
         queue.add(netSpeedRespVo);
         log.info("获取网络吞吐量：" + netSpeedRespVo);
         return ResultUtil.success(queue);
@@ -158,25 +180,25 @@ public class IndexServiceImpl implements IndexService {
                 futures.stream().map(CompletableFuture::join).collect(Collectors.toList())
         );
         //等待返回数据
-        List<Long> resultList =  finalResults.join();
+        List<Long> resultList = finalResults.join();
         System.out.println(resultList);
         return ResultUtil.success(indexVo);
     }
 
-    private long queryFieldNum( Field field, IndexVo indexVo) {
-
+    private long queryFieldNum(Field field, IndexVo indexVo) {
         switch (field.getName()) {
-            case "total":
-                long queryTotal = queryTotal();
+            case StaticValue.TOTAL:
+                long queryTotal = 0;
+                queryTotal = queryTotal();
                 System.out.println(queryTotal);
                 indexVo.setTotal(queryTotal);
                 return queryTotal;
-            case "certTotal":
+            case StaticValue.CERT_TOTAL:
                 long queryCertTotal = queryCertTotal();
                 System.out.println(queryCertTotal);
                 indexVo.setCertTotal(queryCertTotal);
                 return queryCertTotal;
-            case "crlTotal":
+            case StaticValue.CRL_TOTAL:
                 long queryCrlTotal = queryCrlTotal();
                 System.out.println(queryCrlTotal);
                 indexVo.setCrlTotal(queryCrlTotal);
@@ -194,23 +216,8 @@ public class IndexServiceImpl implements IndexService {
      */
     private long queryCrlTotal() {
         System.out.println("查询CRL接口");
-        String base = "c=cn";
-        long count = 0L;
-        List<String> crlList = null;
-        try {
-            crlList = ldapTemplate.list(base);
-        } catch (Exception e) {
-            return 0;
-        }
-        for (String crl : crlList) {
-            if (crl.startsWith("ou=crl") || crl.startsWith("ou=cacrl")) {
-                base = crl + "," + base;
-                count = LdapUtil.fun(ldapTemplate, base, crlList.size(), count, "ou=crl", "ou=cacrl");
-            } else {
-                count++;
-            }
-        }
-        return count;
+        long crlTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, "ou=crl", "ou=cacrl");
+        return crlTotal;
     }
 
     /**
@@ -221,23 +228,8 @@ public class IndexServiceImpl implements IndexService {
 
     private long queryCertTotal() {
         System.out.println("查询CERT接口");
-        String base = "c=cn";
-        long count = 0L;
-        List<String> certList = null;
-        try {
-            certList = ldapTemplate.list(base);
-        } catch (Exception e) {
-            return 0;
-        }
-        for (String cert : certList) {
-            if (cert.startsWith("serialNumber=")) {
-                base = cert + "," + base;
-                count = LdapUtil.fun(ldapTemplate, base, certList.size(), count, "serialNumber=");
-            } else {
-                count++;
-            }
-        }
-        return count;
+        long certTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, "serialNumber=");
+        return certTotal;
     }
 
     /**
@@ -246,35 +238,9 @@ public class IndexServiceImpl implements IndexService {
      * @return
      */
     private long queryTotal() {
-        SearchControls sc = new SearchControls();
-        switch ("base") {
-            case "base":
-                sc.setSearchScope(SearchControls.OBJECT_SCOPE);
-                break;
-            case "one":
-                sc.setSearchScope(SearchControls.ONELEVEL_SCOPE);
-                break;
-            default:
-                sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-                break;
-        }
-        NamingEnumeration ne = null;
-        ldapTemplate.lookupContext("");
-
-        DirContext dc = null;
-
-        dc = ldapTemplate.lookupContext("dc=super,dc=com");
-        Name dn = ((DirContextAdapter) dc).getDn();
-        Long count = 0L;
-        List<String> rootList = ldapTemplate.list(dn);
-        count += rootList.stream().count();
-        for (String root : rootList) {
-            List<String> list = ldapTemplate.list(root + ",dc=super,dc=com");
-            count += list.stream().count();
-        }
-
-
-        return count + 1;
+        System.out.println("查询总数接口");
+        long certTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, null);
+        return certTotal;
     }
 
 

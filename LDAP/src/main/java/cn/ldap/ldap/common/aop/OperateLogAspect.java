@@ -125,7 +125,7 @@ public class OperateLogAspect {
                     case LOOK_MANUAl:
                         threadLocal.set(operationLogModel);
                         break;
-                    case OPERATE_QUERY:
+                    case IMPORT_ADMIN_KEY:
                         threadLocal.set(operationLogModel);
                         break;
                     case QUERY_VERSION:
