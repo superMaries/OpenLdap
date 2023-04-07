@@ -1,9 +1,6 @@
 package cn.ldap.ldap.common.vo;
 
-import com.sun.org.glassfish.external.statistics.annotations.Reset;
 import lombok.Data;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 
 /**
  * @title: IndexVo

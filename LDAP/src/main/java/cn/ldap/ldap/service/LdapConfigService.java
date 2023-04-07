@@ -2,6 +2,7 @@ package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.entity.MainConfig;
 import cn.ldap.ldap.common.vo.ResultVo;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -14,14 +15,14 @@ public interface LdapConfigService {
      * @param mainConfig
      * @return
      */
-    ResultVo addConfig(MainConfig mainConfig);
+    ResultVo<T>  addConfig(MainConfig mainConfig) throws IOException;
 
     /**
      * 开启或者关闭服务
      * @param openOrClose
      * @return
      */
-    ResultVo setServerStatus(Boolean openOrClose) throws IOException;
+    ResultVo<String> setServerStatus(Boolean openOrClose) throws IOException;
 
     /**
      * 判断服务启动状态
@@ -33,5 +34,5 @@ public interface LdapConfigService {
      * 上传文件
      * @param multipartFile
      */
-    ResultVo uploadFile(MultipartFile multipartFile);
+    ResultVo<T> uploadFile(MultipartFile multipartFile);
 }

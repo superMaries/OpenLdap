@@ -23,7 +23,7 @@ public interface LoginService {
      * 获取版本号
      * @return
      */
-    Map<String,String> getVersion();
+    ResultVo<Map<String,String>> getVersion();
 
     /**
      * 下载用户手册接口
@@ -43,27 +43,27 @@ public interface LoginService {
      * 是否初始化
      * @return
      */
-    ResultVo whetherInit();
+    ResultVo<String> whetherInit();
 
     /**
      * 获取服务模式
      * @return
      */
-    ResultVo getServerConfig();
+    ResultVo<String> getServerConfig();
 
     /**
      * USBKey登录
      * @param userDto
      * @return
      */
-    Map<String,Object> certLogin(UserDto userDto,HttpServletRequest  request);
+    ResultVo<Map<String, Object>> certLogin(UserDto userDto,HttpServletRequest  request);
 
     /**
      * 账号密码登录
      * @param loginDto
      * @return
      */
-    ResultVo login(LoginDto loginDto);
+    ResultVo<Object> login(LoginDto loginDto,HttpServletRequest  request);
 
     /**
      * 退出登录
@@ -71,7 +71,7 @@ public interface LoginService {
      * @param
      * @return
      */
-    boolean logout(HttpServletRequest request);
+    Boolean logout(HttpServletRequest request);
 
 
 }
