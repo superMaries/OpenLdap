@@ -1,21 +1,7 @@
 package cn.ldap.ldap.common.util;
 
-import cn.hutool.core.lang.copier.SrcToDestCopier;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.util.ObjectUtils;
 
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-import javax.naming.ldap.Control;
-import javax.naming.ldap.LdapContext;
-import javax.naming.ldap.PagedResultsControl;
-import javax.naming.ldap.PagedResultsResponseControl;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 /**

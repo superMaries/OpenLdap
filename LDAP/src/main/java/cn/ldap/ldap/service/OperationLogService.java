@@ -1,0 +1,13 @@
+package cn.ldap.ldap.service;
+
+import cn.ldap.ldap.common.dto.LogDto;
+import cn.ldap.ldap.common.entity.OperationLogModel;
+import cn.ldap.ldap.common.vo.ResultVo;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
+
+public interface OperationLogService extends IService<OperationLogModel> {
+
+    ResultVo<List<OperationLogModel>> queryLog(LogDto logDto);
+}

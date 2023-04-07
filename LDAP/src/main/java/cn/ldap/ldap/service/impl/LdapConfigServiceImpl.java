@@ -17,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.io.*;
 
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_IS_EMPTY;
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
@@ -32,6 +33,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     private String configPath;
     @Value("${filePath.certPath}")
     private String certPath;
+
+    @Value("${filePath.runPath}")
+    private String runPath;
     /**
      * 空格数据
      */
@@ -42,22 +46,53 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     private static final String FEED = "\n";
 
+    private static final String START = "logfile";
+
+    private static final String SERVICE = "Service";
+
+    private static final String START_SUCCESS = "开启服务成功";
+
+    private static final String STOP_SUCCESS = "关闭服务成功";
+
     //添加配置
     @Override
-    public ResultVo addConfig(MainConfig mainConfig) {
+    public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
         File file = new File(configPath);
         if (!file.exists()) {
             throw new SystemException(FILE_NOT_EXIST);
         }
+        StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;
-        String data = splicingConfigParam(mainConfig);
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
+            String lineStr = null;
+            while ((lineStr = bufferedReader.readLine()) != null) {
+                if (lineStr.trim().startsWith(START)) {
+                    break;
+                }
+                String oldData = lineStr;
+                stringBuilder.append(oldData).append(FEED);
+            }
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        String data = splicingConfigParam(stringBuilder, mainConfig);
         try {
             //采用流的方式进行写入配置
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
             bufferedWriter.write(data);
+            bufferedWriter.flush();
+            bufferedWriter.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+
+        Wini wini = new Wini(new File(runPath));
+        Profile.Section section = wini.get(SERVICE);
+        section.put("Environment", "SLAPD_URLS=ldaps:0.0.0/// ldapi:///\" \"SLAPD_OPTIONS=");
+        wini.store();
         return ResultUtil.success();
     }
 
@@ -69,13 +104,17 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      * @throws IOException
      */
     @Override
-    public ResultVo setServerStatus(Boolean openOrClose) throws IOException {
+    public ResultVo<String> setServerStatus(Boolean openOrClose) throws IOException {
         if (openOrClose) {
-            Runtime.getRuntime().exec("./slapd", null, new File(System.getProperty("user.dir")));
+            Runtime.getRuntime().exec("systemctl start slapd.service", null, new File(System.getProperty("user.dir")));
+            log.info("开启命令:{}", "systemctl start slapd.service");
+            return ResultUtil.success(START_SUCCESS);
         } else {
-            Runtime.getRuntime().exec("./slapd stop", null, new File(System.getProperty("user.dir")));
+            Runtime.getRuntime().exec("systemctl stop slapd.service", null, new File(System.getProperty("user.dir")));
+            log.info("关闭命令:{}", "systemctl stop slapd.service");
+            return ResultUtil.success(STOP_SUCCESS);
         }
-        return ResultUtil.success();
+
     }
 
     /**
@@ -85,24 +124,22 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     @Override
     public Boolean getServerStatus() {
-        String runStr = "ps -ef|grep slapd";
-        ResultVo resultVo = null;
+        String serviceName = "slapd";
         try {
-            resultVo = LinuxCmdEnginUtil.listInfo(runStr);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Integer successCode = 1000;
-        if (!Objects.equals(resultVo.getCode(), successCode)) {
-            return false;
-        }
-        List list = (List) resultVo.getData();
-        if (list.size() > 2) {
-            return true;
-        } else {
-            return false;
+            Process process = new ProcessBuilder("systemctl", "is-active", serviceName).start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String outPut = reader.readLine();
+            log.info("服务信息------:{}", outPut);
+            if (outPut.equals("activating")) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
+
 
     /**
      * 上传文件
@@ -111,7 +148,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      * @return
      */
     @Override
-    public ResultVo uploadFile(MultipartFile multipartFile) {
+    public ResultVo<T> uploadFile(MultipartFile multipartFile) {
         if (multipartFile.isEmpty()) {
             throw new SystemException(FILE_IS_EMPTY);
         }
@@ -140,8 +177,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      * @param mainConfig
      * @return
      */
-    public String splicingConfigParam(MainConfig mainConfig) {
-        StringBuilder stringBuilder = new StringBuilder();
+    public String splicingConfigParam(StringBuilder stringBuilder, MainConfig mainConfig) {
         //配置log文件目录
 
         stringBuilder.append("logfile" + SPACE_DATA + mainConfig.getLogLevelDirectory() + FEED)

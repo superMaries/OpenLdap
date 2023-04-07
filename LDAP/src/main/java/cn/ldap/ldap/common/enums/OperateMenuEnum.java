@@ -17,6 +17,7 @@ public enum OperateMenuEnum {
     PARAM_MANAGER(4,"参数配置"),
     LOG_MANAGER(5,"日志管理"),
 
+
     ;
 
     /**
