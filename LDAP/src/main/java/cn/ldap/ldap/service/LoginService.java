@@ -30,7 +30,7 @@ public interface LoginService {
      * @param
      * @return
      */
-    byte[] downloadManual() throws IOException;
+    byte[] downloadManual()  throws IOException;
 
     /**
      * 查看菜单

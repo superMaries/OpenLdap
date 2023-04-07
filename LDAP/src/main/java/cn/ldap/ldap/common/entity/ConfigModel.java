@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @title: Configf
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
  * @Date: 2023/3/31 9:38
  * @Version 1.0
  */
-@Slf4j
 @Data
 @TableName("config")
 public class ConfigModel {

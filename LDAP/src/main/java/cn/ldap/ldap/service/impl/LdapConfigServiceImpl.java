@@ -1,6 +1,8 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.entity.MainConfig;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -9,8 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.ini4j.Profile;
 import org.ini4j.Wini;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
@@ -48,7 +52,23 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String START_SUCCESS = "开启服务成功";
 
+    private static final String START_FAIL = "开启服务失败";
+
     private static final String STOP_SUCCESS = "关闭服务成功";
+
+    private static final String STOP_FAIL = "关闭服务失败";
+
+    private static final String START_COMMAND="systemctl start slapd.service";
+
+    private static final String STOP_COMMAND="systemctl stop slapd.service";
+
+    private static final String SYSTEM = "systemctl";
+
+    private static final String IS_ACTIVE = "is-active";
+
+    private static final String SERVER_NAME = "slapd";
+
+    private static final String ACTIVATING = "activating";
 
     //添加配置
     @Override
@@ -101,16 +121,29 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     @Override
     public ResultVo<String> setServerStatus(Boolean openOrClose) throws IOException {
-        if (openOrClose) {
-            Runtime.getRuntime().exec("systemctl start slapd.service", null, new File(System.getProperty("user.dir")));
-            log.info("开启命令:{}", "systemctl start slapd.service");
-            return ResultUtil.success(START_SUCCESS);
-        } else {
-            Runtime.getRuntime().exec("systemctl stop slapd.service", null, new File(System.getProperty("user.dir")));
-            log.info("关闭命令:{}", "systemctl stop slapd.service");
-            return ResultUtil.success(STOP_SUCCESS);
+        if(BeanUtil.isEmpty(openOrClose) || openOrClose!= Boolean.TRUE || openOrClose != Boolean.FALSE){
+            return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
 
+        if (openOrClose) {
+            Runtime.getRuntime().exec(START_COMMAND, null);
+            log.info("开启命令执行:{}",START_COMMAND);
+            Boolean result = linuxCommand(SERVER_NAME);
+            if (result){
+                return ResultUtil.success(START_SUCCESS);
+            }else {
+                return ResultUtil.fail(START_FAIL);
+            }
+        } else {
+            Runtime.getRuntime().exec(STOP_COMMAND, null);
+            log.info("关闭命令:{}", "systemctl stop slapd.service");
+            Boolean result = linuxCommand(SERVER_NAME);
+            if (result){
+                return ResultUtil.success(STOP_SUCCESS);
+            }else {
+                return ResultUtil.fail(STOP_FAIL);
+            }
+        }
     }
 
     /**
@@ -120,13 +153,22 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     @Override
     public Boolean getServerStatus() {
-        String serviceName = "slapd";
+        String serviceName = SERVER_NAME;
+        return linuxCommand(serviceName);
+    }
+
+    /**
+     * 执行命令判断是否启动状态-----仅限于service服务
+     * @param serverName
+     * @return
+     */
+    public Boolean linuxCommand(String serverName){
         try {
-            Process process = new ProcessBuilder("systemctl", "is-active", serviceName).start();
+            Process process = new ProcessBuilder(SYSTEM, IS_ACTIVE, serverName).start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String outPut = reader.readLine();
             log.info("服务信息------:{}", outPut);
-            if (outPut.equals("activating")) {
+            if (ACTIVATING.equals(outPut)) {
                 return true;
             } else {
                 return false;
@@ -134,6 +176,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
     }
 
 
@@ -145,19 +188,21 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     @Override
     public ResultVo<T> uploadFile(MultipartFile multipartFile) {
+        //todo 文件名不让修改，拆分接口
         if (multipartFile.isEmpty()) {
             throw new SystemException(FILE_IS_EMPTY);
         }
+        //修改fileName
         String fileName = multipartFile.getOriginalFilename();
         String filePath = certPath + fileName;
         File file = new File(filePath);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+//        if (!file.exists()) {
+//            try {
+//                file.createNewFile();
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
