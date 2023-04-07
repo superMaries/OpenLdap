@@ -55,7 +55,7 @@ public class LoginController {
      */
     @GetMapping("downloadManual")
     @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER,operateType = OperateTypeEnum.LOOK_MANUAl)
-    public byte[] downloadManual() throws IOException {
+    public byte[] downloadManual() throws IOException{
         return loginService.downloadManual();
     }
 
