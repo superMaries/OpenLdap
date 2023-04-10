@@ -7,11 +7,13 @@ import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.ConfigModel;
 import cn.ldap.ldap.common.entity.Permission;
+import cn.ldap.ldap.common.entity.UserAccountModel;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserTypeEnum;
 import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.mapper.ConfigMapper;
+import cn.ldap.ldap.common.mapper.UserAccountMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.LoginResultVo;
@@ -141,6 +143,8 @@ public class LoginServiceImpl implements LoginService {
 
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private UserAccountMapper userAccountMapper;
 
     @Resource
     private UserServiceImpl userService;
@@ -155,7 +159,7 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public Boolean downClientTool(HttpServletResponse httpServletResponse) {
         String path = clientToolPath;
-        log.info("下载地址为:{}",path);
+        log.info("下载地址为:{}", path);
         File downFile = new File(path);
         if (downFile.exists()) {
             httpServletResponse.setCharacterEncoding("UTF-8");
@@ -301,7 +305,7 @@ public class LoginServiceImpl implements LoginService {
 //        }
         Map<String, Object> mapObj = new HashMap<>();
         if (com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull(userDto, userDto.getCertSn())) {
-            log.error("登录错误:{}",ExceptionEnum.USER_LOGIN_ERROR.getMessage());
+            log.error("登录错误:{}", ExceptionEnum.USER_LOGIN_ERROR.getMessage());
             throw new SystemException(ExceptionEnum.USER_LOGIN_ERROR);
         }
 
@@ -310,7 +314,7 @@ public class LoginServiceImpl implements LoginService {
                 .eq(UserModel::getIsEnable, IF_ENABLE);
         List<UserModel> users = userMapper.selectList(lambdaQueryWrapper);
 
-        if (SIZE!= users.size()) {
+        if (SIZE != users.size()) {
             //失敗  返回
             log.error("需要初始化" + ExceptionEnum.USER_FAIL.getMessage());
             throw new SystemException(ExceptionEnum.USER_FAIL);
@@ -325,7 +329,6 @@ public class LoginServiceImpl implements LoginService {
                 .withExpiresAt(instance.getTime()).sign(Algorithm.HMAC256(TOKEN_SECRET_KEY));
 
         log.info("验签开始");
-
 
 
         String key = "0444270bd267987f13b32846abb09c34c7c865b4d1559946b5734275ffc7cbcc932909eb815430ada80537bcd02f094dd1c79b04d90105923f57183ab9f076d36a";
@@ -385,11 +388,15 @@ public class LoginServiceImpl implements LoginService {
         if (PASSWORD_LENGTH < loginDto.getPassword().length()) {
             return ResultUtil.fail(MORE_PASSWORD_LENGTH);
         }
-        if (!USER_NAME.equals(loginDto.getUserName())) {
-            return ResultUtil.fail(RESULT_ERR);
-        }
-        if (!USER_PASSWORD.equals(loginDto.getPassword())) {
-            return ResultUtil.fail(RESULT_ERR);
+
+        //查询数据库判断账号密码是否正确
+        List<UserAccountModel> userAccountModels = userAccountMapper.selectList(new LambdaQueryWrapper<UserAccountModel>()
+                .eq(UserAccountModel::getAccount, loginDto.getUserName())
+                .eq(UserAccountModel::getPassword, loginDto.getPassword())
+                .orderByDesc(UserAccountModel::getId));
+        if (ObjectUtils.isEmpty(userAccountModels)) {
+            log.info(USER_ACCOUNT_ERROR.getMessage());
+            return ResultUtil.fail(ExceptionEnum.USER_ACCOUNT_ERROR);
         }
         Map<String, Object> hashMap = new HashMap<>();
         Calendar instance = Calendar.getInstance();

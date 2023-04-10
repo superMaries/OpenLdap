@@ -31,6 +31,8 @@ public enum ExceptionEnum {
     USER_PASSWORD_FAIL(585, "密码为空"),
     //密码超过长度限制
     MORE_PASSWORD_LENGTH(586, "密码超过长度限制"),
+    //账号密码错误
+    USER_ACCOUNT_ERROR(586, "账号或密码错误"),
     //未获取到配置文件信息
     NO_CONFIG(800, "未获取到配置文件信息"),
 
