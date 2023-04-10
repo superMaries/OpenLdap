@@ -62,15 +62,38 @@ public class ConfigController {
     }
 
     /**
-     * 上传文件
+     * 上传CA证书
      * @param multipartFile
      * @return
      */
-    @PostMapping("uploadFile")
+    @PostMapping("uploadCACert")
     @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
-    public ResultVo<T> uploadFile(@RequestParam("multipartFile") MultipartFile multipartFile){
-        return ldapConfigService.uploadFile(multipartFile);
+    public ResultVo<T> uploadCACert(@RequestParam("multipartFile") MultipartFile multipartFile){
+        return ldapConfigService.uploadCACert(multipartFile);
     }
+
+    /**
+     * 上传证书
+     * @param multipartFile
+     * @return
+     */
+    @PostMapping("uploadCert")
+    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
+    public ResultVo<T> uploadCert(@RequestParam("multipartFile") MultipartFile multipartFile){
+        return ldapConfigService.uploadCert(multipartFile);
+    }
+
+    /**
+     * 上传证书
+     * @param multipartFile
+     * @return
+     */
+    @PostMapping("uploadKey")
+    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
+    public ResultVo<T> uploadKey(@RequestParam("multipartFile") MultipartFile multipartFile){
+        return ldapConfigService.uploadKey(multipartFile);
+    }
+
 
 
     /**
