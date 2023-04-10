@@ -1,11 +1,7 @@
 package cn.ldap.ldap.service.impl;
 
-import cn.hutool.core.convert.Convert;
-import cn.hutool.core.lang.copier.SrcToDestCopier;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
-import cn.ldap.ldap.common.enums.ExceptionEnum;
-import cn.ldap.ldap.common.enums.QueryEnum;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.NetWorkUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
@@ -17,38 +13,19 @@ import com.google.common.collect.EvictingQueue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.ldap.control.PagedResultsCookie;
-import org.springframework.ldap.control.PagedResultsDirContextProcessor;
 import org.springframework.ldap.core.*;
-import org.springframework.ldap.core.support.LdapContextSource;
-import org.springframework.ldap.query.LdapQuery;
 import org.springframework.stereotype.Service;
 
 
-import javax.naming.Name;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.*;
-import javax.naming.ldap.Control;
-import javax.naming.ldap.LdapContext;
-import javax.naming.ldap.PagedResultsControl;
-import javax.naming.ldap.PagedResultsResponseControl;
-import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
-
-import static org.springframework.ldap.query.LdapQueryBuilder.query;
 
 /**
  * @title: IndexServiceImpl
@@ -183,6 +160,34 @@ public class IndexServiceImpl implements IndexService {
         List<Long> resultList = finalResults.join();
         System.out.println(resultList);
         return ResultUtil.success(indexVo);
+    }
+
+    /**
+     * 查询证书接口
+     *
+     * @return 查询证书接口
+     */
+    @Override
+    public ResultVo<Long> ldapCrlNum() {
+        return ResultUtil.success(queryCrlTotal());
+    }
+
+    /**
+     * 查询证书接口
+     *
+     * @return 查询证书接口
+     */
+    @Override
+    public ResultVo<Long> ldapCertNum() {
+        return ResultUtil.success(queryCertTotal());
+    }
+    /**
+     * 返回ldap 总数接口
+     * @return 返回ldap 总数接口
+     */
+    @Override
+    public ResultVo<Long> ldapTotal() {
+        return null;
     }
 
     /**
