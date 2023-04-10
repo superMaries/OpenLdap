@@ -70,6 +70,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String ACTIVATING = "activating";
 
+    private static final String CASERVER_CERT = "ca.cert";
+
+    private static final String SERVER_CERT = "server.cert";
+
+    private static final String SERVER_KEY = "server.cert";
+
     //添加配置
     @Override
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
@@ -124,12 +130,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         if(BeanUtil.isEmpty(openOrClose) || openOrClose!= Boolean.TRUE || openOrClose != Boolean.FALSE){
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
-
-        if (openOrClose) {
+        Boolean compare = true;
+        if (openOrClose == compare) {
             Runtime.getRuntime().exec(START_COMMAND, null);
             log.info("开启命令执行:{}",START_COMMAND);
             Boolean result = linuxCommand(SERVER_NAME);
-            if (result){
+            if (result == compare){
                 return ResultUtil.success(START_SUCCESS);
             }else {
                 return ResultUtil.fail(START_FAIL);
@@ -138,7 +144,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             Runtime.getRuntime().exec(STOP_COMMAND, null);
             log.info("关闭命令:{}", "systemctl stop slapd.service");
             Boolean result = linuxCommand(SERVER_NAME);
-            if (result){
+            if (result == compare){
                 return ResultUtil.success(STOP_SUCCESS);
             }else {
                 return ResultUtil.fail(STOP_FAIL);
@@ -187,13 +193,62 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      * @return
      */
     @Override
-    public ResultVo<T> uploadFile(MultipartFile multipartFile) {
-        //todo 文件名不让修改，拆分接口
+    public ResultVo<T> uploadCACert(MultipartFile multipartFile) {
         if (multipartFile.isEmpty()) {
             throw new SystemException(FILE_IS_EMPTY);
         }
         //修改fileName
-        String fileName = multipartFile.getOriginalFilename();
+        String fileName = CASERVER_CERT;
+        String filePath = certPath + fileName;
+        File file = new File(filePath);
+//        if (!file.exists()) {
+//            try {
+//                file.createNewFile();
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
+        try {
+            multipartFile.transferTo(file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return ResultUtil.success();
+    }
+
+    @Override
+    public ResultVo<T> uploadCert(MultipartFile multipartFile) {
+        if (multipartFile.isEmpty()) {
+            throw new SystemException(FILE_IS_EMPTY);
+        }
+        //修改fileName
+        String fileName = SERVER_CERT;
+        String filePath = certPath + fileName;
+        File file = new File(filePath);
+//        if (!file.exists()) {
+//            try {
+//                file.createNewFile();
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
+        try {
+            multipartFile.transferTo(file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return ResultUtil.success();
+    }
+
+    @Override
+    public ResultVo<T> uploadKey(MultipartFile multipartFile) {
+        if (multipartFile.isEmpty()) {
+            throw new SystemException(FILE_IS_EMPTY);
+        }
+        //修改fileName
+        String fileName = SERVER_KEY;
         String filePath = certPath + fileName;
         File file = new File(filePath);
 //        if (!file.exists()) {
