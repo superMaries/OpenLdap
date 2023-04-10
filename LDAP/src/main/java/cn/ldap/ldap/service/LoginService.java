@@ -70,7 +70,12 @@ public interface LoginService {
      * @param
      * @return
      */
-    Boolean logout(HttpServletRequest request);
+    ResultVo<Boolean> logout(HttpServletRequest request);
 
-
+    /**
+     * USEBkey登录是否展示
+     *
+     * @return true 显示 false 不显示
+     */
+    ResultVo<Boolean> isShowUsbKey();
 }

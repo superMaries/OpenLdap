@@ -46,7 +46,7 @@ public class UserController {
      * @param userDto
      * @return
      */
-    @PostMapping("importConfig")
+//    @PostMapping("importConfig")
     @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.IMPORT_CONFIG)
     public ResultVo<Boolean> importConfig(@RequestBody UserDto userDto){
         return userService.importConfig(userDto);

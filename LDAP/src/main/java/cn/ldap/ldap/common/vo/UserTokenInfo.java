@@ -21,4 +21,15 @@ public class UserTokenInfo {
     @JsonProperty("TOKEN")
     private String token;
 
+    /**
+     * 是否同步
+     *  0  不同步 1 同步
+     */
+    private Integer isSync;
+    /**
+     * 0, "主服务器"
+     * 1, "从服务器"
+     */
+    private Integer serviceType;
+
 }

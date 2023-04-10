@@ -86,7 +86,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         ConfigModel configModel = new ConfigModel();
-        configModel.setIsInit(1);
+//        configModel.setIsInit(1);
         configModel.setServiceType(userDto.getServiceType());
         try {
             configService.save(configModel);

@@ -19,6 +19,7 @@ import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.UserTokenInfo;
+import cn.ldap.ldap.hander.InitConfigData;
 import cn.ldap.ldap.service.LoginService;
 import cn.ldap.ldap.service.PermissionService;
 import cn.ldap.ldap.service.UserService;
@@ -270,11 +271,12 @@ public class LoginServiceImpl implements LoginService {
         if (ObjectUtils.isEmpty(config)) {
             return ResultUtil.fail(NO_CONFIG);
         }
-        if (IS_INIT.equals(config.getIsInit())) {
-            return ResultUtil.success(IS_INIT_STR);
-        } else {
-            return ResultUtil.success(IS_NOT_INIT_STR);
-        }
+//        if (IS_INIT.equals(config.getIsInit())) {
+//            return ResultUtil.success(IS_INIT_STR);
+//        } else {
+//            return ResultUtil.success(IS_NOT_INIT_STR);
+//        }
+        return ResultUtil.success(IS_NOT_INIT_STR);
     }
 
     /**
@@ -362,6 +364,10 @@ public class LoginServiceImpl implements LoginService {
         tokenInfo.setCertData(userInfo.getSignCert());
         tokenInfo.setId(userInfo.getId());
         log.info("获取token" + token);
+
+        tokenInfo.setServiceType(InitConfigData.getServiceType());
+        tokenInfo.setIsSync(InitConfigData.getIsSync());
+
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
         mapObj.put("data", loginResultVo);
         HttpSession session = request.getSession();
@@ -409,6 +415,10 @@ public class LoginServiceImpl implements LoginService {
         tokenInfo.setRoleId(TOKEN_ID);
         tokenInfo.setRoleName(loginDto.getUserName());
         tokenInfo.setToken(token);
+
+        tokenInfo.setServiceType(InitConfigData.getServiceType());
+        tokenInfo.setIsSync(InitConfigData.getIsSync());
+
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
         resultMap.put("data", loginResultVo);
         HttpSession session = request.getSession();
@@ -417,8 +427,31 @@ public class LoginServiceImpl implements LoginService {
     }
 
     @Override
-    public Boolean logout(HttpServletRequest request) {
+    public ResultVo<Boolean> logout(HttpServletRequest request) {
         request.getSession().invalidate();
-        return true;
+        return ResultUtil.success(true);
+    }
+
+    /**
+     * USEBkey登录是否展示
+     *
+     * @return true 显示 false 不显示
+     */
+    @Override
+    public ResultVo<Boolean> isShowUsbKey() {
+        List<UserModel> userModels = null;
+        try {
+            userModels = userMapper.selectList(null);
+        } catch (Exception e) {
+            log.error("错误日志:{}", e.getMessage());
+            throw new SystemException(SQL_ERROR);
+        }
+
+        if (ObjectUtils.isEmpty(userModels)) {
+            return ResultUtil.success(false);
+        } else {
+            return ResultUtil.success(true);
+        }
+
     }
 }

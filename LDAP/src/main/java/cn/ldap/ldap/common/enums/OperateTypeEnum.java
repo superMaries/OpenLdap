@@ -45,6 +45,11 @@ public enum OperateTypeEnum {
     UPLOAD_FILE(703, "上传文件"),
 
     OPEN_SERVICE(704, "开启或关闭服务"),
+
+    DEL_USBKEY(801, "删除USBKEY用户"),
+    ADD_USBKEY(802, "添加USBKEY用户"),
+    UPDATE_USBKEY(802, "修改密码"),
+
     ;
 
     public static Map<String, String> getMap() {

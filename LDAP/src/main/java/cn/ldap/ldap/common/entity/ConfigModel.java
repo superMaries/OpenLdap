@@ -21,15 +21,16 @@ public class ConfigModel {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     /**
-     * 是否初始化
-     * 0 未初始化
-     * 1 初始化
+     * key值
      */
-    @TableField("is_init")
-    private Integer isInit;
+    @TableField("code")
+    private String  code;
     /**
      * 0, "主服务器"
      * 1, "从服务器"
+     * 是否展示同步
+     * 0 不展示同步
+     * 1 展示同步
      */
     @TableField("service_type")
     private Integer serviceType;

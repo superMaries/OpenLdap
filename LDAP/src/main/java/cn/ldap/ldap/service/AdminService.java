@@ -1,6 +1,7 @@
 package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.dto.AdminVo;
+import cn.ldap.ldap.common.dto.UpdateAdminVo;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -32,5 +33,6 @@ public interface AdminService {
      * @return 返回tru 成功   false 失败
      */
     ResultVo<Boolean> addUserKey(UserDto userDto);
-    
+
+    ResultVo<Boolean> updatePwd(UpdateAdminVo adminVo);
 }

@@ -27,6 +27,9 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static cn.ldap.ldap.common.enums.OperateTypeEnum.ADD_USBKEY;
+import static cn.ldap.ldap.common.enums.OperateTypeEnum.DEL_USBKEY;
+
 /**
  * @title: OperateLogAspect
  * @Author Wy
@@ -189,11 +192,22 @@ public class OperateLogAspect {
                     default:
                         break;
                 }
-                threadLocal.set(operationLogModel);
                 break;
             case LOG_MANAGER:
                 switch (operateAnnotation.operateType()) {
                     //暂无
+                    default:
+                        break;
+                }
+                break;
+            case ADMIN_MANAGER:
+                switch (operateAnnotation.operateType()) {
+                    case DEL_USBKEY:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case ADD_USBKEY:
+                        threadLocal.set(operationLogModel);
+                        break;
                     default:
                         break;
                 }

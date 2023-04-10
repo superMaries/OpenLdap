@@ -1,11 +1,14 @@
 package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.AdminVo;
+import cn.ldap.ldap.common.dto.UpdateAdminVo;
 import cn.ldap.ldap.common.dto.UserDto;
+import cn.ldap.ldap.common.entity.UserAccountModel;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserEnableEnum;
 import cn.ldap.ldap.common.enums.UserRoleEnum;
+import cn.ldap.ldap.common.mapper.UserAccountMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -13,6 +16,7 @@ import cn.ldap.ldap.service.AdminService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -30,6 +34,9 @@ import java.util.List;
 @Slf4j
 public class AdminServiceImpl extends ServiceImpl<UserMapper, UserModel>
         implements AdminService {
+
+    @Autowired
+    private UserAccountMapper userAccountMapper;
 
     /**
      * 查询管理管理列表
@@ -96,6 +103,43 @@ public class AdminServiceImpl extends ServiceImpl<UserMapper, UserModel>
         } catch (Exception e) {
             return ResultUtil.fail(ExceptionEnum.SQL_SAVA_ERROR);
         }
+    }
+
+    /**
+     * 修改密码
+     *
+     * @param adminVo 参数
+     * @return 修改密码
+     */
+    @Override
+    public ResultVo<Boolean> updatePwd(UpdateAdminVo adminVo) {
+        if (ObjectUtils.isEmpty(adminVo)) {
+            return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
+        }
+
+        if (ObjectUtils.isEmpty(adminVo.getAccount())) {
+            return ResultUtil.fail(ExceptionEnum.ACCOUNT);
+        }
+        if (ObjectUtils.isEmpty(adminVo.getPassword())) {
+            return ResultUtil.fail(ExceptionEnum.PASSWD);
+        }
+        try {
+            List<UserAccountModel> userAccountModels = userAccountMapper.selectList(new LambdaQueryWrapper<UserAccountModel>()
+                    .eq(UserAccountModel::getAccount, adminVo.getAccount()));
+
+            if (ObjectUtils.isEmpty(userAccountModels)) {
+                return ResultUtil.success(ExceptionEnum.SUCCESS);
+            }
+            UserAccountModel userAccountModel = userAccountModels.size() > 0 ? userAccountModels.get(0) : new UserAccountModel();
+            userAccountModel.setAccount(adminVo.getAccount());
+            userAccountModel.setPassword(adminVo.getPassword());
+
+            userAccountMapper.updateById(userAccountModel);
+            return ResultUtil.success(true);
+        } catch (Exception e) {
+            return ResultUtil.fail(ExceptionEnum.SQL_SAVA_ERROR);
+        }
+
     }
 
     /**
