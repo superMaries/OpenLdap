@@ -1,6 +1,8 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.entity.MainConfig;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -68,7 +70,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String ACTIVATING = "activating";
 
-    //添加配置
+    /**
+     * 添加配置
+     * @param mainConfig
+     * @return
+     * @throws IOException
+     */
     @Override
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
         File file = new File(configPath);
