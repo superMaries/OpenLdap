@@ -99,7 +99,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("certLogin")
-   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER,operateType = OperateTypeEnum.USER_LOGIN)
+    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER,operateType = OperateTypeEnum.USER_LOGIN)
     public ResultVo<Map<String, Object>> certLogin(@RequestBody UserDto userDto, HttpServletRequest request) {
         return loginService.certLogin(userDto, request);
     }

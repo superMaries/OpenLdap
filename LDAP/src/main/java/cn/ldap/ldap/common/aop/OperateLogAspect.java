@@ -109,6 +109,10 @@ public class OperateLogAspect {
 
         log.info(!ObjectUtils.isEmpty(operateAnnotation.remark()) ?
                 operateAnnotation.remark() : name);
+        settTreadLocal(operateAnnotation, operationLogModel, remark, threadLocal);
+    }
+
+    private void settTreadLocal(OperateAnnotation operateAnnotation, OperationLogModel operationLogModel, StringBuffer remark, ThreadLocal<Object> threadLocal) {
         switch (operateAnnotation.operateModel()) {
             case USER_MANAGER:
                 switch (operateAnnotation.operateType()) {
@@ -184,7 +188,6 @@ public class OperateLogAspect {
                         break;
                     default:
                         break;
-
                 }
                 threadLocal.set(operationLogModel);
                 break;
@@ -202,7 +205,6 @@ public class OperateLogAspect {
                 break;
         }
     }
-
 
     /**
      * 正常返回通知，拦截用户操作日志，连接点正常执行完成后执行， 如果连接点抛出异常，则不会执行

@@ -54,7 +54,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String STOP_SUCCESS = "关闭服务成功";
 
-    //添加配置
+    /**
+     * 添加配置
+     * @param mainConfig
+     * @return
+     * @throws IOException
+     */
     @Override
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
         File file = new File(configPath);

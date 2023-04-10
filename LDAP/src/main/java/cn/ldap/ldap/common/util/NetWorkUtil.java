@@ -37,13 +37,13 @@ public class NetWorkUtil {
             String command = "windows".equals(os) ? "netstat -e" : "ifconfig";
             pro = r.exec(command);
             input = new BufferedReader(new InputStreamReader(pro.getInputStream()));
-            long resultLine[] = readInLine(input, os);
+            long[] resultLine = readInLine(input, os);
             Thread.sleep(SLEEP_TIME);
             pro.destroy();
             input.close();
             pro = r.exec(command);
             input = new BufferedReader(new InputStreamReader(pro.getInputStream()));
-            long resuReadLine[] = readInLine(input, os);
+            long[] resuReadLine = readInLine(input, os);
             rxPercent = formatNumber((resuReadLine[0] - resultLine[0]) / (1024.0 * (SLEEP_TIME / 1000)));
             txPercent = formatNumber((resuReadLine[1] - resultLine[1]) / (1024.0 * (SLEEP_TIME / 1000)));
         } catch (Exception e) {
@@ -64,7 +64,7 @@ public class NetWorkUtil {
     }
 
     private static long[] readInLine(BufferedReader input, String osType) throws IOException {
-        long arr[] = new long[2];
+        long[] arr = new long[2];
         StringTokenizer tokenStat = null;
         try {
             String linux = "linux";

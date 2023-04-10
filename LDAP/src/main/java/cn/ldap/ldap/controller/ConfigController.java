@@ -17,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.List;
-
 @RestController
 @Slf4j
 @RequestMapping("/config/")

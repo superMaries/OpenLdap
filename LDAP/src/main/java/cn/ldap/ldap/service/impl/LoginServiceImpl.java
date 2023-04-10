@@ -225,8 +225,8 @@ public class LoginServiceImpl implements LoginService {
      */
     @Override
     public byte[] downloadManual() throws IOException {
-
-        String filePath = manualPath; // 本地Word文档的路径
+        // 本地Word文档的路径
+        String filePath = manualPath;
         InputStream in = new FileInputStream(filePath);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         StreamUtils.copy(in, out);

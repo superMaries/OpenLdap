@@ -17,7 +17,8 @@ public final class LinuxCmdEnginUtil {
     public static final String processUseSudo(String command) {
         Process p = null;
         StringBuilder sb = new StringBuilder();
-        String resultCode = "0::";// 表示命令执行成功
+        // 表示命令执行成功
+        String resultCode = "0::";
         try {
             String[] comands = new String[]{"/bin/sh", "-c", "sudo " + command};
 
@@ -62,7 +63,8 @@ public final class LinuxCmdEnginUtil {
             p = Runtime.getRuntime().exec(comands);
             String outInfo = read(p.getInputStream());
             String error = read(p.getErrorStream());
-            String resultCode = "0::";// 表示命令执行成功
+            // 表示命令执行成功
+            String resultCode = "0::";
             if (error.length() == 0) {
                 sb.append(resultCode);
                 sb.append(outInfo);
@@ -85,7 +87,8 @@ public final class LinuxCmdEnginUtil {
             }
 
         }
-        return sb.toString();//安可GBK--UTF-8
+        //安可GBK--UTF-8
+        return sb.toString();
     }
 
     public static String processUserCmd(String cmd) {
@@ -95,7 +98,8 @@ public final class LinuxCmdEnginUtil {
         Process process = null;
         BufferedReader bufrIn = null;
         BufferedReader bufrError = null;
-        String resultCode = "0::";// 表示命令执行成功
+        // 表示命令执行成功
+        String resultCode = "0::";
         try {
             // 执行命令, 返回一个子进程对象（命令在子进程中执行）
             //process = Runtime.getRuntime().exec(cmd, null, dir);
@@ -193,7 +197,8 @@ public final class LinuxCmdEnginUtil {
             String outInfo = readWin(p.getInputStream());
 
             String error = readWin(p.getErrorStream());
-            String resultCode = "0::";// 表示命令执行成功
+            // 表示命令执行成功
+            String resultCode = "0::";
             if (error.length() == 0) {
                 sb.append(resultCode);
                 sb.append(outInfo);
