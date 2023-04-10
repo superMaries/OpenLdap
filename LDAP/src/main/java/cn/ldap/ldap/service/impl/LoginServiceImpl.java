@@ -102,11 +102,6 @@ public class LoginServiceImpl implements LoginService {
      * 用户名不正确返回值
      */
     private static final String RESULT_ERR = "用户名不正确";
-
-    /**
-     * 登录成功返回值
-     */
-    private static final String LOGIN_SUCCESS = "登录成功";
     /**
      * 初始化
      */
@@ -136,7 +131,6 @@ public class LoginServiceImpl implements LoginService {
     private static final Integer IF_ENABLE = 1;
 
     private static final Integer SIZE = 1;
-
 
     static final String AUTHORIZATION = "Authorization";
     @Resource
@@ -229,15 +223,23 @@ public class LoginServiceImpl implements LoginService {
      * @throws IOException
      */
     @Override
-    public byte[] downloadManual() throws IOException {
-        // 本地Word文档的路径
-        String filePath = manualPath;
-        InputStream in = new FileInputStream(filePath);
+    public byte[] downloadManual() {
+
+        String filePath = manualPath; // 本地Word文档的路径
+        InputStream in = null;
+        try {
+            in = new FileInputStream(filePath);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        StreamUtils.copy(in, out);
-        out.close();
-        in.close();
-        // todo 后端处理异常信息
+        try {
+            StreamUtils.copy(in, out);
+            out.close();
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         log.info(Arrays.toString(out.toByteArray()));
         return out.toByteArray();
     }
@@ -292,13 +294,12 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public ResultVo<Map<String, Object>> certLogin(UserDto userDto, HttpServletRequest request) {
         log.info(userDto.toString());
-        Map<String, Object> mapObj = userService.init();
-        //todo  别用魔法值
-        boolean isInit = (boolean) mapObj.get("isInit");
-        if (isInit) {
-            return ResultUtil.success(mapObj);
-        }
-       // Map<String, Object> mapObj = new HashMap<>();方便测试
+//        Map<String, Object> mapObj = userService.init();
+//        boolean isInit = (boolean) mapObj.get(IS_INIT_STRING);
+//        if (isInit) {
+//            return ResultUtil.success(mapObj);
+//        }
+        Map<String, Object> mapObj = new HashMap<>();
         if (com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull(userDto, userDto.getCertSn())) {
             log.error("登录错误:{}",ExceptionEnum.USER_LOGIN_ERROR.getMessage());
             throw new SystemException(ExceptionEnum.USER_LOGIN_ERROR);
@@ -326,7 +327,7 @@ public class LoginServiceImpl implements LoginService {
         log.info("验签开始");
 
 
-        //todo 测试数据需要删除-------
+
         String key = "0444270bd267987f13b32846abb09c34c7c865b4d1559946b5734275ffc7cbcc932909eb815430ada80537bcd02f094dd1c79b04d90105923f57183ab9f076d36a";
 
         if (key.length() == 130) {

@@ -31,8 +31,20 @@ public interface LdapConfigService {
     Boolean getServerStatus();
 
     /**
-     * 上传文件
+     * 上传CA证书文件
      * @param multipartFile
      */
-    ResultVo<T> uploadFile(MultipartFile multipartFile);
+    ResultVo<T> uploadCACert(MultipartFile multipartFile);
+
+    /**
+     * 上传证书
+     * @param multipartFile
+     */
+    ResultVo<T> uploadCert(MultipartFile multipartFile);
+
+    /**
+     * 上传密钥
+     * @param multipartFile
+     */
+    ResultVo<T> uploadKey(MultipartFile multipartFile);
 }
