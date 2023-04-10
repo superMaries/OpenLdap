@@ -19,6 +19,7 @@ import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.UserTokenInfo;
 import cn.ldap.ldap.service.LoginService;
 import cn.ldap.ldap.service.PermissionService;
+import cn.ldap.ldap.service.UserService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -73,11 +74,11 @@ public class LoginServiceImpl implements LoginService {
     @Value("${token.validTime}")
     private Integer tokenValidTime;
 
-    static final String TOKEN_SECRET_KEY = "ldapKey";
+    private static final String TOKEN_SECRET_KEY = "ldapKey";
     /**
      * 密码长度限制
      */
-    static final Integer PASSWORD_LENGTH = 16;
+    private static final Integer PASSWORD_LENGTH = 16;
 
     private static final Integer TOKEN_ID = 0;
 
@@ -100,11 +101,8 @@ public class LoginServiceImpl implements LoginService {
     /**
      * 用户名不正确返回值
      */
-    private static final String RESULT_USER_NAME_ERR = "用户名不正确";
-    /**
-     * 密码不正确返回值
-     */
-    private static final String RESULT_PASSWORD_REE = "密码不正确";
+    private static final String RESULT_ERR = "用户名不正确";
+
     /**
      * 登录成功返回值
      */
@@ -135,6 +133,10 @@ public class LoginServiceImpl implements LoginService {
 
     private static final Integer MAIN_SERVICE_STATUS = 0;
 
+    private static final Integer IF_ENABLE = 1;
+
+    private static final Integer SIZE = 1;
+
 
     static final String AUTHORIZATION = "Authorization";
     @Resource
@@ -146,6 +148,9 @@ public class LoginServiceImpl implements LoginService {
     @Resource
     private UserMapper userMapper;
 
+    @Resource
+    private UserServiceImpl userService;
+
 
     /**
      * 下载客户端工具实现类
@@ -156,7 +161,7 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public Boolean downClientTool(HttpServletResponse httpServletResponse) {
         String path = clientToolPath;
-        log.info("下载地址为：" + path);
+        log.info("下载地址为:{}",path);
         File downFile = new File(path);
         if (downFile.exists()) {
             httpServletResponse.setCharacterEncoding("UTF-8");
@@ -232,6 +237,7 @@ public class LoginServiceImpl implements LoginService {
         StreamUtils.copy(in, out);
         out.close();
         in.close();
+        // todo 后端处理异常信息
         log.info(Arrays.toString(out.toByteArray()));
         return out.toByteArray();
     }
@@ -256,7 +262,7 @@ public class LoginServiceImpl implements LoginService {
     public ResultVo<String> whetherInit() {
         ConfigModel config = configMapper.getConfig();
         if (ObjectUtils.isEmpty(config)) {
-            throw new SystemException(NO_CONFIG);
+            return ResultUtil.fail(NO_CONFIG);
         }
         if (IS_INIT.equals(config.getIsInit())) {
             return ResultUtil.success(IS_INIT_STR);
@@ -274,7 +280,7 @@ public class LoginServiceImpl implements LoginService {
     public ResultVo<String> getServerConfig() {
         ConfigModel config = configMapper.getConfig();
         if (ObjectUtils.isEmpty(config)) {
-            throw new SystemException(NO_CONFIG);
+            return ResultUtil.fail(NO_CONFIG);
         }
         if (MAIN_SERVICE_STATUS.equals(config.getServiceType())) {
             return ResultUtil.success(MAIN_SERVICE_STR);
@@ -286,41 +292,41 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public ResultVo<Map<String, Object>> certLogin(UserDto userDto, HttpServletRequest request) {
         log.info(userDto.toString());
-//        Map<String, Object> mapObj = userService.init();
-//        boolean isInit = (boolean) mapObj.get("isInit");
-//        if (isInit) {
-//            return mapObj;
-//        }
-        Map<String, Object> mapObj = new HashMap<>();
+        Map<String, Object> mapObj = userService.init();
+        //todo  别用魔法值
+        boolean isInit = (boolean) mapObj.get("isInit");
+        if (isInit) {
+            return ResultUtil.success(mapObj);
+        }
+       // Map<String, Object> mapObj = new HashMap<>();方便测试
         if (com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull(userDto, userDto.getCertSn())) {
-            log.error(ExceptionEnum.USER_LOGIN_ERROR.getMessage());
+            log.error("登录错误:{}",ExceptionEnum.USER_LOGIN_ERROR.getMessage());
             throw new SystemException(ExceptionEnum.USER_LOGIN_ERROR);
         }
 
         LambdaQueryWrapper<UserModel> lambdaQueryWrapper = new LambdaQueryWrapper<UserModel>()
                 .eq(UserModel::getCertSn, userDto.getCertSn())
-                .eq(UserModel::getIsEnable, 1);
+                .eq(UserModel::getIsEnable, IF_ENABLE);
         List<UserModel> users = userMapper.selectList(lambdaQueryWrapper);
 
-        if (1 != users.size()) {
+        if (SIZE!= users.size()) {
             //失敗  返回
             log.error("需要初始化" + ExceptionEnum.USER_FAIL.getMessage());
             throw new SystemException(ExceptionEnum.USER_FAIL);
         }
-
-
         //开始记录用户信息
         UserModel userInfo = users.get(0);
         Map<String, Object> map = new HashMap<>();
         Calendar instance = Calendar.getInstance();
         instance.add(Calendar.MINUTE, tokenValidTime);
-        String certNumber = JWT.create().withHeader(map)
+        String token = JWT.create().withHeader(map)
                 .withClaim("certNumber", userInfo.getSignCert())
                 .withExpiresAt(instance.getTime()).sign(Algorithm.HMAC256(TOKEN_SECRET_KEY));
 
         log.info("验签开始");
 
 
+        //todo 测试数据需要删除-------
         String key = "0444270bd267987f13b32846abb09c34c7c865b4d1559946b5734275ffc7cbcc932909eb815430ada80537bcd02f094dd1c79b04d90105923f57183ab9f076d36a";
 
         if (key.length() == 130) {
@@ -341,7 +347,7 @@ public class LoginServiceImpl implements LoginService {
         }
         log.info("验签成功");
         UserTokenInfo tokenInfo = new UserTokenInfo();
-        tokenInfo.setToken(certNumber);
+        tokenInfo.setToken(token);
         tokenInfo.setRoleId(userInfo.getRoleId());
         tokenInfo.setRoleName(UserTypeEnum.USER_ADMIN.getName(userInfo.getRoleId()));
         //证书名称
@@ -351,7 +357,6 @@ public class LoginServiceImpl implements LoginService {
         //签名证书
         tokenInfo.setCertData(userInfo.getSignCert());
         tokenInfo.setId(userInfo.getId());
-        String token = UUID.randomUUID().toString();
         log.info("获取token" + token);
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
         mapObj.put("data", loginResultVo);
@@ -380,10 +385,10 @@ public class LoginServiceImpl implements LoginService {
             return ResultUtil.fail(MORE_PASSWORD_LENGTH);
         }
         if (!USER_NAME.equals(loginDto.getUserName())) {
-            return ResultUtil.fail(RESULT_USER_NAME_ERR);
+            return ResultUtil.fail(RESULT_ERR);
         }
         if (!USER_PASSWORD.equals(loginDto.getPassword())) {
-            return ResultUtil.fail(RESULT_PASSWORD_REE);
+            return ResultUtil.fail(RESULT_ERR);
         }
         Map<String, Object> hashMap = new HashMap<>();
         Calendar instance = Calendar.getInstance();
