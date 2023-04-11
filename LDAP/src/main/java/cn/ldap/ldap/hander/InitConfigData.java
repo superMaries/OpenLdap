@@ -25,13 +25,19 @@ import java.util.List;
 @Component
 public class InitConfigData implements InitializingBean, ServletContextAware {
 
-    //是否展示同步
+    /**
+     * 是否展示同步
+     */
     private final static String SYNC = "SYNC";
-    //根据该值获取 是主服务还是从服务
+    /**
+     * 根据该值获取 是主服务还是从服务
+     */
     private final static String SERVICE = "SERVICE";
     @Resource
     private ConfigMapper configMapper;
-    //是否同步
+    /**
+     * 是否同步
+     */
     private static Integer isSync = 0;
     /**
      * 0, "主服务器"
