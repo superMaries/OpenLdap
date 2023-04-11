@@ -34,8 +34,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     @Value("${filePath.certPath}")
     private String certPath;
 
-    @Value("${filePath.runPath}")
-    private String runPath;
+
     /**
      * 空格数据
      */
@@ -47,8 +46,6 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     private static final String FEED = "\n";
 
     private static final String START = "logfile";
-
-    private static final String SERVICE = "Service";
 
     private static final String START_SUCCESS = "开启服务成功";
 
@@ -74,7 +71,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String SERVER_CERT = "server.cert";
 
-    private static final String SERVER_KEY = "server.cert";
+    private static final String SERVER_KEY = "server.key";
 
     //添加配置
     @Override
@@ -97,7 +94,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             }
 
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
         String data = splicingConfigParam(stringBuilder, mainConfig);
         try {
@@ -107,14 +104,8 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             bufferedWriter.flush();
             bufferedWriter.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
-
-
-        Wini wini = new Wini(new File(runPath));
-        Profile.Section section = wini.get(SERVICE);
-        section.put("Environment", "SLAPD_URLS=ldaps:0.0.0/// ldapi:///\" \"SLAPD_OPTIONS=");
-        wini.store();
         return ResultUtil.success();
     }
 
@@ -142,7 +133,6 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             }
         } else {
             Runtime.getRuntime().exec(STOP_COMMAND, null);
-            log.info("关闭命令:{}", "systemctl stop slapd.service");
             Boolean result = linuxCommand(SERVER_NAME);
             if (result == compare){
                 return ResultUtil.success(STOP_SUCCESS);
@@ -201,17 +191,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         String fileName = CASERVER_CERT;
         String filePath = certPath + fileName;
         File file = new File(filePath);
-//        if (!file.exists()) {
-//            try {
-//                file.createNewFile();
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         return ResultUtil.success();
@@ -226,17 +209,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         String fileName = SERVER_CERT;
         String filePath = certPath + fileName;
         File file = new File(filePath);
-//        if (!file.exists()) {
-//            try {
-//                file.createNewFile();
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         return ResultUtil.success();
@@ -251,17 +227,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         String fileName = SERVER_KEY;
         String filePath = certPath + fileName;
         File file = new File(filePath);
-//        if (!file.exists()) {
-//            try {
-//                file.createNewFile();
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         return ResultUtil.success();
@@ -278,14 +247,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
         stringBuilder.append("logfile" + SPACE_DATA + mainConfig.getLogLevelDirectory() + FEED)
                 //配置之日志输出等级
-                .append("loglevel" + SPACE_DATA + mainConfig.getLogLevel() + FEED)
-                //配置主从模式
-                .append("overlay" + SPACE_DATA + "syncprov" + FEED)
-                //配置推送触发条件
-                .append("syncprov-checkpoint" + SPACE_DATA + mainConfig.getTriggerSyncMaxNum() + SPACE_DATA + mainConfig.getSyncTimeInterval() + FEED)
-                //配置会话日志最大条数
-                .append("syncprov-sessionlog" + SPACE_DATA + mainConfig.getTalkMaxNumber() + FEED)
-                .append("TLSVerifyClient" + SPACE_DATA + mainConfig.getAnonymousAccess() + FEED);
+                .append("loglevel" + SPACE_DATA + mainConfig.getLogLevel() + FEED);
         return stringBuilder.toString();
     }
 }
