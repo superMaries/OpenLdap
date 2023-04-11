@@ -1,6 +1,8 @@
 package cn.ldap.ldap.common.util;
 
 import cn.ldap.ldap.common.dto.CertTreeDto;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
@@ -20,8 +22,8 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.rmi.MarshalledObject;
+import java.util.*;
 
 /**
  * @title: LdapUtil
@@ -40,7 +42,7 @@ public class LdapUtil {
         int totalNodeCount = 0;
         int pageSize = 1000;
         try {
-            Control[] controls = new Control[]{new PagedResultsControl(pageSize, Control.CRITICAL)};
+            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, Control.CRITICAL)};
             ctx.setRequestControls(controls);
 
             byte[] cookie = null;
@@ -62,7 +64,7 @@ public class LdapUtil {
                     }
                 }
 
-                ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
+                ctx.setRequestControls(new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, cookie, Control.CRITICAL)});
             } while (cookie != null);
             ctx.close();
         } catch (NamingException | IOException e) {
@@ -72,16 +74,25 @@ public class LdapUtil {
         return totalNodeCount;
     }
 
+    /**
+     * 查询总数 CRL cert 节点总数
+     *
+     * @param ldapTemplate     ldap 连接模板
+     * @param ldapSearchFilter 过滤条件
+     * @param ldapSearchBase   查询条件
+     * @param whereParam       查询总数的条件
+     * @return
+     */
     public static long queryTotal(LdapTemplate ldapTemplate, String ldapSearchFilter, String ldapSearchBase, String... whereParam) {
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         SearchControls searchControls = new SearchControls();
         searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
-        int totalNodeCount = 0;
+        Long totalNodeCount = StaticValue.TOTAL_NODE_NUM;
         int pageSize = StaticValue.LDAP_PAGE_SIZE;
         try {
             //设置每页查询的数量
-            Control[] controls = new Control[]{new PagedResultsControl(pageSize, Control.CRITICAL)};
+            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, Control.CRITICAL)};
             ctx.setRequestControls(controls);
 
             byte[] cookie = null;
@@ -112,7 +123,7 @@ public class LdapUtil {
                         }
                     }
                 }
-                ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
+                ctx.setRequestControls(new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, cookie, Control.CRITICAL)});
             } while (cookie != null);
             ctx.close();
         } catch (NamingException | IOException e) {
@@ -125,15 +136,23 @@ public class LdapUtil {
     /**
      * @param ldapTemplate ldap 查询模板
      * @param baseDN       查询条件
+     * @param isRetrunAttr 是否返回属性值
+     * @param attribute    属性值
      * @return 返回查询节点属性详情
      */
-    public static List<TreeVo> queryAttributeInfo(LdapTemplate ldapTemplate, String baseDN) {
+    public static List<TreeVo> queryAttributeInfo(LdapTemplate ldapTemplate, String baseDN, boolean isRetrunAttr, String attribute) {
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         List<TreeVo> treeVos = new ArrayList<>();
         Attributes attributes = null;
         try {
-            attributes = ctx.getAttributes(baseDN);
+            //查询对应的属性值
+            if (isRetrunAttr && !ObjectUtils.isEmpty(attribute)) {
+                attributes = ctx.getAttributes(baseDN, attribute.split(StaticValue.SPLIT));
+            } else {
+                attributes = ctx.getAttributes(baseDN);
+            }
             NamingEnumeration<? extends Attribute> attributesAll = attributes.getAll();
+            //解析属性值
             while (attributesAll.hasMore()) {
                 Attribute next = attributesAll.next();
                 String key = next.getID();
@@ -151,8 +170,6 @@ public class LdapUtil {
             return treeVos;
         }
         return treeVos;
-
-
     }
 
     /**
@@ -168,11 +185,13 @@ public class LdapUtil {
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         SearchControls searchControls = new SearchControls();
         searchControls.setSearchScope(scope);
+        //查询多少条
+        searchControls.setCountLimit(pageSize);
         int totalNodeCount = 0;
         List<CertTreeVo> certTreeVos = new ArrayList<>();
         try {
             //设置每页查询的数量
-            Control[] controls = new Control[]{new PagedResultsControl(pageSize, Control.CRITICAL)};
+            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, Control.CRITICAL)};
             ctx.setRequestControls(controls);
 
             byte[] cookie = null;
@@ -186,7 +205,7 @@ public class LdapUtil {
                     SearchResult result = results.next();
                     String baseDn = result.getName();
                     if (ObjectUtils.isEmpty(baseDn)) {
-                        String[] split = ldapSearchBase.split(",");
+                        String[] split = ldapSearchBase.split(StaticValue.SPLIT);
                         baseDn = split[0];
                     }
                     certTreeVo.setBaseDn(baseDn);
@@ -198,6 +217,7 @@ public class LdapUtil {
                     }
                     certTreeVos.add(certTreeVo);
                 }
+                //获取最近一次 LDAP 操作的响应控制器。
                 Control[] responseControls = ctx.getResponseControls();
                 //设置Cookies
                 if (responseControls != null) {
@@ -208,7 +228,7 @@ public class LdapUtil {
                         }
                     }
                 }
-                ctx.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
+                ctx.setRequestControls(new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, cookie, Control.CRITICAL)});
             } while (cookie != null);
             ctx.close();
         } catch (NamingException | IOException e) {
@@ -216,6 +236,81 @@ public class LdapUtil {
             return certTreeVos;
         }
         return certTreeVos;
+    }
+
+    /**
+     * @param ldapTemplate 查询模板
+     * @param scope        查询范围
+     * @param baseDN       查询条件
+     * @param filter       过滤条件
+     * @return
+     */
+    public static Map<String, Object> queryTreeRdnOrNum(Map<String, Object> map, LdapTemplate ldapTemplate, Integer scope, String baseDN, String filter) {
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        SearchControls searchControls = new SearchControls();
+        searchControls.setSearchScope(scope);
+
+        int pageSize = StaticValue.LDAP_PAGE_SIZE;
+
+        map.put(StaticValue.RDN, baseDN);
+        // 执行搜索操作
+        NamingEnumeration<SearchResult> searchResults = null;
+        try {
+            //设置分页条件
+            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, Control.CRITICAL)};
+            ctx.setRequestControls(controls);
+            byte[] cookie = null;
+
+            Long totalNodeCount = StaticValue.TOTAL_NODE_NUM;
+            Long total = StaticValue.TOTAL_NODE_NUM;
+
+            do {
+                searchResults = ctx.search(baseDN, filter, searchControls);
+                while (searchResults.hasMore()) {
+                    SearchResult next = searchResults.next();
+                    String name = next.getName();
+                    String fullName = next.getNameInNamespace();
+                    if (!StaticValue.REPLACE.equals(name)) {
+                        //取DN
+                        String newName = name.split(StaticValue.SPLIT)[StaticValue.SPLIT_COUNT];
+                        newName = fullName.replace(newName + StaticValue.SPLIT, StaticValue.REPLACE);
+                        if (baseDN.equals(newName)) {
+                            total++;
+                        }
+                    }
+                    totalNodeCount++;
+                    log.info("节点 {} 中的条目数为：{}", baseDN, total);
+                }
+                Control[] responseControls = ctx.getResponseControls();
+                //设置Cookies
+                if (responseControls != null) {
+                    for (Control control : responseControls) {
+                        if (control instanceof PagedResultsResponseControl) {
+                            PagedResultsResponseControl prrc = (PagedResultsResponseControl) control;
+                            cookie = prrc.getCookie();
+                        }
+                    }
+                }
+                ctx.setRequestControls(new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, cookie, Control.CRITICAL)});
+            } while (cookie != null);
+
+            map.put(StaticValue.RDN_NUM_KEY, total);
+            map.put(StaticValue.RDN_CHILD_NUM_KEY, totalNodeCount);
+            return map;
+        } catch (NamingException | IOException e) {
+            log.info("节点 {} 不存在", e.getMessage());
+            throw new SystemException(ExceptionEnum.QUERY_POINT_ERROR);
+        } finally {
+            // 关闭LDAP连接
+            try {
+                if (ctx != null) {
+                    ctx.close();
+                }
+            } catch (NamingException e) {
+                log.info("节点 {} 不存在", e.getMessage());
+                throw new SystemException(ExceptionEnum.QUERY_POINT_ERROR);
+            }
+        }
     }
 
     public static long funTotal(LdapTemplate ldapTemplate, String base, long size, long count, String... whereParam) {
@@ -269,6 +364,4 @@ public class LdapUtil {
         }
         return count;
     }
-
-
 }

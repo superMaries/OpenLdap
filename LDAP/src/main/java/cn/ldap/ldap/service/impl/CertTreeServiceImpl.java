@@ -16,7 +16,9 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import javax.naming.directory.SearchControls;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @title: CertTreeServiceImpl
@@ -72,7 +74,39 @@ public class CertTreeServiceImpl implements CertTreeService {
                 || ObjectUtils.isEmpty(treeDto.getBaseDN())) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
-        List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(ldapTemplate, treeDto.getBaseDN());
+
+        List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(ldapTemplate, treeDto.getBaseDN(), treeDto.isReturnAttr(), treeDto.getAttribute());
         return ResultUtil.success(treeVos);
+    }
+
+    /**
+     * 根据条件查询目录树
+     *
+     * @param treeVo 参数
+     * @return 返回树型结构
+     */
+    @Override
+    public ResultVo<List<CertTreeVo>> queryTree(CertTreeDto treeVo) {
+        if (ObjectUtils.isEmpty(treeVo)) {
+            return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
+        }
+        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, treeVo.getFilter(), treeVo.getBaseDN(), treeVo.getScope(), treeVo.getPageSize());
+        return ResultUtil.success(listResultVo);
+    }
+
+    /**
+     * 只需要传递 rdn  scope 的值 （ one`：搜索指定的DN及其一级子节点。`sub`：搜索指定的DN及其所有子孙节点。）
+     *
+     * @param treeVo 参数
+     * @return 返回一个Map  其中表示rdn 和num
+     */
+    @Override
+    public ResultVo<Map<String, Object>> queryTreeRdnOrNum(CertTreeDto treeVo) {
+        if (ObjectUtils.isEmpty(treeVo)) {
+            return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
+        }
+        Map<String, Object> map = new HashMap<>();
+        map = LdapUtil.queryTreeRdnOrNum(map, ldapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
+        return ResultUtil.success(map);
     }
 }
