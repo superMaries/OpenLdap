@@ -15,7 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.LdapContext;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,5 +114,34 @@ public class CertTreeServiceImpl implements CertTreeService {
         Map<String, Object> map = new HashMap<>();
         map = LdapUtil.queryTreeRdnOrNum(map, ldapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
         return ResultUtil.success(map);
+    }
+
+    /**
+     * 测试
+     */
+    private void querySchema() {
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        SearchControls searchControls = new SearchControls();
+        searchControls.setSearchScope(SearchControls.OBJECT_SCOPE);
+        try {
+            NamingEnumeration<SearchResult> results = ctx.search("cn=subschema", "(objectClass=*)", searchControls);
+            while (results.hasMore()) {
+                SearchResult searchResult = results.next();
+                Attributes attrs = searchResult.getAttributes();
+                Attribute objectClasses = attrs.get("objectClasses");
+                if (objectClasses != null) {
+                    NamingEnumeration<?> all = objectClasses.getAll();
+                    while (all.hasMore()) {
+                        String objectClass = (String) all.next();
+                        System.out.println(objectClass);
+                    }
+                }
+            }
+
+        } catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 }

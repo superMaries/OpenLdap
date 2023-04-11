@@ -45,6 +45,7 @@ public enum ExceptionEnum {
     SQL_ERROR(803, "SQL异常"),
     POINTT_NOT_EXIT(804, "节点不存在"),
     QUERY_POINT_ERROR(805, "查询节点失败"),
+    DATA_EXIT(806, "数据已存在"),
     //失败
     LINUX_ERROR(5007, "失败"),
     //上传失败
