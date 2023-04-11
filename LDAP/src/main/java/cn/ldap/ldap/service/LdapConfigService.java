@@ -47,4 +47,5 @@ public interface LdapConfigService {
      * @param multipartFile
      */
     ResultVo<T> uploadKey(MultipartFile multipartFile);
+
 }

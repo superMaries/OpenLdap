@@ -1,16 +1,12 @@
 package cn.ldap.ldap.controller;
 
-import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
-import cn.ldap.ldap.common.enums.OperateMenuEnum;
-import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.IndexVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexService;
 import com.google.common.collect.EvictingQueue;
 import lombok.Data;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -89,6 +85,7 @@ public class IndexController {
     public ResultVo<Long> ldapCertNum() {
         return indexService.ldapCertNum();
     }
+
 }
 
 

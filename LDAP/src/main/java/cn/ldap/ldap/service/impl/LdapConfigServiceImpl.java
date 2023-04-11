@@ -118,7 +118,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     @Override
     public ResultVo<String> setServerStatus(Boolean openOrClose) throws IOException {
-        if(BeanUtil.isEmpty(openOrClose) || openOrClose!= Boolean.TRUE || openOrClose != Boolean.FALSE){
+        if(BeanUtil.isEmpty(openOrClose)){
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         Boolean compare = true;
@@ -244,7 +244,6 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     public String splicingConfigParam(StringBuilder stringBuilder, MainConfig mainConfig) {
         //配置log文件目录
-
         stringBuilder.append("logfile" + SPACE_DATA + mainConfig.getLogLevelDirectory() + FEED)
                 //配置之日志输出等级
                 .append("loglevel" + SPACE_DATA + mainConfig.getLogLevel() + FEED);
