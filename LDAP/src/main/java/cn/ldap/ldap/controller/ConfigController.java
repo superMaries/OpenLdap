@@ -12,7 +12,6 @@ import cn.ldap.ldap.service.OperationLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -60,41 +59,6 @@ public class ConfigController {
     public Boolean getServerStatus(){
         return ldapConfigService.getServerStatus();
     }
-
-    /**
-     * 上传CA证书
-     * @param multipartFile
-     * @return
-     */
-    @PostMapping("uploadCACert")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
-    public ResultVo<T> uploadCACert(@RequestParam("multipartFile") MultipartFile multipartFile){
-        return ldapConfigService.uploadCACert(multipartFile);
-    }
-
-    /**
-     * 上传证书
-     * @param multipartFile
-     * @return
-     */
-    @PostMapping("uploadCert")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
-    public ResultVo<T> uploadCert(@RequestParam("multipartFile") MultipartFile multipartFile){
-        return ldapConfigService.uploadCert(multipartFile);
-    }
-
-    /**
-     * 上传证书
-     * @param multipartFile
-     * @return
-     */
-    @PostMapping("uploadKey")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
-    public ResultVo<T> uploadKey(@RequestParam("multipartFile") MultipartFile multipartFile){
-        return ldapConfigService.uploadKey(multipartFile);
-    }
-
-
 
     /**
      * 日志查询
