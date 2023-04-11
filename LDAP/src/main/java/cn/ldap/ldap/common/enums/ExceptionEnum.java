@@ -23,6 +23,7 @@ public enum ExceptionEnum {
     //已被初始化
     USER_INIT(203,"已被初始化"),
 
+
     //系统异常
     SYSTEM_ERROR(500,"系统异常"),
 
@@ -36,10 +37,12 @@ public enum ExceptionEnum {
     USER_PASSWORD_FAIL(585, "密码为空"),
     //密码超过长度限制
     MORE_PASSWORD_LENGTH(586, "密码超过长度限制"),
+    USER_ACCOUNT_ERROR(587,"账号或密码错误"),
     //未获取到配置文件信息
     NO_CONFIG(800, "未获取到配置文件信息"),
     PARAM_EMPTY(801,"参数为空"),
     PARAM_ANOMALY(802,"参数异常"),
+    SQL_ERROR(803,"SQL异常"),
     //失败
     LINUX_ERROR(5007, "失败"),
     //上传失败
