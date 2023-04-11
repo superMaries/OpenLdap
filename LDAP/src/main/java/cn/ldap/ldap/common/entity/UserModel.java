@@ -12,7 +12,7 @@ import lombok.Data;
  * @Version 1.0
  */
 @Data
-@TableName("User")
+@TableName("user")
 public class UserModel {
     @TableId(value = "id",type = IdType.AUTO)
     private Integer id;

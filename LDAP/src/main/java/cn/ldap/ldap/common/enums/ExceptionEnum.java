@@ -33,7 +33,8 @@ public enum ExceptionEnum {
     MORE_PASSWORD_LENGTH(586, "密码超过长度限制"),
     //未获取到配置文件信息
     NO_CONFIG(800, "未获取到配置文件信息"),
-
+    PARAM_EMPTY(801,"参数为空"),
+    PARAM_ANOMALY(802,"参数异常"),
     //失败
     LINUX_ERROR(5007, "失败"),
     //上传失败
