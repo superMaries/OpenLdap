@@ -12,7 +12,7 @@ public enum ExceptionEnum {
     //操作成功
     SUCCESS(200, "操作成功"),
     //用户未登录
-    USER_NOT_LOGIN(800, "用户未登录"),
+    USER_NOT_LOGIN(401, "用户未登录"),
     //参数异常
     PARAM_ERROR(201, "参数异常"),
     PASSWD(204, "密码不可为null"),
@@ -22,7 +22,6 @@ public enum ExceptionEnum {
 
     //已被初始化
     USER_INIT(203, "已被初始化"),
-
 
     //系统异常
     SYSTEM_ERROR(500, "系统异常"),
