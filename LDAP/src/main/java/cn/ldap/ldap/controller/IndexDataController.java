@@ -1,15 +1,14 @@
 package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.dto.IndexDataDto;
+import cn.ldap.ldap.common.entity.IndexDataModel;
+import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexDataService;
-import org.apache.poi.ss.formula.functions.T;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 索引
@@ -20,7 +19,7 @@ import javax.annotation.Resource;
  * @Version 1.0
  */
 @RestController
-@RequestMapping("indexData")
+@RequestMapping("/indexData/")
 public class IndexDataController {
 
     @Resource
@@ -36,4 +35,13 @@ public class IndexDataController {
     public ResultVo<Boolean> updateIndexData(@RequestBody IndexDataDto indexDataDto) {
        return indexDataService.updateIndexData(indexDataDto);
     }
+    @PostMapping("query")
+    public ResultVo<List<IndexDataModel>> query() {
+        return ResultUtil.success(indexDataService.list());
+    }
+    @PostMapping("delete/{id}")
+    public ResultVo<Boolean> deleteById(@PathVariable Integer id){
+        return indexDataService.deleteById(id);
+    }
+
 }
