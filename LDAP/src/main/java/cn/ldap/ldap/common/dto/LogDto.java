@@ -11,7 +11,7 @@ public class LogDto {
 
     private String operateType;
 
-    private Integer pageNum;
+    private Long pageNum=1L;
 
-    private Integer pageSize;
+    private Long pageSize=10L;
 }

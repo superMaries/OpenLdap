@@ -3,6 +3,7 @@ package cn.ldap.ldap.service;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.Permission;
+import cn.ldap.ldap.common.vo.PermissionVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +37,7 @@ public interface LoginService {
      * @param
      * @return
      */
-    List<Permission> queryMenus();
+    ResultVo<List<Permission>> queryMenus(HttpServletRequest request);
 
     /**
      * 是否初始化

@@ -1,6 +1,8 @@
 package cn.ldap.ldap.common.enums;
+
 /**
- *  用户角色枚举
+ * 用户角色枚举
+ *
  * @title: UserServiceImpl
  * @Author Wy
  * @Date: 2023/3/31 8:58
@@ -11,6 +13,8 @@ public enum UserRoleEnum {
     ACCOUNT_ADMIN(0, "Admin"),
     //管理员
     USER_ADMIN(1, "管理员"),
+    //审计员
+    AUDIT_USER(2, "审计员"),
     ;
     /**
      * code
@@ -22,7 +26,6 @@ public enum UserRoleEnum {
     private String msg;
 
     /**
-     *
      * @param code
      * @param msg
      */
@@ -33,6 +36,7 @@ public enum UserRoleEnum {
 
     /**
      * 获取对应的code
+     *
      * @return code
      */
     public Integer getCode() {
@@ -41,6 +45,7 @@ public enum UserRoleEnum {
 
     /**
      * 获取对应的提示信息
+     *
      * @return 提示信息
      */
     public String getMsg() {

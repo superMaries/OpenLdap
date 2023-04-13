@@ -40,11 +40,13 @@ public enum ExceptionEnum {
     //未获取到配置文件信息
     NO_CONFIG(800, "未获取到配置文件信息"),
     PARAM_EMPTY(801, "参数为空"),
+
     PARAM_ANOMALY(802, "参数异常"),
     SQL_ERROR(803, "SQL异常"),
     POINTT_NOT_EXIT(804, "节点不存在"),
     QUERY_POINT_ERROR(805, "查询节点失败"),
     DATA_EXIT(806, "数据已存在"),
+    NOT_AUDIT(807, "该账号是管理员,不允许审计日志"),
     //失败
     LINUX_ERROR(5007, "失败"),
     //上传失败

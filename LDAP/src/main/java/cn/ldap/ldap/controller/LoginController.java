@@ -6,6 +6,7 @@ import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
+import cn.ldap.ldap.common.vo.PermissionVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
@@ -65,9 +66,9 @@ public class LoginController {
      * @param
      * @return
      */
-    @GetMapping("menus")
-    public List<Permission> queryMenus() {
-        return loginService.queryMenus();
+    @PostMapping("menus")
+    public  ResultVo<List<Permission>> queryMenus(HttpServletRequest request) {
+        return loginService.queryMenus(request);
     }
 
     /**

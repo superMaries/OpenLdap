@@ -16,13 +16,14 @@ import cn.ldap.ldap.common.mapper.ConfigMapper;
 import cn.ldap.ldap.common.mapper.UserAccountMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.SessionUtil;
+import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.UserTokenInfo;
 import cn.ldap.ldap.hander.InitConfigData;
 import cn.ldap.ldap.service.LoginService;
 import cn.ldap.ldap.service.PermissionService;
-import cn.ldap.ldap.service.UserService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -41,6 +42,7 @@ import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static cn.ldap.ldap.common.enums.ExceptionEnum.*;
 
@@ -135,7 +137,7 @@ public class LoginServiceImpl implements LoginService {
 
     private static final Integer SIZE = 1;
 
-    static final String AUTHORIZATION = "Authorization";
+    static final String AUTHORIZATION = "auth";
     @Resource
     private PermissionService permissionService;
 
@@ -256,8 +258,40 @@ public class LoginServiceImpl implements LoginService {
      * @return
      */
     @Override
-    public List<Permission> queryMenus() {
-        return permissionService.list();
+    public ResultVo<List<Permission>> queryMenus(HttpServletRequest request) {
+        log.info("获取菜单");
+        //获取当前登录的用户信息
+        LoginResultVo userInfo = SessionUtil.getUserInfo(request);
+        if (ObjectUtils.isEmpty(userInfo) || ObjectUtils.isEmpty(userInfo.getUserInfo())) {
+            log.info(USER_NOT_LOGIN.getMessage());
+           return ResultUtil.fail(USER_NOT_LOGIN);
+        }
+        Integer roleId = userInfo.getUserInfo().getRoleId();
+
+        //查询一级菜单
+        List<Permission> permissions = permissionService.list
+                (new LambdaQueryWrapper<Permission>()
+                        .isNull(Permission::getParentId)
+                        .eq((!Objects.equals(roleId, StaticValue.ADMIN_ID)), Permission::getRoleId, roleId));
+
+        try {
+            //获取子集菜单
+            List<Integer> parentIds = permissions.stream().map(it -> it.getId()).collect(Collectors.toList());
+            List<Permission> parentPermissionList = permissionService
+                    .list(new LambdaQueryWrapper<Permission>()
+                            .in(Permission::getParentId, parentIds));
+
+            //解析菜单
+            permissions.forEach(it -> {
+                List<Permission> childrens = parentPermissionList.stream().
+                        filter(child -> child.getParentId().equals(it.getId()))
+                        .collect(Collectors.toList());
+                it.setChildren(childrens);
+            });
+        } catch (Exception e) {
+            log.error("获取菜单错误：{}", e.getMessage());
+        }
+        return ResultUtil.success(permissions);
     }
 
     /**
