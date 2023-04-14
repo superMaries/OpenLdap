@@ -9,39 +9,31 @@ import cn.ldap.ldap.common.enums.*;
 import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.mapper.OperationMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
-import cn.ldap.ldap.common.util.*;
+import cn.ldap.ldap.common.util.ClientInfo;
+import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.Sm2Util;
+import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.LogVo;
-import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.OperationLogService;
 import cn.ldap.ldap.util.DateUtil;
-import cn.ldap.ldap.util.UserInfoUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
-import javax.naming.Context;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.*;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static cn.ldap.ldap.common.enums.ExceptionEnum.COLLECTION_EMPTY;
-
-
+/**
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 @Service
 @Slf4j
 public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, OperationLogModel> implements OperationLogService {
@@ -51,8 +43,14 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
     @Resource
     private UserMapper userMapper;
 
+    /**
+     * @title:
+     * @Author superMarie
+     * @Version 1.0
+     */
     @Override
-    public ResultVo<List<LogVo>> queryLog(LogDto logDto) {
+    public ResultVo<List<LogVo>>
+    queryLog(LogDto logDto) {
         String beginTime = null;
         String endTime = null;
         if (ObjectUtils.isEmpty(logDto.getBeginTime())) {

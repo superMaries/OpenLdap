@@ -9,12 +9,8 @@ import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LdapConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
-import org.ini4j.Profile;
-import org.ini4j.Wini;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
@@ -22,6 +18,11 @@ import java.io.*;
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_IS_EMPTY;
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
 
+/**
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 @Service
 @Slf4j
 public class LdapConfigServiceImpl implements LdapConfigService {
@@ -55,9 +56,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String STOP_FAIL = "关闭服务失败";
 
-    private static final String START_COMMAND="systemctl start slapd.service";
+    private static final String START_COMMAND = "systemctl start slapd.service";
 
-    private static final String STOP_COMMAND="systemctl stop slapd.service";
+    private static final String STOP_COMMAND = "systemctl stop slapd.service";
 
     private static final String SYSTEM = "systemctl";
 
@@ -72,6 +73,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     private static final String SERVER_CERT = "server.cert";
 
     private static final String SERVER_KEY = "server.key";
+
+    private static final String LOG_FILE = "logfile";
+
+    private static final String LOG_LEVEL = "loglevel";
 
     //添加配置
     @Override
@@ -118,25 +123,26 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     @Override
     public ResultVo<String> setServerStatus(Boolean openOrClose) throws IOException {
-        if(BeanUtil.isEmpty(openOrClose)){
+        if (BeanUtil.isEmpty(openOrClose)) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
-        Boolean compare = true;
-        if (openOrClose == compare) {
+        if (openOrClose) {
+            //开启
             Runtime.getRuntime().exec(START_COMMAND, null);
-            log.info("开启命令执行:{}",START_COMMAND);
+            log.info("开启命令执行:{}", START_COMMAND);
             Boolean result = linuxCommand(SERVER_NAME);
-            if (result == compare){
+            if (result) {
                 return ResultUtil.success(START_SUCCESS);
-            }else {
+            } else {
                 return ResultUtil.fail(START_FAIL);
             }
         } else {
+            //关闭
             Runtime.getRuntime().exec(STOP_COMMAND, null);
             Boolean result = linuxCommand(SERVER_NAME);
-            if (result == compare){
+            if (result) {
                 return ResultUtil.success(STOP_SUCCESS);
-            }else {
+            } else {
                 return ResultUtil.fail(STOP_FAIL);
             }
         }
@@ -155,10 +161,11 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     /**
      * 执行命令判断是否启动状态-----仅限于service服务
+     *
      * @param serverName
      * @return
      */
-    public Boolean linuxCommand(String serverName){
+    public Boolean linuxCommand(String serverName) {
         try {
             Process process = new ProcessBuilder(SYSTEM, IS_ACTIVE, serverName).start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -244,9 +251,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     public String splicingConfigParam(StringBuilder stringBuilder, MainConfig mainConfig) {
         //配置log文件目录
-        stringBuilder.append("logfile" + SPACE_DATA + mainConfig.getLogLevelDirectory() + FEED)
+        stringBuilder.append(LOG_FILE).append(SPACE_DATA).append(mainConfig.getLogLevelDirectory()).append(FEED)
                 //配置之日志输出等级
-                .append("loglevel" + SPACE_DATA + mainConfig.getLogLevel() + FEED);
+                .append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
         return stringBuilder.toString();
     }
 }

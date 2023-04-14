@@ -11,15 +11,22 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
+/**
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 public interface OperationLogService extends IService<OperationLogModel> {
 
     ResultVo<List<LogVo>> queryLog(LogDto logDto);
 
     /**
      * 添加日志
-     * @return  true成功  false 失败
+     *
+     * @return true成功  false 失败
      */
-    ResultVo<Boolean> addLog(HttpServletRequest request,AddLogDto logDto);
+    ResultVo<Boolean> addLog(HttpServletRequest request, AddLogDto logDto);
+
     /**
      * 审计日志
      *
