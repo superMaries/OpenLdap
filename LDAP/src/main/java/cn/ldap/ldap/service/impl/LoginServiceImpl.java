@@ -36,6 +36,10 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
+import javax.naming.Context;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -95,27 +99,8 @@ public class LoginServiceImpl implements LoginService {
      * 服务端版本key值
      */
     private static final String SERVICE_VERSION = "serviceVersionKey";
-    /**
-     * 账户名唯一值
-     */
-    private static final String USER_NAME = "admin";
-    /**
-     * 用户密码唯一值
-     */
-    private static final String USER_PASSWORD = "admin";
-    /**
-     * 用户名不正确返回值
-     */
-    private static final String RESULT_ERR = "用户名不正确";
-    /**
-     * 初始化
-     */
-    private static final Integer IS_INIT = 1;
 
-    /**
-     * 已经初始化描述
-     */
-    private static final String IS_INIT_STR = "已初始化";
+
 
     /**
      * 未初始化描述
@@ -305,11 +290,6 @@ public class LoginServiceImpl implements LoginService {
         if (ObjectUtils.isEmpty(config)) {
             return ResultUtil.fail(NO_CONFIG);
         }
-//        if (IS_INIT.equals(config.getIsInit())) {
-//            return ResultUtil.success(IS_INIT_STR);
-//        } else {
-//            return ResultUtil.success(IS_NOT_INIT_STR);
-//        }
         return ResultUtil.success(IS_NOT_INIT_STR);
     }
 
@@ -487,5 +467,38 @@ public class LoginServiceImpl implements LoginService {
             return ResultUtil.success(true);
         }
 
+    }
+
+    @Override
+    public void getAllData() {
+        Hashtable<String, String> env = new Hashtable<>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, "ldap://127.0.0.1:389");
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, "cn=Directory Manager,c=cn");
+         env.put(Context.SECURITY_CREDENTIALS, "Js3qCaLdapAdmin");
+        String searchBase = "cn=subschema"; // LDAP搜索根节点
+        String searchFilter = "(objectClass=*)"; // LDAP搜索过滤条件
+        try {
+            DirContext ctx = new InitialDirContext(env);
+            SearchControls searchControls = new SearchControls();
+            searchControls.setDerefLinkFlag(false);
+            searchControls.setSearchScope(SearchControls.OBJECT_SCOPE);
+            searchControls.setReturningAttributes(new String[]{"objectClasses", "*"});
+
+            NamingEnumeration<SearchResult> results = ctx.search(searchBase,searchFilter, searchControls);
+            log.info("deref:{}",searchControls.getDerefLinkFlag());
+            while (results.hasMore()) {
+                SearchResult result = results.next();
+                Attributes attributes = result.getAttributes();
+                Attribute objectClass = attributes.get("objectClass");
+                log.info("ObjectClass:{}" , objectClass);
+            }
+
+
+            ctx.close();
+        } catch (NamingException e) {
+            e.printStackTrace();
+        }
     }
 }
