@@ -1,6 +1,9 @@
 package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.dto.CertTreeDto;
+import cn.ldap.ldap.common.dto.LdapBindTreeDto;
+import cn.ldap.ldap.common.dto.LdapDto;
+import cn.ldap.ldap.common.dto.ReBindTreDto;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
@@ -71,5 +74,37 @@ public class CertTreeController {
     @PostMapping("queryTreeRdnOrNum")
     public ResultVo<Map<String, Object>> queryTreeRdnOrNum(@RequestBody CertTreeDto treeVo) {
         return certTreeService.queryTreeRdnOrNum(treeVo);
+    }
+
+    /**
+     * 删除Ldap
+     *
+     * @param ldapDto 参数
+     * @return true 成功 false 失败
+     */
+    @PostMapping("del")
+    public ResultVo<Boolean> delLdapTreByRdn(@RequestBody LdapDto ldapDto) {
+        return certTreeService.delLdapTreByRdn(ldapDto);
+    }
+
+    /**
+     * 编辑属性
+     *
+     * @param ldapBindTreeDto 参数
+     * @return true 成功 false 失败
+     */
+    @PostMapping("updateLdap")
+    public ResultVo<Boolean> updateLdapBindTree(@RequestBody LdapBindTreeDto ldapBindTreeDto) {
+        return certTreeService.updateLdapBindTree(ldapBindTreeDto);
+    }
+
+    /**
+     * 修改节点名称
+     * @param bindTree 参数
+     * @return  true 成功 false 失败
+     */
+    @PostMapping("reBind")
+    public ResultVo<Boolean> reBIndLdapTree(@RequestBody ReBindTreDto bindTree) {
+        return certTreeService.reBIndLdapTree(bindTree);
     }
 }

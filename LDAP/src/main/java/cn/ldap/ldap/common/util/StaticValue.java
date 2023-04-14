@@ -41,6 +41,7 @@ public class StaticValue {
     public final static String RDN_CHILD_NUM_KEY = "rdnChildNum";
     public final static Integer RDN_NUM = 0;
     public final static String SPLIT = ",";
+    public final static String ADD = "\\+";
     public final static String LINE = "-";
     public final static String REPLACE = "";
     public final static Integer SPLIT_COUNT = 0;
@@ -55,4 +56,6 @@ public class StaticValue {
     public final static String SM3="SM3";
     public final static String VERTICAL="|";
     public final static String LOG="日志管理-审计日志";
+    public final static String EQ="=";
+    public final static String OBJECTA_CLASS="objectClass";
 }

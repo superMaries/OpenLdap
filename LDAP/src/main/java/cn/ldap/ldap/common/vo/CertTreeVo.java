@@ -18,4 +18,6 @@ public class CertTreeVo {
      * 展示的值
      */
     private String baseDn;
+
+    private String parentRdn;
 }

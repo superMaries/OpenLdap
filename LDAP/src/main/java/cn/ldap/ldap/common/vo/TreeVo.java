@@ -18,4 +18,5 @@ public class TreeVo {
      * 属性值
      */
     private String value;
+    private boolean flag = false;
 }

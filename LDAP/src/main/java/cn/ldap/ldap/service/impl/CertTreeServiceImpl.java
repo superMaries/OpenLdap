@@ -1,9 +1,13 @@
 package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.CertTreeDto;
+import cn.ldap.ldap.common.dto.LdapBindTreeDto;
+import cn.ldap.ldap.common.dto.LdapDto;
+import cn.ldap.ldap.common.dto.ReBindTreDto;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
@@ -13,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import javax.naming.NamingEnumeration;
@@ -117,31 +122,39 @@ public class CertTreeServiceImpl implements CertTreeService {
     }
 
     /**
-     * 测试
+     * 删除Ldap
+     * 删除节点必须要先删除子节点
+     *
+     * @param ldapDto 参数
+     * @return true 成功 false 失败
      */
-    private void querySchema() {
-        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
-        SearchControls searchControls = new SearchControls();
-        searchControls.setSearchScope(SearchControls.OBJECT_SCOPE);
-        try {
-            NamingEnumeration<SearchResult> results = ctx.search("cn=subschema", "(objectClass=*)", searchControls);
-            while (results.hasMore()) {
-                SearchResult searchResult = results.next();
-                Attributes attrs = searchResult.getAttributes();
-                Attribute objectClasses = attrs.get("objectClasses");
-                if (objectClasses != null) {
-                    NamingEnumeration<?> all = objectClasses.getAll();
-                    while (all.hasMore()) {
-                        String objectClass = (String) all.next();
-                        System.out.println(objectClass);
-                    }
-                }
-            }
+    @Override
+    public ResultVo<Boolean> delLdapTreByRdn(LdapDto ldapDto) {
+        boolean result = LdapUtil.delLdapTreByRdn(ldapTemplate, ldapDto, ldapSearchFilter);
+        return ResultUtil.success(result);
+    }
 
-        } catch (NamingException e) {
-            throw new RuntimeException(e);
-        }
+    /**
+     * 编辑属性
+     *
+     * @param ldapBindTreeDto 参数
+     * @return true 成功 false 失败
+     */
+    @Override
+    public ResultVo<Boolean> updateLdapBindTree(LdapBindTreeDto ldapBindTreeDto) {
+        boolean result = LdapUtil.updateLdapBindTree(ldapTemplate, ldapBindTreeDto, ldapSearchFilter);
+        return ResultUtil.success(true);
+    }
 
-
+    /**
+     * 修改节点名称
+     *
+     * @param bindTree 参数
+     * @return true 成功 false 失败
+     */
+    @Override
+    public ResultVo<Boolean> reBIndLdapTree(ReBindTreDto bindTree) {
+        boolean b = LdapUtil.reBIndLdapTree(ldapTemplate, bindTree,ldapSearchFilter);
+        return ResultUtil.success(b);
     }
 }

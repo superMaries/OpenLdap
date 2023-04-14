@@ -129,7 +129,9 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             command = LDAPS_HEAD + serverDto.getSafePort() + AFTER_COMMAND + serverDto.getPort() + DOUBLE_COMMAND;
             objectResultVo = twice(command, serverDto);
         }
-        if(true == serverDto.getSafeOperation()) syncConfig(serverDto);
+        if(true == serverDto.getSafeOperation()) {
+            syncConfig(serverDto);
+        }
 
         return objectResultVo;
     }

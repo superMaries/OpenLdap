@@ -34,5 +34,10 @@ public interface AdminService {
      */
     ResultVo<Boolean> addUserKey(UserDto userDto);
 
+    /**
+     * 修改密码
+     * @param adminVo 参数
+     * @return 返回tru 成功   false 失败
+     */
     ResultVo<Boolean> updatePwd(UpdateAdminVo adminVo);
 }

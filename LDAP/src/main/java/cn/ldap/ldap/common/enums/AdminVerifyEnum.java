@@ -1,8 +1,17 @@
 package cn.ldap.ldap.common.enums;
 
 public enum AdminVerifyEnum {
+    /**
+     * 验签成功
+     */
     SIGN_SUCCESS(0, "验签成功"),
+    /**
+     * 验签失败
+     */
     SIGN_ERROR(1, "验签失败"),
+    /**
+     * -
+     */
     NOT_SIGN(999, "--"),
     ;
 
