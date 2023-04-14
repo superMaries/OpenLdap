@@ -1,16 +1,13 @@
 package cn.ldap.ldap.common.util;
 
-import cn.ldap.ldap.common.dto.CertTreeDto;
 import cn.ldap.ldap.common.dto.LdapBindTreeDto;
 import cn.ldap.ldap.common.dto.LdapDto;
 import cn.ldap.ldap.common.dto.ReBindTreDto;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SystemException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
-import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ldap.core.LdapAttribute;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.util.ObjectUtils;
 
@@ -22,6 +19,9 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.rmi.MarshalledObject;
 import java.util.*;
 import java.util.stream.Collectors;

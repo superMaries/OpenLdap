@@ -140,4 +140,9 @@ public class LoginController {
     public ResultVo<Boolean> isShowUsbKey() {
         return loginService.isShowUsbKey();
     }
+
+    @PostMapping("getAllData")
+    public void getAllData() {
+        loginService.getAllData();
+    }
 }

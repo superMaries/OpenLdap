@@ -1,6 +1,7 @@
 package cn.ldap.ldap.common.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -8,7 +9,7 @@ import lombok.Data;
 @TableName("port_link")
 public class PortLink {
 
-    @TableField("id")
+    @TableId("id")
     private Integer id;
 
     @TableField("port")
