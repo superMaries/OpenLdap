@@ -1,10 +1,12 @@
 package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.dto.CertTreeDto;
+import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -45,5 +47,7 @@ public interface CertTreeService {
      * @return 返回一个Map  其中表示rdn 和num
      */
     ResultVo<Map<String, Object>> queryTreeRdnOrNum(CertTreeDto treeVo);
+
+    Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response);
 
 }

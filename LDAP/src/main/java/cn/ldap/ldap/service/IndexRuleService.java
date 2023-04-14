@@ -6,7 +6,12 @@ import cn.ldap.ldap.common.vo.ResultVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
-
+/**
+ *
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 public interface IndexRuleService extends IService<IndexRule> {
     /**
      * 查询索引规则

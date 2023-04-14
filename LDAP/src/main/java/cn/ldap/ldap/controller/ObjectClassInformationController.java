@@ -9,7 +9,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
-
+/**
+ *
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 @RestController
 @Slf4j
 @RequestMapping("/objectClass/")

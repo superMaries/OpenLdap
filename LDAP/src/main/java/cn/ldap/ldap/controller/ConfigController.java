@@ -5,7 +5,6 @@ import cn.ldap.ldap.common.dto.AddLogDto;
 import cn.ldap.ldap.common.dto.AuditDto;
 import cn.ldap.ldap.common.dto.LogDto;
 import cn.ldap.ldap.common.entity.MainConfig;
-import cn.ldap.ldap.common.entity.OperationLogModel;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.LogVo;
@@ -21,6 +20,13 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * 配置接口
+ *
+ * @title: CertController
+ * @Author superMarie
+ * @Version 1.0
+ */
 @RestController
 @Slf4j
 @RequestMapping("/config/")

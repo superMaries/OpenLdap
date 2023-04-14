@@ -6,7 +6,6 @@ import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
-import cn.ldap.ldap.common.vo.PermissionVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
+/**
+ *
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 @RestController
 @Slf4j
 @RequestMapping("/login/")
@@ -141,8 +145,4 @@ public class LoginController {
         return loginService.isShowUsbKey();
     }
 
-    @PostMapping("getAllData")
-    public void getAllData() {
-        loginService.getAllData();
-    }
 }

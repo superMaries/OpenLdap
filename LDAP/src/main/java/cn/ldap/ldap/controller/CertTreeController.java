@@ -1,6 +1,7 @@
 package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.dto.CertTreeDto;
+import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -71,5 +73,10 @@ public class CertTreeController {
     @PostMapping("queryTreeRdnOrNum")
     public ResultVo<Map<String, Object>> queryTreeRdnOrNum(@RequestBody CertTreeDto treeVo) {
         return certTreeService.queryTreeRdnOrNum(treeVo);
+    }
+
+    @PostMapping("exportQueryData")
+    public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
+        return certTreeService.exportQueryData(paramDto,response);
     }
 }

@@ -7,6 +7,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+/**
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 public interface LdapConfigService {
 
     /**
@@ -15,10 +20,11 @@ public interface LdapConfigService {
      * @param mainConfig
      * @return
      */
-    ResultVo<T>  addConfig(MainConfig mainConfig) throws IOException;
+    ResultVo<T> addConfig(MainConfig mainConfig) throws IOException;
 
     /**
      * 开启或者关闭服务
+     *
      * @param openOrClose
      * @return
      */
@@ -26,24 +32,28 @@ public interface LdapConfigService {
 
     /**
      * 判断服务启动状态
+     *
      * @return
      */
     Boolean getServerStatus();
 
     /**
      * 上传CA证书文件
+     *
      * @param multipartFile
      */
     ResultVo<T> uploadCACert(MultipartFile multipartFile);
 
     /**
      * 上传证书
+     *
      * @param multipartFile
      */
     ResultVo<T> uploadCert(MultipartFile multipartFile);
 
     /**
      * 上传密钥
+     *
      * @param multipartFile
      */
     ResultVo<T> uploadKey(MultipartFile multipartFile);

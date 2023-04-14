@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
 
+/**
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 @RestController
 @Slf4j
 @RequestMapping("/server/")
@@ -31,9 +36,10 @@ public class ServerController {
     public ResultVo<Object> sslOperation(@RequestBody ServerDto serverDto) {
         return indexRuleService.sslOperation(serverDto);
     }
+
     @GetMapping("queryServerStatus")
     @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPLOAD_FILE)
-    public ResultVo<List<PortLink>> queryServerStatus(){
+    public ResultVo<List<PortLink>> queryServerStatus() {
         return ResultUtil.success(portLinkService.list());
     }
 }

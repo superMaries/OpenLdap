@@ -16,6 +16,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 @Slf4j
 @Service
 public class ObjectClassInformationServiceImpl implements ObjectClassInformationService {
@@ -34,14 +39,13 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
     public List<ObjectDataDto> queryObjectAndAttribute() {
 
         LDAPConnection ldapConnection = null;
+        //和LDAP服务进行连接
         try {
             ldapConnection = new LDAPConnection(url, port, userName, password);
         } catch (LDAPException e) {
             e.printStackTrace();
         }
-
         // 获取 LDAP 服务器的 schema 信息
-
         Schema schema = null;
         try {
             schema = ldapConnection.getSchema();
@@ -57,23 +61,24 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
             ObjectDataDto objectDataDto = new ObjectDataDto();
             log.info("ObjectClass:{}" + objectClass.getNameOrOID());
             objectDataDto.setObjectClassName(objectClass.getNameOrOID());
-            List<String> strings = Arrays.asList(objectClass.getRequiredAttributes());
-            List<String> strings1 = Arrays.asList(objectClass.getOptionalAttributes());
+            List<String> requireAttribute = Arrays.asList(objectClass.getRequiredAttributes());
+            List<String> optionalAttribute = Arrays.asList(objectClass.getOptionalAttributes());
             List<String> resultList = new ArrayList<>();
-           if (!CollectionUtils.isEmpty(strings)){
-               resultList.addAll(strings);
-           }
-           if (!CollectionUtils.isEmpty(strings1)){
-               resultList.addAll(strings1);
-           }
+            //整合属性
+            if (!CollectionUtils.isEmpty(requireAttribute)) {
+                resultList.addAll(requireAttribute);
+            }
+            if (!CollectionUtils.isEmpty(optionalAttribute)) {
+                resultList.addAll(optionalAttribute);
+            }
+            //存入到类中
             objectDataDto.setAttributesName(resultList);
-                for (String attribute : objectClass.getRequiredAttributes()) {
-                   log.info("Attributes:{}",attribute);
-                }
-                for (String attribute : objectClass.getOptionalAttributes()) {
-                    log.info("Attributes:{}",attribute);
-                }
-
+            for (String attribute : objectClass.getRequiredAttributes()) {
+                log.info("Attributes:{}", attribute);
+            }
+            for (String attribute : objectClass.getOptionalAttributes()) {
+                log.info("Attributes:{}", attribute);
+            }
             dtoList.add(objectDataDto);
         }
         ldapConnection.close();

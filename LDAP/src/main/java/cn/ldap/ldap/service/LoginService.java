@@ -3,14 +3,18 @@ package cn.ldap.ldap.service;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.Permission;
-import cn.ldap.ldap.common.vo.PermissionVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
-
+/**
+ *
+ * @title:
+ * @Author superMarie
+ * @Version 1.0
+ */
 public interface LoginService {
     /**
      * 下载客户端工具
@@ -79,6 +83,4 @@ public interface LoginService {
      * @return true 显示 false 不显示
      */
     ResultVo<Boolean> isShowUsbKey();
-
-    void getAllData();
 }

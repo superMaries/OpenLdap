@@ -100,8 +100,6 @@ public class LoginServiceImpl implements LoginService {
      */
     private static final String SERVICE_VERSION = "serviceVersionKey";
 
-
-
     /**
      * 未初始化描述
      */
@@ -122,7 +120,13 @@ public class LoginServiceImpl implements LoginService {
 
     private static final Integer SIZE = 1;
 
-    static final String AUTHORIZATION = "auth";
+    private static final String AUTHORIZATION = "auth";
+
+    private static final String CERTNUMBER = "certNumber";
+
+    private static final String USER_NAME = "userName";
+
+    private static final String DATA = "data";
     @Resource
     private PermissionService permissionService;
 
@@ -133,9 +137,6 @@ public class LoginServiceImpl implements LoginService {
     private UserMapper userMapper;
     @Resource
     private UserAccountMapper userAccountMapper;
-
-    @Resource
-    private UserServiceImpl userService;
 
 
     /**
@@ -314,11 +315,6 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public ResultVo<Map<String, Object>> certLogin(UserDto userDto, HttpServletRequest request) {
         log.info(userDto.toString());
-//        Map<String, Object> mapObj = userService.init();
-//        boolean isInit = (boolean) mapObj.get(IS_INIT_STRING);
-//        if (isInit) {
-//            return ResultUtil.success(mapObj);
-//        }
         Map<String, Object> mapObj = new HashMap<>();
         if (com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull(userDto, userDto.getCertSn())) {
             log.error("登录错误:{}", ExceptionEnum.USER_LOGIN_ERROR.getMessage());
@@ -341,7 +337,7 @@ public class LoginServiceImpl implements LoginService {
         Calendar instance = Calendar.getInstance();
         instance.add(Calendar.MINUTE, tokenValidTime);
         String token = JWT.create().withHeader(map)
-                .withClaim("certNumber", userInfo.getSignCert())
+                .withClaim(CERTNUMBER, userInfo.getSignCert())
                 .withExpiresAt(instance.getTime()).sign(Algorithm.HMAC256(TOKEN_SECRET_KEY));
 
         log.info("验签开始");
@@ -422,7 +418,7 @@ public class LoginServiceImpl implements LoginService {
         Calendar instance = Calendar.getInstance();
         instance.add(Calendar.MINUTE, tokenValidTime);
         String token = JWT.create().withHeader(hashMap)
-                .withClaim("userName", loginDto.getUserName())
+                .withClaim(USER_NAME, loginDto.getUserName())
                 .withExpiresAt(instance.getTime()).sign(Algorithm.HMAC256(TOKEN_SECRET_KEY));
         UserTokenInfo tokenInfo = new UserTokenInfo();
         tokenInfo.setId(TOKEN_ID);
@@ -434,12 +430,17 @@ public class LoginServiceImpl implements LoginService {
         tokenInfo.setIsSync(InitConfigData.getIsSync());
 
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
-        resultMap.put("data", loginResultVo);
+        resultMap.put(DATA, loginResultVo);
         HttpSession session = request.getSession();
         session.setAttribute(AUTHORIZATION, loginResultVo);
         return ResultUtil.success(loginResultVo);
     }
 
+    /**
+     * 退出登录
+     * @param request
+     * @return
+     */
     @Override
     public ResultVo<Boolean> logout(HttpServletRequest request) {
         request.getSession().invalidate();
@@ -469,36 +470,4 @@ public class LoginServiceImpl implements LoginService {
 
     }
 
-    @Override
-    public void getAllData() {
-        Hashtable<String, String> env = new Hashtable<>();
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, "ldap://127.0.0.1:389");
-        env.put(Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(Context.SECURITY_PRINCIPAL, "cn=Directory Manager,c=cn");
-         env.put(Context.SECURITY_CREDENTIALS, "Js3qCaLdapAdmin");
-        String searchBase = "cn=subschema"; // LDAP搜索根节点
-        String searchFilter = "(objectClass=*)"; // LDAP搜索过滤条件
-        try {
-            DirContext ctx = new InitialDirContext(env);
-            SearchControls searchControls = new SearchControls();
-            searchControls.setDerefLinkFlag(false);
-            searchControls.setSearchScope(SearchControls.OBJECT_SCOPE);
-            searchControls.setReturningAttributes(new String[]{"objectClasses", "*"});
-
-            NamingEnumeration<SearchResult> results = ctx.search(searchBase,searchFilter, searchControls);
-            log.info("deref:{}",searchControls.getDerefLinkFlag());
-            while (results.hasMore()) {
-                SearchResult result = results.next();
-                Attributes attributes = result.getAttributes();
-                Attribute objectClass = attributes.get("objectClass");
-                log.info("ObjectClass:{}" , objectClass);
-            }
-
-
-            ctx.close();
-        } catch (NamingException e) {
-            e.printStackTrace();
-        }
-    }
 }
