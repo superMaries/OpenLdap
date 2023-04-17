@@ -104,33 +104,33 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     @Override
     public ResultVo<Object> sslOperation(ServerDto serverDto) {
         if ((BeanUtil.isEmpty(serverDto.getSafeOperation()) && BeanUtil.isEmpty(serverDto.getSafeOperation()))
-                || (false == serverDto.getOperation() && false == serverDto.getSafeOperation())) {
+                || (!serverDto.getOperation() && !serverDto.getSafeOperation())) {
             return ResultUtil.fail(ExceptionEnum.PARAM_EMPTY);
         }
         //定义一个命令
         String command = "";
         ResultVo<Object> objectResultVo = null;
         //标准协议
-        if (true == serverDto.getOperation() && false == serverDto.getSafeOperation()) {
+        if (serverDto.getOperation() && !serverDto.getSafeOperation()) {
             //标准协议命令
             command = LDAP_HEAD + serverDto.getPort() + LAST_COMMAND;
             objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
             log.info("标准协议配置为:{}", command);
         }
         //安全协议
-        if (false == serverDto.getOperation() && true == serverDto.getSafeOperation()) {
+        if (!serverDto.getOperation() && serverDto.getSafeOperation()) {
             //安全协议命令
             command = LDAPS_HEAD + serverDto.getSafePort() + LAST_COMMAND;
             objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
             log.info("安全协议开启端口:{}", command);
         }
         //安全协议标准协议全部开启
-        if (true == serverDto.getOperation() && serverDto.getSafeOperation()) {
+        if (serverDto.getOperation() && serverDto.getSafeOperation()) {
             //双重协议命令
             command = LDAPS_HEAD + serverDto.getSafePort() + AFTER_COMMAND + serverDto.getPort() + DOUBLE_COMMAND;
             objectResultVo = twice(command, serverDto);
         }
-        if (true == serverDto.getSafeOperation()) syncConfig(serverDto);
+        if (serverDto.getSafeOperation()) syncConfig(serverDto);
 
         return objectResultVo;
     }
