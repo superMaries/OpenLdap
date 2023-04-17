@@ -110,6 +110,13 @@ public class CertTreeController {
     public ResultVo<Boolean> reBIndLdapTree(@RequestBody ReBindTreDto bindTree) {
         return certTreeService.reBIndLdapTree(bindTree);
     }
+
+    /**
+     * 查询导出全部
+     * @param paramDto
+     * @param response
+     * @return
+     */
     @PostMapping("exportQueryData")
     public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
         return certTreeService.exportQueryData(paramDto,response);
