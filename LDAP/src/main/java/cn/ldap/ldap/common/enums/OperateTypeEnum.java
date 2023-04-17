@@ -46,6 +46,8 @@ public enum OperateTypeEnum {
 
     OPEN_SERVICE(704, "开启或关闭服务"),
 
+    ADD_DATA(705,"添加数据"),
+
     DEL_USBKEY(801, "删除USBKEY用户"),
     ADD_USBKEY(802, "添加USBKEY用户"),
     UPDATE_USBKEY(802, "修改密码"),

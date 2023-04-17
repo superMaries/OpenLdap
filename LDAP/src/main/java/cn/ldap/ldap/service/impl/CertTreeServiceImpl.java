@@ -1,13 +1,10 @@
 package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.CertTreeDto;
-import cn.ldap.ldap.common.dto.LdapBindTreeDto;
-import cn.ldap.ldap.common.dto.LdapDto;
-import cn.ldap.ldap.common.dto.ReBindTreDto;
+import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
-import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
@@ -17,19 +14,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-import javax.naming.ldap.LdapContext;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * @title: CertTreeServiceImpl
@@ -47,6 +40,13 @@ public class CertTreeServiceImpl implements CertTreeService {
     private String ldapSearchBase;
     @Value("${ldap.searchFilter}")
     private String ldapSearchFilter;
+
+    /**
+     * 换行
+     */
+    private static final String FEED = "\n";
+
+    private static final String LAST = ".ldif";
 
     /**
      * 查询目录树接口
@@ -121,40 +121,66 @@ public class CertTreeServiceImpl implements CertTreeService {
         return ResultUtil.success(map);
     }
 
-    /**
-     * 删除Ldap
-     * 删除节点必须要先删除子节点
-     *
-     * @param ldapDto 参数
-     * @return true 成功 false 失败
-     */
     @Override
-    public ResultVo<Boolean> delLdapTreByRdn(LdapDto ldapDto) {
-        boolean result = LdapUtil.delLdapTreByRdn(ldapTemplate, ldapDto, ldapSearchFilter);
-        return ResultUtil.success(result);
+    public Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response) {
+        String fileName = paramDto.getFileName()+LAST;
+        if (ObjectUtils.isEmpty(paramDto)) {
+            return false;
+        }
+        List<String> writeData = queryData(paramDto);
+        exportToLdif(writeData,fileName);
+        // 下载ldif文件
+        Path file = Paths.get(fileName);
+        if (Files.exists(file)) {
+            response.setContentType("application/ldif");
+            response.addHeader("Content-Disposition", "attachment; filename=" + fileName);
+            try {
+                Files.copy(file, response.getOutputStream());
+                response.getOutputStream().flush();
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
     }
 
-    /**
-     * 编辑属性
-     *
-     * @param ldapBindTreeDto 参数
-     * @return true 成功 false 失败
-     */
-    @Override
-    public ResultVo<Boolean> updateLdapBindTree(LdapBindTreeDto ldapBindTreeDto) {
-        boolean result = LdapUtil.updateLdapBindTree(ldapTemplate, ldapBindTreeDto, ldapSearchFilter);
-        return ResultUtil.success(true);
+    public List<String> queryData(ParamDto paramDto){
+        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, paramDto.getFilter(), paramDto.getBaseDN(), paramDto.getScope(), paramDto.getPageSize());
+        List<String> strings = new ArrayList<>();
+        for (CertTreeVo certTreeVo : listResultVo) {
+            LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+            List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
+            map.put("dn:",certTreeVo.getRdn());
+            strings.add("dn:"+certTreeVo.getRdn());
+            for (TreeVo treeVo : treeVos) {
+                map.put(treeVo.getKey(),treeVo.getValue());
+                strings.add(treeVo.getKey()+":"+treeVo.getValue());
+            }
+            strings.add(FEED);
+        }
+        return strings;
     }
 
-    /**
-     * 修改节点名称
-     *
-     * @param bindTree 参数
-     * @return true 成功 false 失败
-     */
-    @Override
-    public ResultVo<Boolean> reBIndLdapTree(ReBindTreDto bindTree) {
-        boolean b = LdapUtil.reBIndLdapTree(ldapTemplate, bindTree,ldapSearchFilter);
-        return ResultUtil.success(b);
+
+    public static void exportToLdif(List<String> data, String filename) {
+        try (FileWriter writer = new FileWriter(filename)) {
+            for (String line : data) {
+                writer.write(line + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+//    /**
+//     * 删除Ldap
+//     *
+//     * @param ldapDto 参数
+//     * @return true 成功 false 失败
+//     */
+//    @Override
+//    public ResultVo<Boolean> delLdapTreByRdn(LdapDto ldapDto) {
+//        boolean result = LdapUtil.delLdapTreByRdn(ldapTemplate, ldapDto);
+//        return ResultUtil.success(result);
+//    }
 }

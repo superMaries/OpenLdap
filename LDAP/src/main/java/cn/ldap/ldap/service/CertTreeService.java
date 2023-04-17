@@ -1,13 +1,12 @@
 package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.dto.CertTreeDto;
-import cn.ldap.ldap.common.dto.LdapBindTreeDto;
-import cn.ldap.ldap.common.dto.LdapDto;
-import cn.ldap.ldap.common.dto.ReBindTreDto;
+import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +24,6 @@ public interface CertTreeService {
      * @return 返回树型结构
      */
     ResultVo<List<CertTreeVo>> queryCertTree(CertTreeDto treeVo);
-
     /**
      * 查询节点属性详情
      *
@@ -50,28 +48,6 @@ public interface CertTreeService {
      */
     ResultVo<Map<String, Object>> queryTreeRdnOrNum(CertTreeDto treeVo);
 
-    /**
-     * 删除Ldap
-     *
-     * @param ldapDto 参数
-     * @return true 成功 false 失败
-     */
-    ResultVo<Boolean> delLdapTreByRdn(LdapDto ldapDto);
-
-    /**
-     * 编辑属性
-     *
-     * @param ldapBindTreeDto 参数
-     * @return true 成功 false 失败
-     */
-    ResultVo<Boolean> updateLdapBindTree(LdapBindTreeDto ldapBindTreeDto);
-
-    /**
-     * 修改节点名称
-     * @param bindTree 参数
-     * @return  true 成功 false 失败
-     */
-    ResultVo<Boolean> reBIndLdapTree(ReBindTreDto bindTree);
-
+    Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response);
 
 }

@@ -1,11 +1,7 @@
 package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.dto.CertTreeDto;
-import cn.ldap.ldap.common.dto.LdapBindTreeDto;
-import cn.ldap.ldap.common.dto.LdapDto;
-import cn.ldap.ldap.common.dto.ReBindTreDto;
-import cn.ldap.ldap.common.enums.ExceptionEnum;
-import cn.ldap.ldap.common.exception.SysException;
+import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
@@ -16,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -78,35 +75,8 @@ public class CertTreeController {
         return certTreeService.queryTreeRdnOrNum(treeVo);
     }
 
-    /**
-     * 删除Ldap
-     *
-     * @param ldapDto 参数
-     * @return true 成功 false 失败
-     */
-    @PostMapping("del")
-    public ResultVo<Boolean> delLdapTreByRdn(@RequestBody LdapDto ldapDto) {
-        return certTreeService.delLdapTreByRdn(ldapDto);
-    }
-
-    /**
-     * 编辑属性
-     *
-     * @param ldapBindTreeDto 参数
-     * @return true 成功 false 失败
-     */
-    @PostMapping("updateLdap")
-    public ResultVo<Boolean> updateLdapBindTree(@RequestBody LdapBindTreeDto ldapBindTreeDto) {
-        return certTreeService.updateLdapBindTree(ldapBindTreeDto);
-    }
-
-    /**
-     * 修改节点名称
-     * @param bindTree 参数
-     * @return  true 成功 false 失败
-     */
-    @PostMapping("reBind")
-    public ResultVo<Boolean> reBIndLdapTree(@RequestBody ReBindTreDto bindTree) {
-        return certTreeService.reBIndLdapTree(bindTree);
+    @PostMapping("exportQueryData")
+    public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
+        return certTreeService.exportQueryData(paramDto,response);
     }
 }
