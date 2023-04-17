@@ -4,10 +4,11 @@ import cn.ldap.ldap.common.dto.LdapBindTreeDto;
 import cn.ldap.ldap.common.dto.LdapDto;
 import cn.ldap.ldap.common.dto.ReBindTreDto;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
-import cn.ldap.ldap.common.exception.SystemException;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 import lombok.extern.slf4j.Slf4j;
+import org.omg.CORBA.SystemException;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.util.ObjectUtils;
 
@@ -22,11 +23,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.rmi.MarshalledObject;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
 
 /**
  * @title: LdapUtil
@@ -323,7 +321,7 @@ public class LdapUtil {
             return map;
         } catch (NamingException | IOException e) {
             log.info("节点 {} 不存在", e.getMessage());
-            throw new SystemException(ExceptionEnum.QUERY_POINT_ERROR);
+            throw new SysException(ExceptionEnum.QUERY_POINT_ERROR);
         } finally {
             // 关闭LDAP连接
             try {
@@ -332,7 +330,7 @@ public class LdapUtil {
                 }
             } catch (NamingException e) {
                 log.info("节点 {} 不存在", e.getMessage());
-                throw new SystemException(ExceptionEnum.QUERY_POINT_ERROR);
+                throw new SysException(ExceptionEnum.QUERY_POINT_ERROR);
             }
         }
     }
@@ -397,7 +395,7 @@ public class LdapUtil {
             ctx.close();
         } catch (NamingException e) {
             log.error(e.getMessage());
-            throw new SystemException(ExceptionEnum.LDAP_QUERY_RDN_NOT_EXIT);
+            throw new SysException(ExceptionEnum.LDAP_QUERY_RDN_NOT_EXIT);
         }
         return StaticValue.TRUE;
     }
@@ -432,7 +430,7 @@ public class LdapUtil {
             ctx.close();
         } catch (NamingException e) {
             log.error(e.getMessage());
-            throw new SystemException(ExceptionEnum.LDAP_QUERY_RDN_NOT_EXIT);
+            throw new SysException(ExceptionEnum.LDAP_QUERY_RDN_NOT_EXIT);
         }
         return StaticValue.TRUE;
 
@@ -469,7 +467,7 @@ public class LdapUtil {
             ctx.close();
         } catch (NamingException e) {
             log.error(e.getMessage());
-            throw new SystemException(ExceptionEnum.LDAP_DEL_RDN_NOT_EXIT);
+            throw new SysException(ExceptionEnum.LDAP_DEL_RDN_NOT_EXIT);
         }
         return StaticValue.TRUE;
     }

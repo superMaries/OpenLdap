@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service;
 
+import cn.ldap.ldap.common.dto.CertTreeDto;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
 import cn.ldap.ldap.common.vo.IndexVo;
@@ -32,22 +33,22 @@ public interface IndexService {
      *
      * @return 总数接口
      */
-    ResultVo<IndexVo> ldapInfo();
+    ResultVo<IndexVo> ldapInfo(CertTreeDto tree);
 
     /**
      * @return 返回Crl数量
      */
-    ResultVo<Long> ldapCrlNum();
+    ResultVo<Long> ldapCrlNum(CertTreeDto tree);
 
     /**
      * 查询证书接口
      *
      * @return 查询证书接口
      */
-    ResultVo<Long> ldapCertNum();
+    ResultVo<Long> ldapCertNum(CertTreeDto tree);
     /**
      * 返回ldap 总数接口
      * @return 返回ldap 总数接口
      */
-    ResultVo<Long> ldapTotal();
+    ResultVo<Long> ldapTotal(CertTreeDto tree);
 }

@@ -2,20 +2,17 @@ package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.IndexDataDto;
 import cn.ldap.ldap.common.entity.IndexDataModel;
-import cn.ldap.ldap.common.entity.Permission;
-import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
-import cn.ldap.ldap.common.exception.SystemException;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.IndexDataMapper;
-import cn.ldap.ldap.common.mapper.PermissionMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexDataService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -119,7 +116,7 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         //判断文件是否存在
         File file = new File(configPath);
         if (!file.exists()) {
-            throw new SystemException(FILE_NOT_EXIST);
+            throw new SysException(FILE_NOT_EXIST);
         }
         StringBuilder stringBuilder = new StringBuilder();
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {

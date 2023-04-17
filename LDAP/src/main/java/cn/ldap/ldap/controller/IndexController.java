@@ -1,5 +1,6 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.dto.CertTreeDto;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
 import cn.ldap.ldap.common.vo.IndexVo;
@@ -9,6 +10,7 @@ import com.google.common.collect.EvictingQueue;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -54,8 +56,8 @@ public class IndexController {
      * 查询CRL接口
      */
     @PostMapping("ldap/info")
-    public ResultVo<IndexVo> ldapInfo() {
-        return indexService.ldapInfo();
+    public ResultVo<IndexVo> ldapInfo(@RequestBody CertTreeDto tree) {
+        return indexService.ldapInfo(tree);
     }
 
     /**
@@ -64,16 +66,16 @@ public class IndexController {
      * @return 返回ldap 总数接口
      */
     @PostMapping("ldap/num")
-    public ResultVo<Long> ldapTotal() {
-        return indexService.ldapTotal();
+    public ResultVo<Long> ldapTotal(@RequestBody CertTreeDto tree) {
+        return indexService.ldapTotal(tree);
     }
 
     /**
      * @return 返回Crl数量
      */
     @PostMapping("ldap/crlNum")
-    public ResultVo<Long> ldapCrlNum() {
-        return indexService.ldapCrlNum();
+    public ResultVo<Long> ldapCrlNum(@RequestBody CertTreeDto tree) {
+        return indexService.ldapCrlNum(tree);
     }
 
     /**
@@ -82,8 +84,8 @@ public class IndexController {
      * @return 查询证书接口
      */
     @PostMapping("ldap/certNum")
-    public ResultVo<Long> ldapCertNum() {
-        return indexService.ldapCertNum();
+    public ResultVo<Long> ldapCertNum(@RequestBody CertTreeDto tree) {
+        return indexService.ldapCertNum(tree);
     }
 
 }

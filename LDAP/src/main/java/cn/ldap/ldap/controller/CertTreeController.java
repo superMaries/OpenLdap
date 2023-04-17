@@ -4,6 +4,8 @@ import cn.ldap.ldap.common.dto.CertTreeDto;
 import cn.ldap.ldap.common.dto.LdapBindTreeDto;
 import cn.ldap.ldap.common.dto.LdapDto;
 import cn.ldap.ldap.common.dto.ReBindTreDto;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;

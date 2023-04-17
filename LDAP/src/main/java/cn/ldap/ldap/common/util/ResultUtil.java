@@ -2,6 +2,7 @@ package cn.ldap.ldap.common.util;
 
 
 import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.PageVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 
@@ -84,6 +85,12 @@ public class ResultUtil {
         vo.setCode(result.getCode());
         vo.setMessage(result.getMessage());
         return vo;
+    }
+    public static ResultVo fail(SysException sysException) {
+        ResultVo resultVo = new ResultVo();
+        resultVo.setCode(sysException.getCode());
+        resultVo.setMessage(sysException.getMessage());
+        return resultVo;
     }
 
     public static ResultVo fail(ExceptionEnum result, String message) {

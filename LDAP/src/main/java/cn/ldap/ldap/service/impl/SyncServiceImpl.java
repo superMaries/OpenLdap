@@ -2,11 +2,12 @@ package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.FromSyncDto;
 import cn.ldap.ldap.common.dto.SyncDto;
-import cn.ldap.ldap.common.exception.SystemException;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.SyncService;
 import lombok.extern.slf4j.Slf4j;
+import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -83,7 +84,7 @@ public class SyncServiceImpl implements SyncService {
     public ResultVo<Object> syncConfig(SyncDto syncDto) {
         File file = new File(configPath);
         if (!file.exists()) {
-            throw new SystemException(FILE_NOT_EXIST);
+            throw new SysException(FILE_NOT_EXIST);
         }
         StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;
@@ -125,7 +126,7 @@ public class SyncServiceImpl implements SyncService {
     public ResultVo<Object> fromSyncConfig(FromSyncDto fromSyncDto) {
         File file = new File(configPath);
         if (!file.exists()) {
-            throw new SystemException(FILE_NOT_EXIST);
+            throw new SysException(FILE_NOT_EXIST);
         }
         StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;

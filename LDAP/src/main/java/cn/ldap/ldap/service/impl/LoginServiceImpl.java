@@ -11,7 +11,7 @@ import cn.ldap.ldap.common.entity.UserAccountModel;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserTypeEnum;
-import cn.ldap.ldap.common.exception.SystemException;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.ConfigMapper;
 import cn.ldap.ldap.common.mapper.UserAccountMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
@@ -30,16 +30,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
-import javax.naming.Context;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -173,7 +170,7 @@ public class LoginServiceImpl implements LoginService {
                 }
             } catch (Exception e) {
                 log.error("下载文件失败！！！" + e.getMessage());
-                throw new SystemException("下载文件失败!");
+                throw new SysException("下载文件失败!");
             } finally {
                 if (bis != null) {
                     try {
@@ -192,7 +189,7 @@ public class LoginServiceImpl implements LoginService {
             }
             return true;
         } else {
-            throw new SystemException("文件不存在!");
+            throw new SysException("文件不存在!");
         }
     }
 
@@ -318,7 +315,7 @@ public class LoginServiceImpl implements LoginService {
         Map<String, Object> mapObj = new HashMap<>();
         if (com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull(userDto, userDto.getCertSn())) {
             log.error("登录错误:{}", ExceptionEnum.USER_LOGIN_ERROR.getMessage());
-            throw new SystemException(ExceptionEnum.USER_LOGIN_ERROR);
+            throw new SysException(ExceptionEnum.USER_LOGIN_ERROR);
         }
 
         LambdaQueryWrapper<UserModel> lambdaQueryWrapper = new LambdaQueryWrapper<UserModel>()
@@ -329,7 +326,7 @@ public class LoginServiceImpl implements LoginService {
         if (SIZE != users.size()) {
             //失敗  返回
             log.error("需要初始化" + ExceptionEnum.USER_FAIL.getMessage());
-            throw new SystemException(ExceptionEnum.USER_FAIL);
+            throw new SysException(ExceptionEnum.USER_FAIL);
         }
         //开始记录用户信息
         UserModel userInfo = users.get(0);
@@ -359,7 +356,7 @@ public class LoginServiceImpl implements LoginService {
         sm2.setMode(SM2Engine.Mode.C1C2C3);
         boolean verify = sm2.verify(userDto.getSignCert().getBytes(), HexUtil.decodeHex(userDto.getSignData()));
         if (!verify) {
-            throw new SystemException(VERIFY_FAIL);
+            throw new SysException(VERIFY_FAIL);
         }
         log.info("验签成功");
         UserTokenInfo tokenInfo = new UserTokenInfo();
@@ -459,7 +456,7 @@ public class LoginServiceImpl implements LoginService {
             userModels = userMapper.selectList(null);
         } catch (Exception e) {
             log.error("错误日志:{}", e.getMessage());
-            throw new SystemException(SQL_ERROR);
+            throw new SysException(SQL_ERROR);
         }
 
         if (ObjectUtils.isEmpty(userModels)) {

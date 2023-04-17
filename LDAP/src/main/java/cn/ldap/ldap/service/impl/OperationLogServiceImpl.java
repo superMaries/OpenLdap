@@ -6,7 +6,7 @@ import cn.ldap.ldap.common.dto.LogDto;
 import cn.ldap.ldap.common.entity.OperationLogModel;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.*;
-import cn.ldap.ldap.common.exception.SystemException;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.OperationMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ClientInfo;
@@ -20,6 +20,7 @@ import cn.ldap.ldap.util.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.omg.CORBA.SystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -150,14 +151,14 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
     @Override
     public ResultVo<Boolean> addLog(HttpServletRequest request, AddLogDto logDto) {
         if (ObjectUtils.isEmpty(logDto)) {
-            throw new SystemException(ExceptionEnum.PARAM_EMPTY);
+            throw new SysException(ExceptionEnum.PARAM_EMPTY);
         }
         //判断用户是否是审计员
         UserModel userModel = userMapper.selectById(logDto.getUserId());
         if (!ObjectUtils.isEmpty(userModel)) {
             if (Objects.equals(userModel.getRoleId(), UserRoleEnum.USER_ADMIN.getCode())) {
                 log.info(ExceptionEnum.NOT_AUDIT.getMessage());
-                throw new SystemException(ExceptionEnum.NOT_AUDIT);
+                throw new SysException(ExceptionEnum.NOT_AUDIT);
             }
         }
         String clinetIp = ClientInfo.getIpAdrress(request);
@@ -191,7 +192,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
     @Override
     public ResultVo<Boolean> auditLog(HttpServletRequest request, List<AuditDto> auditDtos) {
         if (ObjectUtils.isEmpty(auditDtos)) {
-            throw new SystemException(ExceptionEnum.PARAM_EMPTY);
+            throw new SysException(ExceptionEnum.PARAM_EMPTY);
         }
         //根据id查询数据
         List<Integer> ids = auditDtos.stream().map(it -> it.getId()).collect(Collectors.toList());

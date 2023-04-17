@@ -3,12 +3,13 @@ package cn.ldap.ldap.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.entity.MainConfig;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
-import cn.ldap.ldap.common.exception.SystemException;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LdapConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
+import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -83,7 +84,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
         File file = new File(configPath);
         if (!file.exists()) {
-            throw new SystemException(FILE_NOT_EXIST);
+            throw new SysException(FILE_NOT_EXIST);
         }
         StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;
@@ -192,7 +193,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     @Override
     public ResultVo<T> uploadCACert(MultipartFile multipartFile) {
         if (multipartFile.isEmpty()) {
-            throw new SystemException(FILE_IS_EMPTY);
+            throw new SysException(FILE_IS_EMPTY);
         }
         //修改fileName
         String fileName = CASERVER_CERT;
@@ -210,7 +211,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     @Override
     public ResultVo<T> uploadCert(MultipartFile multipartFile) {
         if (multipartFile.isEmpty()) {
-            throw new SystemException(FILE_IS_EMPTY);
+            throw new SysException(FILE_IS_EMPTY);
         }
         //修改fileName
         String fileName = SERVER_CERT;
@@ -228,7 +229,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     @Override
     public ResultVo<T> uploadKey(MultipartFile multipartFile) {
         if (multipartFile.isEmpty()) {
-            throw new SystemException(FILE_IS_EMPTY);
+            throw new SysException(FILE_IS_EMPTY);
         }
         //修改fileName
         String fileName = SERVER_KEY;

@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.ldap.ldap.common.dto.CertTreeDto;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
 import cn.ldap.ldap.common.util.LdapUtil;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ldap.core.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 
 import java.io.IOException;
@@ -134,7 +136,7 @@ public class IndexServiceImpl implements IndexService {
      * 查询CRL接口
      */
     @Override
-    public ResultVo<IndexVo> ldapInfo() {
+    public ResultVo<IndexVo> ldapInfo(CertTreeDto tree) {
         IndexVo indexVo = new IndexVo();
         Field[] fields = IndexVo.class.getDeclaredFields();
 
@@ -144,7 +146,7 @@ public class IndexServiceImpl implements IndexService {
         for (Field field : fields) {
             System.out.println(field.getName());
             CompletableFuture<Long> future = CompletableFuture.supplyAsync(() -> {
-                return queryFieldNum(field, indexVo);
+                return queryFieldNum(field, indexVo, tree);
             });
             futures.add(future);
         }
@@ -168,8 +170,8 @@ public class IndexServiceImpl implements IndexService {
      * @return 查询证书接口
      */
     @Override
-    public ResultVo<Long> ldapCrlNum() {
-        return ResultUtil.success(queryCrlTotal());
+    public ResultVo<Long> ldapCrlNum(CertTreeDto tree) {
+        return ResultUtil.success(queryCrlTotal(tree));
     }
 
     /**
@@ -178,16 +180,18 @@ public class IndexServiceImpl implements IndexService {
      * @return 查询证书接口
      */
     @Override
-    public ResultVo<Long> ldapCertNum() {
-        return ResultUtil.success(queryCertTotal());
+    public ResultVo<Long> ldapCertNum(CertTreeDto tree) {
+        return ResultUtil.success(queryCertTotal(tree));
     }
+
     /**
      * 返回ldap 总数接口
+     *
      * @return 返回ldap 总数接口
      */
     @Override
-    public ResultVo<Long> ldapTotal() {
-        return null;
+    public ResultVo<Long> ldapTotal(CertTreeDto tree) {
+        return ResultUtil.success(queryTotal(tree));
     }
 
     /**
@@ -197,24 +201,24 @@ public class IndexServiceImpl implements IndexService {
      * @param indexVo 返回的实体
      * @return
      */
-    private long queryFieldNum(Field field, IndexVo indexVo) {
+    private long queryFieldNum(Field field, IndexVo indexVo, CertTreeDto tree) {
         switch (field.getName()) {
             case StaticValue.TOTAL:
                 //查询总数
                 long queryTotal = 0;
-                queryTotal = queryTotal();
+                queryTotal = queryTotal(tree);
                 System.out.println(queryTotal);
                 indexVo.setTotal(queryTotal);
                 return queryTotal;
             case StaticValue.CERT_TOTAL:
                 //查询CERT 总数
-                long queryCertTotal = queryCertTotal();
+                long queryCertTotal = queryCertTotal(tree);
                 System.out.println(queryCertTotal);
                 indexVo.setCertTotal(queryCertTotal);
                 return queryCertTotal;
             case StaticValue.CRL_TOTAL:
                 //查询CRL 总数
-                long queryCrlTotal = queryCrlTotal();
+                long queryCrlTotal = queryCrlTotal(tree);
                 System.out.println(queryCrlTotal);
                 indexVo.setCrlTotal(queryCrlTotal);
                 return queryCrlTotal;
@@ -227,10 +231,14 @@ public class IndexServiceImpl implements IndexService {
     /**
      * 查询CRL接口
      *
+     * @param tree 条件
      * @return
      */
-    private long queryCrlTotal() {
+    private long queryCrlTotal(CertTreeDto tree) {
         System.out.println("查询CRL接口");
+        if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
+            ldapSearchBase = tree.getBaseDN();
+        }
         long crlTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, "ou=crl", "ou=cacrl");
         return crlTotal;
     }
@@ -238,11 +246,15 @@ public class IndexServiceImpl implements IndexService {
     /**
      * 查询CERT接口
      *
+     * @param tree 条件
      * @return
      */
 
-    private long queryCertTotal() {
+    private long queryCertTotal(CertTreeDto tree) {
         System.out.println("查询CERT接口");
+        if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
+            ldapSearchBase = tree.getBaseDN();
+        }
         long certTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, "serialNumber=");
         return certTotal;
     }
@@ -250,10 +262,14 @@ public class IndexServiceImpl implements IndexService {
     /**
      * 查询总数接口
      *
+     * @param tree 条件
      * @return
      */
-    private long queryTotal() {
+    private long queryTotal(CertTreeDto tree) {
         System.out.println("查询总数接口");
+        if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
+            ldapSearchBase = tree.getBaseDN();
+        }
         long certTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, null);
         return certTotal;
     }

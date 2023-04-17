@@ -5,7 +5,7 @@ import cn.ldap.ldap.common.dto.ServerDto;
 import cn.ldap.ldap.common.entity.IndexRule;
 import cn.ldap.ldap.common.entity.PortLink;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
-import cn.ldap.ldap.common.exception.SystemException;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.IndexRuleMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -217,7 +217,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     public void syncConfig(ServerDto serverDto) {
         File file = new File(configPath);
         if (!file.exists()) {
-            throw new SystemException(FILE_NOT_EXIST);
+            throw new SysException(FILE_NOT_EXIST);
         }
         StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;

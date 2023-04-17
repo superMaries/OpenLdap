@@ -1,10 +1,10 @@
 package cn.ldap.ldap.common.util;
 
-import cn.hutool.json.JSONUtil;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
-import cn.ldap.ldap.common.exception.SystemException;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import org.apache.catalina.connector.RequestFacade;
+import org.omg.CORBA.SystemException;
 
 
 import javax.servlet.ServletRequest;
@@ -25,7 +25,7 @@ public class SessionUtil {
 //            loginResultVo = (LoginResultVo) requests.getAttribute(AUTHORIZATION);
         } catch (Exception e) {
             //用户未登录
-            throw new SystemException(ExceptionEnum.USER_NOT_LOGIN);
+            throw new SysException(ExceptionEnum.USER_NOT_LOGIN);
         }
         return loginResultVo;
     }
