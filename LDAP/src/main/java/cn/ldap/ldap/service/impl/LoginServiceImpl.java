@@ -379,7 +379,7 @@ public class LoginServiceImpl implements LoginService {
         tokenInfo.setIsSync(InitConfigData.getIsSync());
 
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
-        mapObj.put("data", loginResultVo);
+        mapObj.put(DATA, loginResultVo);
         HttpSession session = request.getSession();
         session.setAttribute(AUTHORIZATION, loginResultVo);
         return ResultUtil.success(mapObj);

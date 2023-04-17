@@ -4,12 +4,12 @@ server:
 #数据库配置
 spring:
   ldap:
-    urls: ldap://39.98.83.34:389/ #openldap连接地址
-    username: cn=root,dc=super,dc=com #用户名
-    password: 123456 #密码
+    urls: ldap://123.57.204.10:389/ #openldap连接地址
+    username: cn=Directory Manager,c=cn #用户名
+    password: Js3qCaLdapAdmin #密码
     base: #dc=super
   datasource:
-    url: jdbc:sqlite:E:\博雅\项目\LDAP\项目\ldap\ldap.sqlite
+    url: jdbc:sqlite:D:\工具\ldap.sqlite
     driver-class-name: org.sqlite.JDBC
     username:
     password:
@@ -40,3 +40,10 @@ login:
 
 token:
   validTime: 100
+
+
+ldapLink:
+  url: 123.57.204.10
+  port: 389
+  userName: cn=Directory Manager,c=cn
+  password: Js3qCaLdapAdmin
