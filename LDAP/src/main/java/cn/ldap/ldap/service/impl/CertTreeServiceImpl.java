@@ -27,9 +27,12 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
 import javax.servlet.http.HttpServletResponse;
 import javax.swing.plaf.basic.BasicViewportUI;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * @title: CertTreeServiceImpl
@@ -47,6 +50,13 @@ public class CertTreeServiceImpl implements CertTreeService {
     private String ldapSearchBase;
     @Value("${ldap.searchFilter}")
     private String ldapSearchFilter;
+
+    /**
+     * 换行
+     */
+    private static final String FEED = "\n";
+
+    private static final String LAST = ".ldif";
 
     /**
      * 查询目录树接口
@@ -189,5 +199,57 @@ public class CertTreeServiceImpl implements CertTreeService {
     @Override
     public ResultVo<Boolean> importLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
         return null;
+    }
+
+    @Override
+    public Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response) {
+        String fileName = paramDto.getFileName()+LAST;
+        if (ObjectUtils.isEmpty(paramDto)) {
+            return false;
+        }
+        List<String> writeData = queryData(paramDto);
+        exportToLdif(writeData,fileName);
+        // 下载ldif文件
+        Path file = Paths.get(fileName);
+        if (Files.exists(file)) {
+            response.setContentType("application/ldif");
+            response.addHeader("Content-Disposition", "attachment; filename=" + fileName);
+            try {
+                Files.copy(file, response.getOutputStream());
+                response.getOutputStream().flush();
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public List<String> queryData(ParamDto paramDto){
+        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, paramDto.getFilter(), paramDto.getBaseDN(), paramDto.getScope(), paramDto.getPageSize());
+        List<String> strings = new ArrayList<>();
+        for (CertTreeVo certTreeVo : listResultVo) {
+            LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+            List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
+            map.put("dn:",certTreeVo.getRdn());
+            strings.add("dn:"+certTreeVo.getRdn());
+            for (TreeVo treeVo : treeVos) {
+                map.put(treeVo.getKey(),treeVo.getValue());
+                strings.add(treeVo.getKey()+":"+treeVo.getValue());
+            }
+            strings.add(FEED);
+        }
+        return strings;
+    }
+
+
+    public static void exportToLdif(List<String> data, String filename) {
+        try (FileWriter writer = new FileWriter(filename)) {
+            for (String line : data) {
+                writer.write(line + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

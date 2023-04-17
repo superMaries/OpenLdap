@@ -1,5 +1,7 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.dto.CertTreeDto;
+import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.dto.*;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
@@ -107,6 +109,10 @@ public class CertTreeController {
     @PostMapping("reBind")
     public ResultVo<Boolean> reBIndLdapTree(@RequestBody ReBindTreDto bindTree) {
         return certTreeService.reBIndLdapTree(bindTree);
+    }
+    @PostMapping("exportQueryData")
+    public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
+        return certTreeService.exportQueryData(paramDto,response);
     }
 
     /**

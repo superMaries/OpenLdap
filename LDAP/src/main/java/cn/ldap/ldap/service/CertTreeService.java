@@ -1,6 +1,8 @@
 package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.dto.*;
+import cn.ldap.ldap.common.dto.CertTreeDto;
+import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
@@ -23,7 +25,6 @@ public interface CertTreeService {
      * @return 返回树型结构
      */
     ResultVo<List<CertTreeVo>> queryCertTree(CertTreeDto treeVo);
-
     /**
      * 查询节点属性详情
      *
@@ -48,6 +49,7 @@ public interface CertTreeService {
      */
     ResultVo<Map<String, Object>> queryTreeRdnOrNum(CertTreeDto treeVo);
 
+    Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response);
     /**
      * 删除Ldap
      *
