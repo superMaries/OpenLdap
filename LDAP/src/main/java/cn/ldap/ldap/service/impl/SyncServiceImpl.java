@@ -7,7 +7,6 @@ import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.SyncService;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.cms.PasswordRecipientId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
