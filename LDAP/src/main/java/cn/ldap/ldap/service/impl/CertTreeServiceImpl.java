@@ -1,10 +1,8 @@
 package cn.ldap.ldap.service.impl;
 
-import cn.ldap.ldap.common.dto.CertTreeDto;
-import cn.ldap.ldap.common.dto.LdapBindTreeDto;
-import cn.ldap.ldap.common.dto.LdapDto;
-import cn.ldap.ldap.common.dto.ReBindTreDto;
+import cn.ldap.ldap.common.dto.*;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.util.StaticValue;
@@ -27,6 +25,8 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
+import javax.servlet.http.HttpServletResponse;
+import javax.swing.plaf.basic.BasicViewportUI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -154,7 +154,40 @@ public class CertTreeServiceImpl implements CertTreeService {
      */
     @Override
     public ResultVo<Boolean> reBIndLdapTree(ReBindTreDto bindTree) {
-        boolean b = LdapUtil.reBIndLdapTree(ldapTemplate, bindTree,ldapSearchFilter);
+        boolean b = LdapUtil.reBIndLdapTree(ldapTemplate, bindTree, ldapSearchFilter);
         return ResultUtil.success(b);
+    }
+
+    /**
+     * 导出LDIF文件
+     *
+     * @param exportDto
+     * @return
+     */
+    @Override
+    public ResultVo<Boolean> exportLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
+        if (ObjectUtils.isEmpty(exportDto)
+                || ObjectUtils.isEmpty(exportDto.getBaseDN())
+                || ObjectUtils.isEmpty(exportDto.getScope())
+                || ObjectUtils.isEmpty(exportDto.getExportType())
+                || ObjectUtils.isEmpty(exportDto.getExportFilePath())) {
+            log.error("缺少参数:{}", exportDto);
+            throw new SysException(ExceptionEnum.PARAM_ERROR);
+        }
+        //设置默认值
+        exportDto.setBaseFilter(ldapSearchFilter);
+        Boolean result = LdapUtil.exportLdifFile(ldapTemplate, exportDto, response);
+        return ResultUtil.success(result);
+    }
+
+    /**
+     * 导入LDIF文件
+     *
+     * @param exportDto
+     * @return
+     */
+    @Override
+    public ResultVo<Boolean> importLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
+        return null;
     }
 }

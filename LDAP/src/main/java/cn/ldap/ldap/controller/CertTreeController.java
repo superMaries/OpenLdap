@@ -1,9 +1,6 @@
 package cn.ldap.ldap.controller;
 
-import cn.ldap.ldap.common.dto.CertTreeDto;
-import cn.ldap.ldap.common.dto.LdapBindTreeDto;
-import cn.ldap.ldap.common.dto.LdapDto;
-import cn.ldap.ldap.common.dto.ReBindTreDto;
+import cn.ldap.ldap.common.dto.*;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
@@ -16,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -102,11 +100,34 @@ public class CertTreeController {
 
     /**
      * 修改节点名称
+     *
      * @param bindTree 参数
-     * @return  true 成功 false 失败
+     * @return true 成功 false 失败
      */
     @PostMapping("reBind")
     public ResultVo<Boolean> reBIndLdapTree(@RequestBody ReBindTreDto bindTree) {
         return certTreeService.reBIndLdapTree(bindTree);
+    }
+
+    /**
+     * 导出LDIF文件
+     *
+     * @param exportDto
+     * @return
+     */
+    @PostMapping("export")
+    public ResultVo<Boolean> exportLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
+        return certTreeService.exportLdifByBaseDn(exportDto,response);
+    }
+
+    /**
+     * 导入LDIF文件
+     *
+     * @param exportDto
+     * @return
+     */
+    @PostMapping("import")
+    public ResultVo<Boolean> importLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
+        return certTreeService.importLdifByBaseDn(exportDto,response);
     }
 }

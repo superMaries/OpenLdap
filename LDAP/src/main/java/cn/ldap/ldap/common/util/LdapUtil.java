@@ -2,13 +2,14 @@ package cn.ldap.ldap.common.util;
 
 import cn.ldap.ldap.common.dto.LdapBindTreeDto;
 import cn.ldap.ldap.common.dto.LdapDto;
+import cn.ldap.ldap.common.dto.LdifDto;
 import cn.ldap.ldap.common.dto.ReBindTreDto;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.TreeVo;
+import com.unboundid.ldap.sdk.SearchScope;
 import lombok.extern.slf4j.Slf4j;
-import org.omg.CORBA.SystemException;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.util.ObjectUtils;
 
@@ -19,11 +20,14 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -170,7 +174,7 @@ public class LdapUtil {
                     List<String> collect = list.stream().filter(it -> it.equals(key + StaticValue.EQ + attrValue)).collect(Collectors.toList());
                     if (!ObjectUtils.isEmpty(collect.size()) && collect.size() >= StaticValue.COUNT) {
                         treeVo.setFlag(StaticValue.TRUE);
-                    } else if (StaticValue.OBJECTA_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
+                    } else if (StaticValue.OBJECT_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
                         treeVo.setFlag(StaticValue.TRUE);
                     }
                     treeVo.setKey(key);
@@ -225,15 +229,15 @@ public class LdapUtil {
 
                     String newName = baseDn.split(StaticValue.SPLIT)[StaticValue.SPLIT_COUNT];
                     try {
-                        String fullName=result.getNameInNamespace();
-                        String parentRdn=fullName.replace(newName + StaticValue.SPLIT, StaticValue.REPLACE);
+                        String fullName = result.getNameInNamespace();
+                        String parentRdn = fullName.replace(newName + StaticValue.SPLIT, StaticValue.REPLACE);
                         //设置父级的RDN
                         certTreeVo.setParentRdn(parentRdn);
                         certTreeVo.setRdn(fullName);
                     } catch (Exception e) {
                         log.error(e.getMessage());
                         certTreeVo.setRdn(certTreeVo.getBaseDn());
-                        String parentRdn=certTreeVo.getBaseDn().replace(newName + StaticValue.SPLIT, StaticValue.REPLACE);
+                        String parentRdn = certTreeVo.getBaseDn().replace(newName + StaticValue.SPLIT, StaticValue.REPLACE);
                         //设置父级的RDN
                         certTreeVo.setParentRdn(parentRdn);
                     }
@@ -490,6 +494,83 @@ public class LdapUtil {
         ctx.destroySubcontext(childRdn);
     }
 
+    /**
+     * 导出文件（备份）
+     *
+     * @param ldapTemplate 查询模板
+     * @param exportDto    参数
+     * @param response     返回
+     * @return true 成功 false 失败
+     */
+    public static Boolean exportLdifFile(LdapTemplate ldapTemplate, LdifDto exportDto, HttpServletResponse response) {
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        SearchControls searchControls = new SearchControls();
+
+        Integer scope = exportDto.getScope();
+        //设置导出的条件
+        Integer queryScope = (StaticValue.LDAP_SCOPE.equals(exportDto.getScope())) ? SearchControls.OBJECT_SCOPE : scope;
+        searchControls.setSearchScope(queryScope);
+
+        int pageSize = StaticValue.LDAP_PAGE_SIZE;
+        searchControls.setCountLimit(pageSize);
+
+        int totalNodeCount = 0;
+        //设置过滤值和查询值
+        String ldapSearchBase = exportDto.getBaseDN();
+        String ldapSearchFilter = exportDto.getBaseFilter();
+
+        //导出文件位置
+        String exportFilePath = exportDto.getExportFilePath();
+        try {
+            //设置每页查询的数量
+            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, Control.CRITICAL)};
+            ctx.setRequestControls(controls);
+            // 创建LDIF文件输出流
+            try (PrintWriter ldifWriter = new PrintWriter(new FileWriter(exportFilePath));) {
+                byte[] cookie = null;
+                do {
+                    //分页查询
+                    NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, ldapSearchFilter, searchControls);
+                    //统计总数
+                    while (results.hasMore()) {
+                        SearchResult result = results.nextElement();
+                        if (ObjectUtils.isEmpty(result)) {
+                            continue;
+                        }
+                        Attributes attributes = result.getAttributes();
+                        NamingEnumeration<?> valueEnumeration = attributes.getAll();
+                        while (valueEnumeration.hasMoreElements()) {
+                            Object value = valueEnumeration.nextElement();
+                           // ldifWriter.println(attributes.getID() + ": " + value);
+                        }
+                    }
+                    //获取最近一次 LDAP 操作的响应控制器。
+                    Control[] responseControls = ctx.getResponseControls();
+                    //设置Cookies
+                    if (responseControls != null) {
+                        for (Control control : responseControls) {
+                            if (control instanceof PagedResultsResponseControl) {
+                                PagedResultsResponseControl prrc = (PagedResultsResponseControl) control;
+                                cookie = prrc.getCookie();
+                            }
+                        }
+                    }
+                    ctx.setRequestControls(new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, cookie, Control.CRITICAL)});
+                } while (cookie != null);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                throw new SysException(ExceptionEnum.READ_FILE_ERROR);
+            }
+            ctx.close();
+        } catch (NamingException | IOException e) {
+            log.error(e.getMessage());
+            throw new SysException(ExceptionEnum.LDAP_QUERY_RDN_NOT_EXIT);
+        }
+
+
+        return StaticValue.TRUE;
+    }
+
     public static long funTotal(LdapTemplate ldapTemplate, String base, long size, long count, String... whereParam) {
         if (size == 0) {
             return count;
@@ -541,6 +622,4 @@ public class LdapUtil {
         }
         return count;
     }
-
-
 }

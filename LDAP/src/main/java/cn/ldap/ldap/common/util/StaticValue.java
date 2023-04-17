@@ -52,10 +52,12 @@ public class StaticValue {
 
     public final static boolean TRUE = true;
     public final static boolean FALSE = false;
-    public final static String SM2="SM2";
-    public final static String SM3="SM3";
-    public final static String VERTICAL="|";
-    public final static String LOG="日志管理-审计日志";
-    public final static String EQ="=";
-    public final static String OBJECTA_CLASS="objectClass";
+    public final static String SM2 = "SM2";
+    public final static String SM3 = "SM3";
+    public final static String VERTICAL = "|";
+    public final static String LOG = "日志管理-审计日志";
+    public final static String EQ = "=";
+    public final static String OBJECT_CLASS = "objectClass";
+
+    public final static Integer LDAP_SCOPE = 3;
 }
