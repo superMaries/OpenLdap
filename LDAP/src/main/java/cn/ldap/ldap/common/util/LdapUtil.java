@@ -186,6 +186,59 @@ public class LdapUtil {
         return treeVos;
     }
 
+
+
+    public static List<TreeVo> queryAttributeBytesInfo(LdapTemplate ldapTemplate, String baseDN, boolean isRetrunAttr, String attribute) {
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        List<TreeVo> treeVos = new ArrayList<>();
+        Attributes attributes = null;
+        // 对rdn 进行分析出来
+        String parentStr = baseDN.split(StaticValue.SPLIT)[0];
+        String[] addStr = parentStr.split(StaticValue.ADD);
+        List<String> list = Arrays.asList(addStr);
+
+        try {
+            //查询对应的属性值
+            if (isRetrunAttr && !ObjectUtils.isEmpty(attribute)) {
+                attributes = ctx.getAttributes(baseDN, attribute.split(StaticValue.SPLIT));
+            } else {
+                attributes = ctx.getAttributes(baseDN);
+            }
+            NamingEnumeration<? extends Attribute> attributesAll = attributes.getAll();
+            //解析属性值
+            while (attributesAll.hasMore()) {
+                Attribute next = attributesAll.next();
+                String key = next.getID();
+                NamingEnumeration<?> keyAll = next.getAll();
+                while (keyAll.hasMore()) {
+                    TreeVo treeVo = new TreeVo();
+                    Object o = keyAll.nextElement();
+                    String attrValue = o.toString();
+                    if (o instanceof byte[]) {
+                        byte[] cert = (byte[]) o;
+                        attrValue = Base64.getEncoder().encodeToString(cert);
+
+                    }
+
+                    String finalAttrValue = attrValue;
+                    List<String> collect = list.stream().filter(it -> it.equals(key + StaticValue.EQ + finalAttrValue)).collect(Collectors.toList());
+                    if (!ObjectUtils.isEmpty(collect.size()) && collect.size() >= StaticValue.COUNT) {
+                        treeVo.setFlag(StaticValue.TRUE);
+                    } else if (StaticValue.OBJECTA_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
+                        treeVo.setFlag(StaticValue.TRUE);
+                    }
+                    treeVo.setKey(key);
+                    treeVo.setValue(attrValue);
+                    treeVos.add(treeVo);
+                }
+            }
+        } catch (NamingException e) {
+            log.error("ldap 查询属性异常:{}", e.getMessage());
+            return treeVos;
+        }
+        return treeVos;
+    }
+
     /**
      * @param ldapTemplate     ldap 查询模板
      * @param ldapSearchFilter 过滤条件

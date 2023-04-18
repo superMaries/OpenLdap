@@ -58,7 +58,6 @@ public class CertTreeServiceImpl implements CertTreeService {
      */
     @Override
     public ResultVo<List<CertTreeVo>> queryCertTree(CertTreeDto treeVo) {
-        //注释
         if (ObjectUtils.isEmpty(treeVo)) {
             treeVo = new CertTreeDto();
             treeVo.setBaseDN(ldapSearchBase);
@@ -254,17 +253,17 @@ public class CertTreeServiceImpl implements CertTreeService {
         return false;
     }
 
-    public List<String> queryData(ParamDto paramDto) {
+    public List<String> queryData(ParamDto paramDto){
         List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, paramDto.getFilter(), paramDto.getBaseDN(), paramDto.getScope(), paramDto.getPageSize());
         List<String> strings = new ArrayList<>();
         for (CertTreeVo certTreeVo : listResultVo) {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-            List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
-            map.put("dn:", certTreeVo.getRdn());
-            strings.add("dn:" + certTreeVo.getRdn());
+            List<TreeVo> treeVos = LdapUtil.queryAttributeBytesInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
+            map.put("dn:",certTreeVo.getRdn());
+            strings.add("dn:"+certTreeVo.getRdn());
             for (TreeVo treeVo : treeVos) {
-                map.put(treeVo.getKey(), treeVo.getValue());
-                strings.add(treeVo.getKey() + ":" + treeVo.getValue());
+                map.put(treeVo.getKey(),treeVo.getValue());
+                strings.add(treeVo.getKey()+":"+treeVo.getValue());
             }
             strings.add(FEED);
         }
@@ -281,4 +280,5 @@ public class CertTreeServiceImpl implements CertTreeService {
             e.printStackTrace();
         }
     }
+
 }

@@ -6,6 +6,7 @@ import cn.ldap.ldap.service.ObjectClassInformationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -31,5 +32,15 @@ public class ObjectClassInformationController {
     @PostMapping("queryInformation")
     public ResultVo<List<ObjectDataDto>> queryInformation() {
         return objectClassInformationService.queryObjectAndAttribute();
+    }
+
+    /**
+     * 根据objectclassname查询属性
+     * @param objectClassName
+     * @return 属性列表
+     */
+    @PostMapping("queryAttribute")
+    public ResultVo<Object> queryAttribute(@RequestParam("objectClassName") String objectClassName) {
+        return objectClassInformationService.queryAttribute(objectClassName);
     }
 }

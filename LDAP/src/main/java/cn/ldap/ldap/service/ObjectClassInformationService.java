@@ -17,4 +17,11 @@ public interface ObjectClassInformationService {
      * @return
      */
     ResultVo<List<ObjectDataDto>> queryObjectAndAttribute();
+
+    /**
+     * 根据objectClassName查询属性
+     * @param objectClassName
+     * @return 属性列表
+     */
+    ResultVo<Object> queryAttribute(String objectClassName);
 }

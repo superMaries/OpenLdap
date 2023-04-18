@@ -1,5 +1,6 @@
 package cn.ldap.ldap.common.vo;
 
+import cn.ldap.ldap.common.dto.AttributeDto;
 import lombok.Data;
 
 import java.util.List;
@@ -14,5 +15,5 @@ public class ObjectDataDto {
     /**
      * 属性集合名称
      */
-    private List<String> attributesName;
+    private List<AttributeDto> attributesName;
 }

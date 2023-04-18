@@ -67,10 +67,21 @@ public class SyncController {
     /**
      * 删除
      * @param id
-     * @return
+     * @return 返回一个boolean值
      */
     @PostMapping("delete/{id}")
     public Boolean deleteById(@PathVariable Integer id){
         return syncStatusService.removeById(id);
     }
+
+    /**
+     * 主服务同步状态节课
+     * @return 查询的从服务和主服务对比信息的集合
+     */
+    @PostMapping("mainQuery")
+    public ResultVo<Object> mainQuery(){
+        return syncStatusService.mainQuery();
+    }
 }
+
+

@@ -32,12 +32,12 @@ public class SyncStatus {
      * 主服务数量
      */
     @TableField("main_server_number")
-    private String mainServerNumber;
+    private Integer mainServerNumber;
     /**
      * 从服务数量
      */
     @TableField("follow_server_number")
-    private String followServerNumber;
+    private Integer followServerNumber;
     /**
      * 同步状态
      */
