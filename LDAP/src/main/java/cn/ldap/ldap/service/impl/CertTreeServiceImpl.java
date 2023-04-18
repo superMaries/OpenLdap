@@ -150,7 +150,7 @@ public class CertTreeServiceImpl implements CertTreeService {
         List<String> strings = new ArrayList<>();
         for (CertTreeVo certTreeVo : listResultVo) {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-            List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
+            List<TreeVo> treeVos = LdapUtil.queryAttributeBytesInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
             map.put("dn:",certTreeVo.getRdn());
             strings.add("dn:"+certTreeVo.getRdn());
             for (TreeVo treeVo : treeVos) {
@@ -172,15 +172,5 @@ public class CertTreeServiceImpl implements CertTreeService {
             e.printStackTrace();
         }
     }
-//    /**
-//     * 删除Ldap
-//     *
-//     * @param ldapDto 参数
-//     * @return true 成功 false 失败
-//     */
-//    @Override
-//    public ResultVo<Boolean> delLdapTreByRdn(LdapDto ldapDto) {
-//        boolean result = LdapUtil.delLdapTreByRdn(ldapTemplate, ldapDto);
-//        return ResultUtil.success(result);
-//    }
+
 }

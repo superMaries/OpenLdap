@@ -6,6 +6,7 @@ import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 import cn.ldap.ldap.service.CertTreeService;
+import cn.ldap.ldap.service.FileNameService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/tree/")
 public class CertTreeController {
+
+    @Resource
+    private FileNameService fileNameService;
 
     @Resource
     private CertTreeService certTreeService;
@@ -75,8 +79,23 @@ public class CertTreeController {
         return certTreeService.queryTreeRdnOrNum(treeVo);
     }
 
+    /**
+     * 导出
+     * @param paramDto
+     * @param response
+     * @return
+     */
     @PostMapping("exportQueryData")
     public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
         return certTreeService.exportQueryData(paramDto,response);
+    }
+
+    /**
+     * 查询文件路径
+     * @return
+     */
+    @PostMapping("queryFileName")
+    public ResultVo<String> queryFileName() {
+        return fileNameService.queryFileName();
     }
 }

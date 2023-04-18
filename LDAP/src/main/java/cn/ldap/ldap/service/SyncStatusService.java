@@ -16,5 +16,12 @@ public interface SyncStatusService extends IService<SyncStatus> {
      */
     ResultVo<Object> add(SyncStatusDto syncStatusDto);
 
+    /**
+     * 修改
+     * @param syncStatusDto
+     * @return
+     */
     ResultVo<Object> update(SyncStatusDto syncStatusDto);
+
+    ResultVo<Object> mainQuery();
 }

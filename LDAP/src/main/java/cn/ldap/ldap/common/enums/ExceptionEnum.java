@@ -23,6 +23,8 @@ public enum ExceptionEnum {
     //已被初始化
     USER_INIT(203, "已被初始化"),
 
+
+
     //系统异常
     SYSTEM_ERROR(500, "系统异常"),
 
@@ -63,10 +65,12 @@ public enum ExceptionEnum {
     //验签失败
     VERIFY_FAIL(5012, "验签失败"),
 
+
     //LDAP接口中的错误 全部定义8开头
     LDAP_RDN_NOT_EXIT(8001, "删除RDN错误"),
     LDAP_QUERY_RDN_NOT_EXIT(8002, "解析RDN错误"),
     LDAP_DEL_RDN_NOT_EXIT(8002, "删除RDN错误"),
+    LDAP_DATA_ERROR(8004,"缺少从服务连接数据"),
     ;
 
     /**
