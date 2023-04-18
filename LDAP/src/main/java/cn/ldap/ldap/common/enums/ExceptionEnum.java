@@ -50,6 +50,8 @@ public enum ExceptionEnum {
     DATA_EXIT(806, "数据已存在"),
     READ_FILE_ERROR(808,"IO流异常"),
     NOT_AUDIT(807, "该账号是管理员,不允许审计日志"),
+    LINK_ERROR(808, "连接异常"),
+    SCHEMA_ERROR(809,"SCHEMA信息异常"),
 
 
     FILE_IO_ERROR(808, "文件流处理失败"),

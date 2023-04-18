@@ -1,6 +1,7 @@
 package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.vo.ObjectDataDto;
+import cn.ldap.ldap.common.vo.ResultVo;
 
 import java.util.List;
 /**
@@ -11,5 +12,9 @@ import java.util.List;
  */
 public interface ObjectClassInformationService {
 
-    List<ObjectDataDto> queryObjectAndAttribute();
+    /**
+     * 查询ObjectClass和属性接
+     * @return
+     */
+    ResultVo<List<ObjectDataDto>> queryObjectAndAttribute();
 }
