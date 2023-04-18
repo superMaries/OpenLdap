@@ -37,6 +37,8 @@ public class StaticValue {
     public final static Long TOTAL_NODE_NUM = 0L;
     public final static String NUM_SUBORDINATES = "1.1";
     public final static String RDN = "rdn";
+    public final static String DN = "dn";
+    public final static String USER_CERTIFICATE = "userCertificate;binary";
     public final static String RDN_NUM_KEY = "rdnNum";
     public final static String RDN_CHILD_NUM_KEY = "rdnChildNum";
     public final static Integer RDN_NUM = 0;
@@ -55,9 +57,19 @@ public class StaticValue {
     public final static String SM2 = "SM2";
     public final static String SM3 = "SM3";
     public final static String VERTICAL = "|";
+    public final static String N = "\n";
+
+    public final static String J = "#";
+    public final static String mh = ": ";
+    public final static Integer index = 2;
     public final static String LOG = "日志管理-审计日志";
     public final static String EQ = "=";
     public final static String OBJECT_CLASS = "objectClass";
 
     public final static Integer LDAP_SCOPE = 3;
+
+    public final static Integer EXPORT_LOCAL = 1;
+
+    public final static String LDIF = ".ldif";
+    public final static String LDIF_END = "\\\\";
 }

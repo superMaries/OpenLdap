@@ -1,18 +1,17 @@
 package cn.ldap.ldap.common.util;
 
-import cn.ldap.ldap.common.dto.LdapBindTreeDto;
-import cn.ldap.ldap.common.dto.LdapDto;
-import cn.ldap.ldap.common.dto.LdifDto;
-import cn.ldap.ldap.common.dto.ReBindTreDto;
+import cn.ldap.ldap.common.dto.*;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.enums.ImportEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.TreeVo;
-import com.unboundid.ldap.sdk.SearchScope;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
@@ -21,13 +20,11 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -172,7 +169,7 @@ public class LdapUtil {
                     String attrValue = keyAll.nextElement().toString();
 
                     List<String> collect = list.stream().filter(it -> it.equals(key + StaticValue.EQ + attrValue)).collect(Collectors.toList());
-                    if (!ObjectUtils.isEmpty(collect.size()) && collect.size() >= StaticValue.COUNT) {
+                    if (!ObjectUtils.isEmpty(collect) && collect.size() >= StaticValue.COUNT) {
                         treeVo.setFlag(StaticValue.TRUE);
                     } else if (StaticValue.OBJECT_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
                         treeVo.setFlag(StaticValue.TRUE);
@@ -507,26 +504,35 @@ public class LdapUtil {
         SearchControls searchControls = new SearchControls();
 
         Integer scope = exportDto.getScope();
-        //设置导出的条件
+        //设置导出的条件  范围 0 当前 1 一个条目 2 全部
         Integer queryScope = (StaticValue.LDAP_SCOPE.equals(exportDto.getScope())) ? SearchControls.OBJECT_SCOPE : scope;
         searchControls.setSearchScope(queryScope);
 
         int pageSize = StaticValue.LDAP_PAGE_SIZE;
         searchControls.setCountLimit(pageSize);
 
-        int totalNodeCount = 0;
         //设置过滤值和查询值
         String ldapSearchBase = exportDto.getBaseDN();
         String ldapSearchFilter = exportDto.getBaseFilter();
 
         //导出文件位置
-        String exportFilePath = exportDto.getExportFilePath();
+        String fileName = exportDto.getExportFilePath();
+        if (StaticValue.EXPORT_LOCAL.equals(exportDto.getExportType())) {
+            //下载到本地
+            String[] fileSplit = fileName.split(StaticValue.LDIF_END);
+            fileName = fileSplit[fileSplit.length - 1] + StaticValue.LDIF;
+        } else {
+            if (!fileName.endsWith(StaticValue.LDIF)) {
+                fileName += StaticValue.LDIF;
+            }
+        }
+
         try {
             //设置每页查询的数量
             Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, Control.CRITICAL)};
             ctx.setRequestControls(controls);
             // 创建LDIF文件输出流
-            try (PrintWriter ldifWriter = new PrintWriter(new FileWriter(exportFilePath));) {
+            try (PrintWriter ldifWriter = new PrintWriter(new FileWriter(fileName));) {
                 byte[] cookie = null;
                 do {
                     //分页查询
@@ -537,11 +543,29 @@ public class LdapUtil {
                         if (ObjectUtils.isEmpty(result)) {
                             continue;
                         }
+                        //设置RDN的值
+                        String rdn = result.getNameInNamespace();
+                        ldifWriter.println("dn" + ": " + rdn);
+                        if (exportDto.isOnlyRdn()) {
+                            continue;
+                        }
                         Attributes attributes = result.getAttributes();
-                        NamingEnumeration<?> valueEnumeration = attributes.getAll();
-                        while (valueEnumeration.hasMoreElements()) {
-                            Object value = valueEnumeration.nextElement();
-                           // ldifWriter.println(attributes.getID() + ": " + value);
+                        NamingEnumeration<? extends Attribute> attributesAll = attributes.getAll();
+                        //解析属性值
+                        while (attributesAll.hasMore()) {
+                            Attribute next = attributesAll.next();
+                            String key = next.getID();
+                            NamingEnumeration<?> keyAll = next.getAll();
+                            while (keyAll.hasMore()) {
+                                Object o = keyAll.nextElement();
+                                String attrValue = o.toString();
+                                //判断是否字节格式
+                                if (o instanceof byte[]) {
+                                    byte[] cert = (byte[]) o;
+                                    attrValue = Base64.getEncoder().encodeToString(cert);
+                                }
+                                ldifWriter.println(key + ": " + attrValue);
+                            }
                         }
                     }
                     //获取最近一次 LDAP 操作的响应控制器。
@@ -562,13 +586,42 @@ public class LdapUtil {
                 throw new SysException(ExceptionEnum.READ_FILE_ERROR);
             }
             ctx.close();
+            return downLdif(exportDto, response, fileName);
+
         } catch (NamingException | IOException e) {
             log.error(e.getMessage());
             throw new SysException(ExceptionEnum.LDAP_QUERY_RDN_NOT_EXIT);
         }
+    }
 
-
-        return StaticValue.TRUE;
+    public static boolean downLdif(LdifDto exportDto, HttpServletResponse response, String fileName) {
+        //判断是下载到服务器还是本地
+        if (StaticValue.EXPORT_LOCAL.equals(exportDto.getExportType())) {
+            Path file = Paths.get(fileName);
+            try {
+                response.setContentType("application/ldif");
+                response.addHeader("Content-Disposition", "attachment; filename=" + fileName);
+                Files.copy(file, response.getOutputStream());
+                response.getOutputStream().flush();
+                return true;
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+            }
+        } else {
+            Path file = Paths.get(fileName);
+            //下载到服务器。判断文件是否存在 不存在就创建 不需要返回下的文件
+            if (!Files.exists(file)) {
+                //不存在
+                try {
+                    Files.createFile(file);
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                    throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+                }
+            }
+            return true;
+        }
     }
 
     public static long funTotal(LdapTemplate ldapTemplate, String base, long size, long count, String... whereParam) {
@@ -621,5 +674,202 @@ public class LdapUtil {
             }
         }
         return count;
+    }
+
+    /**
+     * 根据LDAP文件进行 新增
+     *
+     * @param ldapTemplate LDAP模板
+     * @param file         上传的文件
+     * @param name         文件名称
+     * @param type         1 仅添加  2 仅更新 3 更新或添加
+     * @return
+     */
+    public static boolean importLap(LdapTemplate ldapTemplate, MultipartFile file, String name, Integer type) {
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        SearchControls searchControls = new SearchControls();
+
+        try {
+            byte[] bytes = file.getBytes();
+            String line;
+            InputStream inputStream = file.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            StringBuilder sb = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+                sb.append(StaticValue.N);
+            }
+            // 解析 LDIF 文件
+            analysisLdapFile(ctx, sb, type);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+        }
+
+        return StaticValue.TRUE;
+    }
+
+    /**
+     * 解析 LDIF 文件
+     *
+     * @param sb   LDIF 文件里面的内容
+     * @param type 1 仅添加  2 仅更新 3 更新或添加
+     */
+    private static void analysisLdapFile(LdapContext ctx, StringBuilder sb, Integer type) {
+        String[] entries = sb.toString().split(StaticValue.N + StaticValue.N);
+        for (String entry : entries) {
+            // 解析 LDIF 条目的属性
+            Attributes attributes = new BasicAttributes();
+            Integer count = parseAttributes(entry, attributes);
+            try {
+                //获取DN的值
+                String dn = attributes.get(StaticValue.DN).get().toString();
+                // 判断条目是否已存在
+                Attributes dnAttr = null;
+                try {
+                    dnAttr = ctx.getAttributes(dn);
+                } catch (NameNotFoundException e) {
+                    dnAttr = null;
+                }
+                if (dnAttr == null) {
+                    //  判断导入的类型  如果传入的类型是仅更新 则忽略
+                    if (!ImportEnum.ONLY_UPDATE.getCode().equals(type)) {
+                        // 创建新条目
+                        attributes.remove(StaticValue.DN);
+                        ctx.createSubcontext(dn, attributes);
+                    }
+                } else {
+                    //  判断导入的类型  如果传入的类型是仅添加 则忽略
+                    if (!ImportEnum.ONLY_INTER.getCode().equals(type)) {
+                        // 更新已有条目
+//                        因为里面有一个值为DN，这个是唯一标识 不能放在属性里面，于是需要移除DN
+                        attributes.remove(StaticValue.DN);
+//                        ModificationItem[] mods = new ModificationItem[attributes.size()];
+                        ModificationItem[] mods = new ModificationItem[count - StaticValue.COUNT];
+                        NamingEnumeration<? extends Attribute> attrs = attributes.getAll();
+                        int i = 0;
+                        while (attrs.hasMore()) {
+                            //获取属性
+                            Attribute attr = attrs.next();
+                            if (StaticValue.DN.toUpperCase().equals(attr.getID().toUpperCase())) {
+                                continue;
+                            }
+                            String id = attr.getID();
+//                            Object o = attr.get();
+                            NamingEnumeration<?> all = attr.getAll();
+                            while (all.hasMore()) {
+                                Object o = all.nextElement();
+                                String attrValue = o.toString();
+                                mods[i++] = new ModificationItem(DirContext.ADD_ATTRIBUTE,
+                                        new BasicAttribute(id, o));
+                            }
+                        }
+                        //更新
+//                        ctx.modifyAttributes(dn, mods);
+                        ctx.modifyAttributes(dn, DirContext.REPLACE_ATTRIBUTE, attributes);
+                    }
+                }
+            } catch (NamingException e) {
+                log.error(e.getMessage());
+                throw new SysException(ExceptionEnum.LDAP_QUERY_RDN_NOT_EXIT);
+            }
+        }
+    }
+
+    /**
+     * 证书转字节
+     *
+     * @param certificate 证书字符串
+     * @return 字节
+     */
+    public static byte[] decodeCertificate(String certificate) {
+        return Base64.getDecoder().decode(certificate);
+    }
+
+    /**
+     * 解析 LDIF 条目的属性
+     *
+     * @param entry
+     */
+    private static Integer parseAttributes(String entry, Attributes attributes) {
+        Integer count = StaticValue.SPLIT_COUNT;
+        //对数据进行分割
+        String[] lines = entry.split(StaticValue.N);
+        //解析
+        for (String line : lines) {
+            if (ObjectUtils.isEmpty(line)) {
+                if (line.startsWith(StaticValue.J)) {
+                    // 注释行
+                    continue;
+                }
+            }
+
+            String[] parts = line.split(StaticValue.mh, StaticValue.index);
+            // TODO: 2023/4/17 判断长度
+            //获取key 和 value 的值
+            String name = parts[StaticValue.SPLIT_COUNT];
+            Object value = parts[StaticValue.COUNT];
+            if (name.toUpperCase().equals(StaticValue.USER_CERTIFICATE.toUpperCase())) {
+                value = decodeCertificate(parts[StaticValue.COUNT]);
+            }
+
+            Attribute attribute = attributes.get(name);
+            if (attribute == null) {
+                attribute = new BasicAttribute(name);
+                attributes.put(attribute);
+            }
+            count++;
+            attribute.add(value);
+        }
+        return count;
+
+    }
+
+    /**
+     * 创建属性以及属性值
+     *
+     * @param createAttDtos
+     * @return 返回属性
+     */
+    private static Attributes parseAttributes(List<CreateAttDto> createAttDtos) {
+        log.info("设置属性值的参数：{}", createAttDtos);
+        //创建一个 属性对象
+        Attributes attributes = new BasicAttributes();
+        for (CreateAttDto att : createAttDtos) {
+            String name = att.getKey();
+            Attribute attribute = new BasicAttribute(name);
+            attributes.put(attribute);
+            List<String> values = att.getValues();
+            for (String value : values) {
+                attribute.add(value);
+            }
+        }
+        return attributes;
+    }
+
+    /**
+     * 根据LDAP文件进行 新增
+     *
+     * @param createLdapDto 参数
+     * @param ldapTemplate  LDAP模板
+     * @return true 成功 false 失败
+     */
+    public static boolean crateLdap(LdapTemplate ldapTemplate, CreateLdapDto createLdapDto) {
+        //创建一个 属性对象
+        Attributes attributes = new BasicAttributes();
+        if (!ObjectUtils.isEmpty(createLdapDto.getCreateAttDtos())) {
+            attributes = parseAttributes(createLdapDto.getCreateAttDtos());
+        }
+        //获取context 连接方式
+        String rdn = createLdapDto.getRdn();
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        try {
+            ctx.createSubcontext(rdn, attributes);
+        } catch (NamingException e) {
+            log.error(e.getMessage());
+            throw new SysException(ExceptionEnum.LDAP_QUERY_RDN_NOT_EXIT);
+        }
+        return StaticValue.TRUE;
     }
 }

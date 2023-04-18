@@ -15,18 +15,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-import javax.naming.ldap.LdapContext;
 import javax.servlet.http.HttpServletResponse;
-import javax.swing.plaf.basic.BasicViewportUI;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,6 +58,7 @@ public class CertTreeServiceImpl implements CertTreeService {
      */
     @Override
     public ResultVo<List<CertTreeVo>> queryCertTree(CertTreeDto treeVo) {
+        //注释
         if (ObjectUtils.isEmpty(treeVo)) {
             treeVo = new CertTreeDto();
             treeVo.setBaseDN(ldapSearchBase);
@@ -176,6 +169,7 @@ public class CertTreeServiceImpl implements CertTreeService {
      */
     @Override
     public ResultVo<Boolean> exportLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
+        log.info("导出参数为:{}", exportDto);
         if (ObjectUtils.isEmpty(exportDto)
                 || ObjectUtils.isEmpty(exportDto.getBaseDN())
                 || ObjectUtils.isEmpty(exportDto.getScope())
@@ -193,22 +187,57 @@ public class CertTreeServiceImpl implements CertTreeService {
     /**
      * 导入LDIF文件
      *
-     * @param exportDto
-     * @return
+     * @param importDto 上传的文件
+     * @return 成功 false 失败
      */
     @Override
-    public ResultVo<Boolean> importLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
-        return null;
+    public ResultVo<Boolean> importLdifByBaseDn(ImportDto importDto) {
+        log.info("恢复的方法参数为{}", importDto);
+        //判断参数是否为空
+        if (ObjectUtils.isEmpty(importDto)) {
+            log.error("参数为空");
+            throw new SysException(ExceptionEnum.PARAM_EMPTY);
+        }
+        //获取上传的文件
+        MultipartFile file = importDto.getFile();
+        //判断上传文件为空
+        if (file.isEmpty()) {
+            log.error("文件为空");
+            throw new SysException(ExceptionEnum.PARAM_ERROR);
+        }
+        //获取文件名称
+        String name = file.getName();
+        //对上传的文件进行解析
+        boolean result = LdapUtil.importLap(ldapTemplate, file, name, importDto.getType());
+        return ResultUtil.success(result);
+    }
+
+    /**
+     * 新增LDAP节点
+     *
+     * @param createLdapDto 参数
+     * @return true 成功 false 失败
+     */
+    @Override
+    public ResultVo<Boolean> crateLdap(CreateLdapDto createLdapDto) {
+        log.info("新增LDAP节点{}", createLdapDto);
+        if (ObjectUtils.isEmpty(createLdapDto)
+                || ObjectUtils.isEmpty(createLdapDto.getRdn())) {
+            log.error("参数为空");
+            throw new SysException(ExceptionEnum.PARAM_EMPTY);
+        }
+        boolean result=LdapUtil.crateLdap(ldapTemplate,createLdapDto);
+        return ResultUtil.success(result);
     }
 
     @Override
     public Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response) {
-        String fileName = paramDto.getFileName()+LAST;
+        String fileName = paramDto.getFileName() + LAST;
         if (ObjectUtils.isEmpty(paramDto)) {
             return false;
         }
         List<String> writeData = queryData(paramDto);
-        exportToLdif(writeData,fileName);
+        exportToLdif(writeData, fileName);
         // 下载ldif文件
         Path file = Paths.get(fileName);
         if (Files.exists(file)) {
@@ -225,17 +254,17 @@ public class CertTreeServiceImpl implements CertTreeService {
         return false;
     }
 
-    public List<String> queryData(ParamDto paramDto){
+    public List<String> queryData(ParamDto paramDto) {
         List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, paramDto.getFilter(), paramDto.getBaseDN(), paramDto.getScope(), paramDto.getPageSize());
         List<String> strings = new ArrayList<>();
         for (CertTreeVo certTreeVo : listResultVo) {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
             List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
-            map.put("dn:",certTreeVo.getRdn());
-            strings.add("dn:"+certTreeVo.getRdn());
+            map.put("dn:", certTreeVo.getRdn());
+            strings.add("dn:" + certTreeVo.getRdn());
             for (TreeVo treeVo : treeVos) {
-                map.put(treeVo.getKey(),treeVo.getValue());
-                strings.add(treeVo.getKey()+":"+treeVo.getValue());
+                map.put(treeVo.getKey(), treeVo.getValue());
+                strings.add(treeVo.getKey() + ":" + treeVo.getValue());
             }
             strings.add(FEED);
         }

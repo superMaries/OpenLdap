@@ -21,10 +21,15 @@ public class LdifDto {
      */
     private String baseFilter;
     /**
-     * 范围
+     * 范围 0 当前 1 一个条目 2 全部
      */
     private Integer scope;
 
+
+    /**
+     * 只导出分辨名
+     */
+    private boolean onlyRdn = false;
     /**
      * 导出类型 0 服务器 1 本地
      */

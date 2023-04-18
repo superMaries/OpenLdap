@@ -6,6 +6,7 @@ import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -78,16 +79,24 @@ public interface CertTreeService {
      * 导出LDIF文件
      *
      * @param exportDto
-     * @return
+     * @return 成功 false 失败
      */
     ResultVo<Boolean> exportLdifByBaseDn(LdifDto exportDto, HttpServletResponse response);
 
     /**
      * 导入LDIF文件
      *
-     * @param exportDto
-     * @return
+     * @param importDto 上传的文件
+     * @return  成功 false 失败
      */
-    ResultVo<Boolean> importLdifByBaseDn(LdifDto exportDto,HttpServletResponse response);
+    ResultVo<Boolean> importLdifByBaseDn(ImportDto importDto);
+
+    /**
+     * 新增LDAP节点
+     *
+     * @param createLdapDto 参数
+     * @return true 成功 false 失败
+     */
+    ResultVo<Boolean> crateLdap(CreateLdapDto createLdapDto);
 
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -113,13 +114,14 @@ public class CertTreeController {
 
     /**
      * 查询导出全部
+     *
      * @param paramDto
      * @param response
      * @return
      */
     @PostMapping("exportQueryData")
     public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
-        return certTreeService.exportQueryData(paramDto,response);
+        return certTreeService.exportQueryData(paramDto, response);
     }
 
     /**
@@ -129,18 +131,30 @@ public class CertTreeController {
      * @return
      */
     @PostMapping("export")
-    public ResultVo<Boolean> exportLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
-        return certTreeService.exportLdifByBaseDn(exportDto,response);
+    public ResultVo<Boolean> exportLdifByBaseDn(@RequestBody LdifDto exportDto, HttpServletResponse response) {
+        return certTreeService.exportLdifByBaseDn(exportDto, response);
     }
 
     /**
      * 导入LDIF文件
      *
-     * @param exportDto
-     * @return
+     * @param importDto
+     * @return true 成功 false 失败
      */
     @PostMapping("import")
-    public ResultVo<Boolean> importLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
-        return certTreeService.importLdifByBaseDn(exportDto,response);
+    public ResultVo<Boolean> importLdifByBaseDn(ImportDto importDto) {
+        return certTreeService.importLdifByBaseDn(importDto);
     }
+
+    /**
+     * 新增LDAP节点
+     *
+     * @param createLdapDto 参数
+     * @return true 成功 false 失败
+     */
+    @PostMapping("crate")
+    public ResultVo<Boolean> crateLdap(@RequestBody CreateLdapDto createLdapDto) {
+        return certTreeService.crateLdap(createLdapDto);
+    }
+
 }
