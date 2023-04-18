@@ -1,6 +1,10 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.exception.SysException;
+import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ObjectDataDto;
+import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.ObjectClassInformationService;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -35,53 +39,65 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
     private String password;
 
 
+    /**
+     * 查询属性和objectClass
+     *
+     * @return ObjectClass和属性的结构集合
+     */
     @Override
-    public List<ObjectDataDto> queryObjectAndAttribute() {
+    public ResultVo<List<ObjectDataDto>> queryObjectAndAttribute() {
 
         LDAPConnection ldapConnection = null;
         //和LDAP服务进行连接
         try {
             ldapConnection = new LDAPConnection(url, port, userName, password);
+            log.info("连接URL:{}", url);
         } catch (LDAPException e) {
-            e.printStackTrace();
+            log.error("连接异常:{}", e);
+            return ResultUtil.fail(ExceptionEnum.LINK_ERROR);
         }
         // 获取 LDAP 服务器的 schema 信息
         Schema schema = null;
         try {
             schema = ldapConnection.getSchema();
         } catch (LDAPException e) {
-            e.printStackTrace();
+            log.error("SCHEMA数据异常:{}", e);
+            return ResultUtil.fail(ExceptionEnum.SCHEMA_ERROR);
+        }finally {
+            ldapConnection.close();
         }
         // 获取所有 objectClass
         Set<ObjectClassDefinition> objectClasses = schema.getObjectClasses();
-        List<ObjectDataDto> dtoList = new ArrayList<>();
+        //定义结果集合
+        List<ObjectDataDto> resultList = new ArrayList<>();
 
         // 遍历所有 objectClass
+        ObjectDataDto objectDataDto = new ObjectDataDto();
         for (ObjectClassDefinition objectClass : objectClasses) {
-            ObjectDataDto objectDataDto = new ObjectDataDto();
-            log.info("ObjectClass:{}" + objectClass.getNameOrOID());
+            log.info("ObjectClass:{}", objectClass.getNameOrOID());
+            //获取所有ObjectClass类
             objectDataDto.setObjectClassName(objectClass.getNameOrOID());
+            //获取两种属性集合
             List<String> requireAttribute = Arrays.asList(objectClass.getRequiredAttributes());
             List<String> optionalAttribute = Arrays.asList(objectClass.getOptionalAttributes());
-            List<String> resultList = new ArrayList<>();
-            //整合属性
+            List<String> attributeList = new ArrayList<>();
+            //整合属性（合并）
             if (!CollectionUtils.isEmpty(requireAttribute)) {
-                resultList.addAll(requireAttribute);
+                attributeList.addAll(requireAttribute);
             }
             if (!CollectionUtils.isEmpty(optionalAttribute)) {
-                resultList.addAll(optionalAttribute);
+                attributeList.addAll(optionalAttribute);
             }
             //存入到类中
-            objectDataDto.setAttributesName(resultList);
+            objectDataDto.setAttributesName(attributeList);
             for (String attribute : objectClass.getRequiredAttributes()) {
                 log.info("Attributes:{}", attribute);
             }
             for (String attribute : objectClass.getOptionalAttributes()) {
                 log.info("Attributes:{}", attribute);
             }
-            dtoList.add(objectDataDto);
+            resultList.add(objectDataDto);
         }
-        ldapConnection.close();
-        return dtoList;
+        return ResultUtil.success(resultList);
     }
 }

@@ -48,6 +48,8 @@ public enum ExceptionEnum {
     QUERY_POINT_ERROR(805, "查询节点失败"),
     DATA_EXIT(806, "数据已存在"),
     NOT_AUDIT(807, "该账号是管理员,不允许审计日志"),
+    LINK_ERROR(808, "连接异常"),
+    SCHEMA_ERROR(809,"SCHEMA信息异常"),
     //失败
     LINUX_ERROR(5007, "失败"),
     //上传失败

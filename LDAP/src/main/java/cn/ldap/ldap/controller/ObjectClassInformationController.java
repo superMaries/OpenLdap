@@ -1,6 +1,7 @@
 package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.vo.ObjectDataDto;
+import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.ObjectClassInformationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,8 +23,13 @@ public class ObjectClassInformationController {
 
     @Resource
     private ObjectClassInformationService objectClassInformationService;
+
+    /**
+     * 查询所有objectClass和属性
+     * @return
+     */
     @PostMapping("queryInformation")
-    public List<ObjectDataDto> queryInformation() {
+    public ResultVo<List<ObjectDataDto>> queryInformation() {
         return objectClassInformationService.queryObjectAndAttribute();
     }
 }
