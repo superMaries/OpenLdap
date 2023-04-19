@@ -82,6 +82,11 @@ public class SyncController {
     public ResultVo<Object> mainQuery(){
         return syncStatusService.mainQuery();
     }
+
+    @PostMapping("followQuery")
+    public ResultVo<Object> followQuery(){
+        return syncStatusService.followQuery();
+    }
 }
 
 

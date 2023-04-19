@@ -4,6 +4,7 @@ import cn.ldap.ldap.common.dto.SyncStatusDto;
 import cn.ldap.ldap.common.entity.SyncStatus;
 import cn.ldap.ldap.common.vo.ResultVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
 /**
  * @title:
  * @Author superMarie
@@ -24,4 +25,8 @@ public interface SyncStatusService extends IService<SyncStatus> {
     ResultVo<Object> update(SyncStatusDto syncStatusDto);
 
     ResultVo<Object> mainQuery();
+
+    ResultVo<Object> followQuery();
+
+
 }

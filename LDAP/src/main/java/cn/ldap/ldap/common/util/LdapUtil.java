@@ -224,7 +224,7 @@ public class LdapUtil {
                     List<String> collect = list.stream().filter(it -> it.equals(key + StaticValue.EQ + finalAttrValue)).collect(Collectors.toList());
                     if (!ObjectUtils.isEmpty(collect.size()) && collect.size() >= StaticValue.COUNT) {
                         treeVo.setFlag(StaticValue.TRUE);
-                    } else if (StaticValue.OBJECTA_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
+                    } else if (StaticValue.OBJECT_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
                         treeVo.setFlag(StaticValue.TRUE);
                     }
                     treeVo.setKey(key);

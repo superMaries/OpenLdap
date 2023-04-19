@@ -12,7 +12,11 @@ import cn.ldap.ldap.service.SyncStatusService;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.unboundid.ldap.sdk.unboundidds.tools.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.ini4j.Profile;
+import org.ini4j.Wini;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.*;
 
@@ -34,6 +40,29 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
 
     @Resource
     private LdapTemplate ldapTemplate;
+
+    /**
+     * 配置文件所在路径
+     */
+    @Value("${filePath.configPath}")
+    private String configPath;
+
+    private static final Integer SCOPE = 2;
+
+    private static final String FILTER = "(objectClass=*)";
+
+    private static final String RDN_CHILD_NUM = "rdnChildNum";
+
+
+
+    private static final Integer NUM = 0;
+
+    private static final String SYNC = "已同步";
+
+    private static final String NOT_SYNC = "未同步";
+
+    private static final String CONNECTION_FAILD = "连接失败";
+
 
     /**
      * 添加从服务配置信息
@@ -81,19 +110,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         return ResultUtil.success();
     }
 
-    private static final Integer SCOPE = 2;
 
-    private static final String FILTER = "(objectClass=*)";
-
-    private static final String RDN_CHILD_NUM = "rdnChildNum";
-
-    private static final Integer NUM = 0;
-
-    private static final String SYNC = "已同步";
-
-    private static final String NOT_SYNC = "未同步";
-
-    private static final String CONNECTION_FAILD = "连接失败";
     @Override
     public ResultVo<Object> mainQuery() {
         //查询数据库中所有 从服务的连接信息
@@ -125,12 +142,12 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
 
             Integer followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
             syncStatus.setFollowServerNumber(followCount);
-            if (followCount.equals(NUM)){
+            if (followCount.equals(NUM)) {
                 syncStatus.setSyncStatusStr(CONNECTION_FAILD);
             }
-            if (mainCount.equals(followCount)){
+            if (mainCount.equals(followCount)) {
                 syncStatus.setSyncStatusStr(SYNC);
-            }else {
+            } else {
                 syncStatus.setSyncStatusStr(NOT_SYNC);
             }
             resultList.add(syncStatus);
@@ -138,15 +155,61 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         return ResultUtil.success(resultList);
     }
 
+    @Override
+    public ResultVo<Object> followQuery() {
+        List<SyncStatus> resultList = new ArrayList<>();
+        Wini wini = null;
+        String provider = "";
+        String searchbase = "";
+        String binddn = "";
+        String credentials = "";
+        try {
+            wini = new Wini(new File(configPath));
+            Profile.Section section = wini.get("?");
+            provider = section.get("provider");
+            searchbase = section.get("searchbase");
+            binddn = section.get("binddn");
+            credentials = section.get("credentials");
+        } catch (IOException e) {
+           log.error("修改文件异常:{}",e.getMessage());
+            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+        }
+        SyncStatus syncStatus = new SyncStatus();
+//连接服务
+        LdapTemplate connection = connection(provider, searchbase, binddn, credentials);
+        //查询主服务数据，判断连接状态，并且分别插入到返回值中
+        Map<String, Object> mainMap = new HashMap<>();
+        mainMap = LdapUtil.queryTreeRdnOrNum(mainMap, ldapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
+        Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
+        syncStatus.setMainServerNumber(mainCount);
+        //查询从服务数据，判断连接状态，并且分别插入到返回值中
+        Map<String, Object> followMap = new HashMap<>();
+        followMap = LdapUtil.queryTreeRdnOrNum(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
+
+        Integer followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
+        syncStatus.setFollowServerNumber(followCount);
+        if (followCount.equals(NUM)) {
+            syncStatus.setSyncStatusStr(CONNECTION_FAILD);
+        }
+        if (mainCount.equals(followCount)) {
+            syncStatus.setSyncStatusStr(SYNC);
+        } else {
+            syncStatus.setSyncStatusStr(NOT_SYNC);
+        }
+        resultList.add(syncStatus);
+    return ResultUtil.success(resultList);
+}
+
     /**
      * 连接
+     *
      * @param url
      * @param baseDN
      * @param account
      * @param password
      * @return
      */
-    public LdapTemplate connection(String url,String baseDN,String account,String password) {
+    public LdapTemplate connection(String url, String baseDN, String account, String password) {
         LdapContextSource contextSource = new LdapContextSource();
         contextSource.setUrl(url);
         contextSource.setBase("");

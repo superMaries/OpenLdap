@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.byzk.util.CryptUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.dto.ServerDto;
 import cn.ldap.ldap.common.entity.IndexRule;
@@ -8,6 +9,7 @@ import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.IndexRuleMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexRuleService;
 import cn.ldap.ldap.service.PortLinkService;
@@ -78,8 +80,16 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
     private static final String ENVIRONMENT = "Environment";
 
+    private static final String CASERVER_CERT = "ca.cert";
+
+    private static final String SERVER_CERT = "server.cert";
+
     @Resource
     private PortLinkService portLinkService;
+
+    //证书路径
+    @Value("${filePath.certPath}")
+    private String certPath;
 
     /**
      * 查询索引规则
@@ -95,9 +105,10 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         return ResultUtil.success(indexRuleList);
     }
 
+    private static final String CERT_Start_DROP = "---";
     /**
      * 开启或关闭SSL
-     *
+     *_
      * @param serverDto
      * @return
      */
@@ -106,6 +117,38 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         if ((BeanUtil.isEmpty(serverDto.getSafeOperation()) && BeanUtil.isEmpty(serverDto.getSafeOperation()))
                 || (!serverDto.getOperation() && !serverDto.getSafeOperation())) {
             return ResultUtil.fail(ExceptionEnum.PARAM_EMPTY);
+        }
+
+        //CA证书
+        String caCert = "";
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + CASERVER_CERT));) {
+            while (null != bufferedReader.readLine()) {
+                String certLine = bufferedReader.readLine();
+                if (!certLine.startsWith(CERT_Start_DROP)) {
+                    caCert += certLine;
+                }
+            }
+        } catch (IOException e) {
+            log.error("文件流错误:{}", e.getMessage());
+            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+        }
+        //服务器证书
+        String serverCert = "";
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + SERVER_CERT));) {
+            while (null != bufferedReader.readLine()) {
+                String certLine = bufferedReader.readLine();
+                if (!certLine.startsWith(CERT_Start_DROP)) {
+                    serverCert += certLine;
+                }
+            }
+        } catch (IOException e) {
+            log.error("文件流错误:{}", e.getMessage());
+            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+        }
+        //验证书链
+        boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
+        if (StaticValue.FALSE == validateCertChain) {
+            return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
         }
         //定义一个命令
         String command = "";
@@ -130,7 +173,9 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             command = LDAPS_HEAD + serverDto.getSafePort() + AFTER_COMMAND + serverDto.getPort() + DOUBLE_COMMAND;
             objectResultVo = twice(command, serverDto);
         }
-        if (serverDto.getSafeOperation()) syncConfig(serverDto);
+        if (serverDto.getSafeOperation()) {
+            syncConfig(serverDto);
+        }
 
         return objectResultVo;
     }
@@ -221,8 +266,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         }
         StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));){
             String lineStr = null;
             while ((lineStr = bufferedReader.readLine()) != null) {
                 if (lineStr.trim().startsWith(START)) {
@@ -231,9 +275,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
                 String oldData = lineStr;
                 stringBuilder.append(oldData).append(FEED);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        }  catch (IOException e) {
             e.printStackTrace();
         }
         String data = splicingConfigParam(stringBuilder, serverDto);
