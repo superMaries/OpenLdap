@@ -56,7 +56,8 @@ public enum ExceptionEnum {
     SCHEMA_ERROR(809,"SCHEMA信息异常"),
 
 
-    FILE_IO_ERROR(808, "文件流处理失败"),
+    FILE_IO_ERROR(810, "文件流处理失败"),
+    STR_ERROR(811, "字符格式错误"),
     //失败
     LINUX_ERROR(5007, "失败"),
     //上传失败

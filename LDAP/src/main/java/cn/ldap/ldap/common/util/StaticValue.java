@@ -58,7 +58,7 @@ public class StaticValue {
     public final static String SM3 = "SM3";
     public final static String VERTICAL = "|";
     public final static String N = "\n";
-
+    public final static String RN = "\r\n";
     public final static String J = "#";
     public final static String mh = ": ";
     public final static Integer index = 2;
@@ -72,4 +72,18 @@ public class StaticValue {
 
     public final static String LDIF = ".ldif";
     public final static String LDIF_END = "\\\\";
+
+    public final static String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
+    public final static String END_CERTIFICATE = "-----END CERTIFICATE-----";
+
+
+    public final static String CREATE_USER_CERTIFICATE = "userCertificate";
+
+    /**
+     * base64 正则
+     */
+    public final static String BASE64_PATTERN = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
+
+    public final static String HEX_PATTERN = "^[0-9a-fA-F]+$";
+
 }

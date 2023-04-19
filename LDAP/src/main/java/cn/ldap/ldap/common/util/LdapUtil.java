@@ -1,11 +1,13 @@
 package cn.ldap.ldap.common.util;
 
 import cn.ldap.ldap.common.dto.*;
+import cn.ldap.ldap.common.enums.CertificateEnum;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.ImportEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.TreeVo;
+import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.util.ObjectUtils;
@@ -136,6 +138,8 @@ public class LdapUtil {
     }
 
     /**
+     * 查询节点属性详情
+     *
      * @param ldapTemplate ldap 查询模板
      * @param baseDN       查询条件
      * @param isRetrunAttr 是否返回属性值
@@ -146,8 +150,9 @@ public class LdapUtil {
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         List<TreeVo> treeVos = new ArrayList<>();
         Attributes attributes = null;
-        // 对rdn 进行分析出来
+        // 解析 dn 的值
         String parentStr = baseDN.split(StaticValue.SPLIT)[0];
+        //dn 的值不可修改，于是将dn 的值进行解析
         String[] addStr = parentStr.split(StaticValue.ADD);
         List<String> list = Arrays.asList(addStr);
 
@@ -166,16 +171,32 @@ public class LdapUtil {
                 NamingEnumeration<?> keyAll = next.getAll();
                 while (keyAll.hasMore()) {
                     TreeVo treeVo = new TreeVo();
-                    String attrValue = keyAll.nextElement().toString();
-
-                    List<String> collect = list.stream().filter(it -> it.equals(key + StaticValue.EQ + attrValue)).collect(Collectors.toList());
+                    Object o = keyAll.nextElement();
+                    String attrValue = o.toString();
+                    if (o instanceof byte[]) {
+                        byte[] cert = (byte[]) o;
+                        attrValue = Base64.getEncoder().encodeToString(cert);
+                    }
+                    String queryRn = key + StaticValue.EQ + attrValue;
+                    //获取dn 不可修改的值
+                    List<String> collect = list.stream().filter(it -> it.equals(queryRn)).collect(Collectors.toList());
                     if (!ObjectUtils.isEmpty(collect) && collect.size() >= StaticValue.COUNT) {
                         treeVo.setFlag(StaticValue.TRUE);
                     } else if (StaticValue.OBJECT_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
                         treeVo.setFlag(StaticValue.TRUE);
                     }
-                    treeVo.setKey(key);
+
+                    if (StaticValue.USER_CERTIFICATE.toLowerCase().equals(key.toLowerCase())) {
+                        //证书文件
+                        String cert = IscSignUtil.otherToBase64(attrValue);
+                        IscJcrypt iscJcrypt = new IscJcrypt();
+                        String certInfo = iscJcrypt.getCertInfo(cert, CertificateEnum.CERT_NAME.getCode());
+                        treeVo.setTitle(certInfo);
+                    } else {
+                        treeVo.setTitle(attrValue);
+                    }
                     treeVo.setValue(attrValue);
+                    treeVo.setKey(key);
                     treeVos.add(treeVo);
                 }
             }
@@ -185,7 +206,6 @@ public class LdapUtil {
         }
         return treeVos;
     }
-
 
 
     public static List<TreeVo> queryAttributeBytesInfo(LdapTemplate ldapTemplate, String baseDN, boolean isRetrunAttr, String attribute) {
@@ -224,7 +244,7 @@ public class LdapUtil {
                     List<String> collect = list.stream().filter(it -> it.equals(key + StaticValue.EQ + finalAttrValue)).collect(Collectors.toList());
                     if (!ObjectUtils.isEmpty(collect.size()) && collect.size() >= StaticValue.COUNT) {
                         treeVo.setFlag(StaticValue.TRUE);
-                    } else if (StaticValue.OBJECTA_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
+                    } else if (StaticValue.OBJECT_CLASS.toUpperCase().equals(key.toUpperCase().trim())) {
                         treeVo.setFlag(StaticValue.TRUE);
                     }
                     treeVo.setKey(key);
@@ -415,6 +435,7 @@ public class LdapUtil {
             String rdn = ldapBindTreeDto.getRdn();
             Attributes attributes = ctx.getAttributes(rdn);
             NamingEnumeration<? extends Attribute> attributesAll = attributes.getAll();
+            //需要修改属性的值
             List<TreeVo> attributeList = ldapBindTreeDto.getAttributes();
             List<String> oldAtt = new ArrayList<>();
             while (attributesAll.hasMore()) {
@@ -425,9 +446,18 @@ public class LdapUtil {
                         .filter(it -> it.getKey().equals(key))
                         .map(it -> it.getValue())
                         .collect(Collectors.toList());
+
                 next.clear();
                 for (String value : keys) {
-                    next.add(value);
+                    //判断是否是证书
+                    if (StaticValue.USER_CERTIFICATE.toLowerCase()
+                            .equals(key.toLowerCase())) {
+                        String cert = IscSignUtil.otherToBase64(value);
+                        byte[] certByte = decodeCertificate(cert);
+                        next.add(certByte);
+                    } else {
+                        next.add(value);
+                    }
                     //移除已经修改的数据
                     TreeVo vo = new TreeVo();
                     vo.setValue(value);
@@ -863,6 +893,7 @@ public class LdapUtil {
             //获取key 和 value 的值
             String name = parts[StaticValue.SPLIT_COUNT];
             Object value = parts[StaticValue.COUNT];
+            //判断是否是证书
             if (name.toUpperCase().equals(StaticValue.USER_CERTIFICATE.toUpperCase())) {
                 value = decodeCertificate(parts[StaticValue.COUNT]);
             }
@@ -895,7 +926,15 @@ public class LdapUtil {
             attributes.put(attribute);
             List<String> values = att.getValues();
             for (String value : values) {
-                attribute.add(value);
+                if (StaticValue.CREATE_USER_CERTIFICATE.toLowerCase()
+                        .equals(name.toUpperCase())) {
+                    //证书
+                    String cert = IscSignUtil.otherToBase64(value);
+                    byte[] certificate = decodeCertificate(cert);
+                    attribute.add(certificate);
+                } else {
+                    attribute.add(value);
+                }
             }
         }
         return attributes;
