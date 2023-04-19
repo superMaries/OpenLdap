@@ -71,6 +71,8 @@ public enum ExceptionEnum {
     //验签失败
     VERIFY_FAIL(5012, "验签失败"),
 
+    VALIDATE_ERROR(5013,"验证书链错误"),
+
 
     //LDAP接口中的错误 全部定义8开头
     LDAP_RDN_NOT_EXIT(8001, "删除RDN错误"),

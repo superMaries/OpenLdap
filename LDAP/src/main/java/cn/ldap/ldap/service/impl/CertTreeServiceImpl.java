@@ -231,26 +231,49 @@ public class CertTreeServiceImpl implements CertTreeService {
 
     @Override
     public Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response) {
-        String fileName = paramDto.getFileName() + LAST;
+        String fileName = paramDto.getFileName();
+        if (StaticValue.TRUE ==paramDto.getWebOrFile()){
+            fileName = paramDto.getFileName() + LAST;
+        }else {
+            if (!fileName.endsWith(StaticValue.LDIF)) {
+                fileName += StaticValue.LDIF;
+            }
+        }
         if (ObjectUtils.isEmpty(paramDto)) {
             return false;
         }
         List<String> writeData = queryData(paramDto);
         exportToLdif(writeData, fileName);
-        // 下载ldif文件
-        Path file = Paths.get(fileName);
-        if (Files.exists(file)) {
-            response.setContentType("application/ldif");
-            response.addHeader("Content-Disposition", "attachment; filename=" + fileName);
-            try {
-                Files.copy(file, response.getOutputStream());
-                response.getOutputStream().flush();
-                return true;
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (paramDto.getWebOrFile().equals(StaticValue.TRUE)){
+            // 下载ldif文件
+            Path file = Paths.get(fileName);
+            if (Files.exists(file)) {
+                response.setContentType("application/ldif");
+                response.addHeader("Content-Disposition", "attachment; filename=" + fileName);
+                try {
+                    Files.copy(file, response.getOutputStream());
+                    response.getOutputStream().flush();
+                    return true;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }else {
+            //下载到本地
+            Path file = Paths.get(fileName);
+            //下载到服务器。判断文件是否存在 不存在就创建 不需要返回下的文件
+            if (!Files.exists(file)) {
+                //不存在
+                try {
+                    Files.createFile(file);
+                    return true;
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                    throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+                }
             }
         }
-        return false;
+        return true;
     }
 
     public List<String> queryData(ParamDto paramDto){
