@@ -8,6 +8,7 @@ import cn.ldap.ldap.common.entity.PortLink;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.IndexRuleMapper;
+import cn.ldap.ldap.common.util.IscSignUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -145,6 +146,8 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             log.error("文件流错误:{}", e.getMessage());
             return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
         }
+        caCert = IscSignUtil.otherToBase64(caCert);
+        serverCert = IscSignUtil.otherToBase64(serverCert);
         //验证书链
         boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
         if (StaticValue.FALSE == validateCertChain) {
