@@ -47,7 +47,7 @@ public class AdminController {
      * @return 返回tru 成功   false 失败
      */
     @PostMapping("delUserKey")
-    @OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.DEL_USBKEY)
+    //@OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.DEL_USBKEY)
     public ResultVo<Boolean> delUserKey(@RequestBody AdminVo adminVo) {
         return adminService.delUserKey(adminVo);
     }
@@ -59,7 +59,7 @@ public class AdminController {
      * @return 返回tru 成功   false 失败
      */
     @PostMapping("addUserKey")
-    @OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.ADD_USBKEY)
+    //@OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.ADD_USBKEY)
     public ResultVo<Boolean> addUserKey(@RequestBody UserDto userDto) {
         return adminService.addUserKey(userDto);
     }
@@ -71,7 +71,7 @@ public class AdminController {
      * @return
      */
     @PostMapping("updatePwd")
-    @OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.UPDATE_USBKEY)
+    //@OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.UPDATE_USBKEY)
     public ResultVo<Boolean> updatePwd( @RequestBody UpdateAdminVo adminVo) {
         return adminService.updatePwd(adminVo);
     }

@@ -1,11 +1,8 @@
 package cn.ldap.ldap.controller;
 
-import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.FromSyncDto;
 import cn.ldap.ldap.common.dto.SyncDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
-import cn.ldap.ldap.common.enums.OperateMenuEnum;
-import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.SyncService;
 import cn.ldap.ldap.service.SyncStatusService;
@@ -31,13 +28,13 @@ public class SyncController {
     private SyncStatusService syncStatusService;
 
     @PostMapping("mainSyncConfig")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
     public ResultVo<Object> mainSyncConfig(@RequestBody SyncDto syncDto) {
         return syncService.syncConfig(syncDto);
     }
 
     @PostMapping("fromSyncConfig")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
     public ResultVo<Object> fromSyncConfig(@RequestBody FromSyncDto fromSyncDto) {
         return syncService.fromSyncConfig(fromSyncDto);
     }
@@ -48,7 +45,7 @@ public class SyncController {
      * @return
      */
     @PostMapping("add")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.ADD_DATA)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.ADD_DATA)
     public ResultVo<Object> add(@RequestBody SyncStatusDto syncDto) {
         return syncStatusService.add(syncDto);
     }
@@ -59,7 +56,7 @@ public class SyncController {
      * @return
      */
     @PostMapping("update")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.ADD_DATA)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.ADD_DATA)
     public ResultVo<Object> update(@RequestBody SyncStatusDto syncDto) {
         return syncStatusService.update(syncDto);
     }

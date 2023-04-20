@@ -45,7 +45,7 @@ public class IndexRuleController {
      * @return
      */
     @PostMapping("uploadCACert")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
+  //  @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
     public ResultVo<T> uploadCACert(@RequestParam("multipartFile") MultipartFile multipartFile){
         return ldapConfigService.uploadCACert(multipartFile);
     }
@@ -56,7 +56,7 @@ public class IndexRuleController {
      * @return
      */
     @PostMapping("uploadCert")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
     public ResultVo<T> uploadCert(@RequestParam("multipartFile") MultipartFile multipartFile){
         return ldapConfigService.uploadCert(multipartFile);
     }

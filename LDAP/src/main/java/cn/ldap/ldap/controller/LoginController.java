@@ -1,11 +1,8 @@
 package cn.ldap.ldap.controller;
 
-import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.Permission;
-import cn.ldap.ldap.common.enums.OperateMenuEnum;
-import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +34,7 @@ public class LoginController {
      * @return
      */
     @GetMapping("downClinetTool")
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.DOWN_CLIENT)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.DOWN_CLIENT)
     public Boolean downClientTool(HttpServletResponse httpServletResponse) {
         return loginService.downClientTool(httpServletResponse);
     }
@@ -47,7 +44,7 @@ public class LoginController {
      * * @return
      */
     @GetMapping("getVersion")
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.LOOK_DATA)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.LOOK_DATA)
     public ResultVo<Map<String, String>> getVersion() {
         return loginService.getVersion();
     }
@@ -59,7 +56,7 @@ public class LoginController {
      * @throws IOException
      */
     @GetMapping("downloadManual")
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.LOOK_MANUAl)
+    //@OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.LOOK_MANUAl)
     public byte[] downloadManual() {
         return loginService.downloadManual();
     }
@@ -81,7 +78,7 @@ public class LoginController {
      * @return
      */
     @GetMapping("whetherInit")
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
     public ResultVo<String> whetherInit() {
         return loginService.whetherInit();
     }
@@ -92,7 +89,7 @@ public class LoginController {
      * @return
      */
     @GetMapping("getServerConfig")
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
+  //  @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
     public ResultVo<String> getServerConfig() {
         return loginService.getServerConfig();
     }
@@ -104,7 +101,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("certLogin")
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
     public ResultVo<Map<String, Object>> certLogin(@RequestBody UserDto userDto, HttpServletRequest request) {
         return loginService.certLogin(userDto, request);
     }
@@ -116,7 +113,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("login")
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
     public ResultVo<Object> login(@RequestBody LoginDto loginDto, HttpServletRequest request) {
         return loginService.login(loginDto, request);
     }
@@ -129,7 +126,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("logout")
-    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGOUT)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGOUT)
     public ResultVo<Boolean> logout(HttpServletRequest request) {
         return loginService.logout(request);
     }
