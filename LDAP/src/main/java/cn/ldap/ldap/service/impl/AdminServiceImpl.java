@@ -8,9 +8,12 @@ import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserEnableEnum;
 import cn.ldap.ldap.common.enums.UserRoleEnum;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.UserAccountMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.SessionUtil;
+import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.AdminService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -20,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -112,28 +116,29 @@ public class AdminServiceImpl extends ServiceImpl<UserMapper, UserModel>
      * @return 修改密码
      */
     @Override
-    public ResultVo<Boolean> updatePwd(UpdateAdminVo adminVo) {
+    public ResultVo<Boolean> updatePwd(UpdateAdminVo adminVo, HttpServletRequest httpServletRequest) {
         if (ObjectUtils.isEmpty(adminVo)) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
 
-        if (ObjectUtils.isEmpty(adminVo.getAccount())) {
-            return ResultUtil.fail(ExceptionEnum.ACCOUNT);
+        if (ObjectUtils.isEmpty(adminVo.getOldPassword())) {
+            return ResultUtil.fail(ExceptionEnum.PASSWD);
         }
         if (ObjectUtils.isEmpty(adminVo.getPassword())) {
             return ResultUtil.fail(ExceptionEnum.PASSWD);
         }
         try {
-            List<UserAccountModel> userAccountModels = userAccountMapper.selectList(new LambdaQueryWrapper<UserAccountModel>()
-                    .eq(UserAccountModel::getAccount, adminVo.getAccount()));
+           // LoginResultVo userInfo = SessionUtil.getUserInfo(httpServletRequest);
+            List<UserAccountModel> userAccountModels = userAccountMapper.selectList(null);
 
             if (ObjectUtils.isEmpty(userAccountModels)) {
                 return ResultUtil.success(ExceptionEnum.SUCCESS);
             }
             UserAccountModel userAccountModel = userAccountModels.size() > 0 ? userAccountModels.get(0) : new UserAccountModel();
-            userAccountModel.setAccount(adminVo.getAccount());
+            if (!adminVo.getOldPassword().equals(userAccountModel.getPassword())){
+                throw new SysException(ExceptionEnum.OLD_PASSWORD_ERROR);
+            }
             userAccountModel.setPassword(adminVo.getPassword());
-
             userAccountMapper.updateById(userAccountModel);
             return ResultUtil.success(true);
         } catch (Exception e) {

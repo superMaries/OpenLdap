@@ -40,6 +40,7 @@ public enum ExceptionEnum {
     MORE_PASSWORD_LENGTH(586, "密码超过长度限制"),
     USER_ACCOUNT_ERROR(587, "账号或密码错误"),
     REQUEST_WAY_ERROR(588, "请求方式有误,请检查 GET/POST"),
+    OLD_PASSWORD_ERROR(589,"旧密码与新密码不符"),
     //未获取到配置文件信息
     NO_CONFIG(800, "未获取到配置文件信息"),
     PARAM_EMPTY(801, "参数为空"),

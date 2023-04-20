@@ -11,6 +11,6 @@ import lombok.Data;
  */
 @Data
 public class UpdateAdminVo {
-    private String account;
+    private String oldPassword;
     private String password;
 }

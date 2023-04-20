@@ -6,6 +6,8 @@ import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.vo.ResultVo;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * 管理员管理
  * @title: AdminUService
@@ -39,5 +41,5 @@ public interface AdminService {
      * @param adminVo 参数
      * @return 返回tru 成功   false 失败
      */
-    ResultVo<Boolean> updatePwd(UpdateAdminVo adminVo);
+    ResultVo<Boolean> updatePwd(UpdateAdminVo adminVo, HttpServletRequest httpServletRequest);
 }

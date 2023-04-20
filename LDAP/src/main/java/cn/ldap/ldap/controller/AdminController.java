@@ -1,12 +1,9 @@
 package cn.ldap.ldap.controller;
 
-import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.AdminVo;
 import cn.ldap.ldap.common.dto.UpdateAdminVo;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.UserModel;
-import cn.ldap.ldap.common.enums.OperateMenuEnum;
-import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 管理员管理接口
@@ -72,7 +71,7 @@ public class AdminController {
      */
     @PostMapping("updatePwd")
     //@OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.UPDATE_USBKEY)
-    public ResultVo<Boolean> updatePwd( @RequestBody UpdateAdminVo adminVo) {
-        return adminService.updatePwd(adminVo);
+    public ResultVo<Boolean> updatePwd(@RequestBody UpdateAdminVo adminVo, HttpServletRequest httpServletRequest) {
+        return adminService.updatePwd(adminVo,httpServletRequest);
     }
 }

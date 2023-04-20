@@ -4,9 +4,7 @@ import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import org.apache.catalina.connector.RequestFacade;
-import org.omg.CORBA.SystemException;
 import org.springframework.util.ObjectUtils;
-
 
 import javax.servlet.ServletRequest;
 
@@ -28,7 +26,7 @@ public class SessionUtil {
             if (ObjectUtils.isEmpty(auth)) {
                 throw new SysException(ExceptionEnum.USER_NOT_LOGIN);
             }
-            if (auth.equals(loginResultVo.getAuthorization())) {
+            if (!auth.equals(loginResultVo.getAuthorization())) {
                 throw new SysException(ExceptionEnum.USER_NOT_LOGIN);
             }
         } catch (Exception e) {
