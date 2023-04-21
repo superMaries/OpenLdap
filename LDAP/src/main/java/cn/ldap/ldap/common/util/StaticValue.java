@@ -47,9 +47,13 @@ public class StaticValue {
     public final static String LINE = "-";
     public final static String REPLACE = "";
     public final static Integer SPLIT_COUNT = 0;
+    public final static Integer ONE = 1;
+    public final static Integer TWO = 2;
     public final static Integer AUDIT_STATUS = 1;
     public final static Integer AUDIT_NOT_STATUS = 0;
     public final static String UNKNOWN = "-";
+
+    public final static String KG = " ";
     public final static Integer ADMIN_ID = 0;
 
     public final static boolean TRUE = true;

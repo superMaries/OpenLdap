@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Map;
 
 /**
  * @title:
@@ -30,20 +31,31 @@ public class SyncController {
     @Resource
     private SyncStatusService syncStatusService;
 
+    /**
+     * 添加/修改主服务的配置信息
+     * @param syncDto
+     * @return
+     */
     @PostMapping("mainSyncConfig")
 //    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
     public ResultVo<Object> mainSyncConfig(@RequestBody SyncDto syncDto) {
         return syncService.syncConfig(syncDto);
     }
 
+    /**
+     * 添加/修改从服务的配置信息
+     * @param fromSyncDto
+     * @return
+     */
     @PostMapping("fromSyncConfig")
-//    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
+    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
     public ResultVo<Object> fromSyncConfig(@RequestBody FromSyncDto fromSyncDto) {
         return syncService.fromSyncConfig(fromSyncDto);
     }
 
     /**
      * 添加
+     *
      * @param syncDto
      * @return
      */
@@ -55,6 +67,7 @@ public class SyncController {
 
     /**
      * 修改
+     *
      * @param syncDto
      * @return
      */
@@ -66,27 +79,36 @@ public class SyncController {
 
     /**
      * 删除
+     *
      * @param id
      * @return 返回一个boolean值
      */
     @PostMapping("delete/{id}")
-    public Boolean deleteById(@PathVariable Integer id){
+    public Boolean deleteById(@PathVariable Integer id) {
         return syncStatusService.removeById(id);
     }
 
     /**
      * 主服务同步状态节课
+     *
      * @return 查询的从服务和主服务对比信息的集合
      */
     @PostMapping("mainQuery")
-    public ResultVo<Object> mainQuery(){
+    public ResultVo<Object> mainQuery() {
         return syncStatusService.mainQuery();
     }
 
     @PostMapping("followQuery")
-    public ResultVo<Object> followQuery(){
+    public ResultVo<Object> followQuery() {
         return syncStatusService.followQuery();
     }
+
+    @PostMapping("queryServiceConfig")
+    public ResultVo<Map<String, String>> queryServiceConfig() {
+        return syncStatusService.queryServiceConfig();
+    }
+
+
 }
 
 

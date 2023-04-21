@@ -3,11 +3,15 @@ package cn.ldap.ldap.service.impl;
 import cn.ldap.ldap.common.dto.ConnectionDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
 import cn.ldap.ldap.common.entity.SyncStatus;
+import cn.ldap.ldap.common.enums.ConfigEnum;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.SyncStatusMapper;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
+import cn.ldap.ldap.hander.InitConfigData;
 import cn.ldap.ldap.service.SyncStatusService;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -28,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @title:
@@ -52,7 +57,6 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
     private static final String FILTER = "(objectClass=*)";
 
     private static final String RDN_CHILD_NUM = "rdnChildNum";
-
 
 
     private static final Integer NUM = 0;
@@ -171,7 +175,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             binddn = section.get("binddn");
             credentials = section.get("credentials");
         } catch (IOException e) {
-           log.error("修改文件异常:{}",e.getMessage());
+            log.error("修改文件异常:{}", e.getMessage());
             return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
         }
         SyncStatus syncStatus = new SyncStatus();
@@ -197,8 +201,63 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             syncStatus.setSyncStatusStr(NOT_SYNC);
         }
         resultList.add(syncStatus);
-    return ResultUtil.success(resultList);
-}
+        return ResultUtil.success(resultList);
+    }
+
+
+    /**
+     * 0, "主服务器"
+     * 1, "从服务器"
+     *
+     * @return
+     */
+    @Override
+    public ResultVo<Map<String, String>> queryServiceConfig() {
+        Map<String, String> map = new HashMap<>();
+        if (ConfigEnum.MAIN_SERVICE.getCode().equals(InitConfigData.getServiceType())) {
+            //主服务器
+            Wini wini = null;
+            try {
+                wini = new Wini(new File(configPath));
+                Profile.Section section = wini.get("?");
+                List<String> collect = section.keySet().stream().filter(it -> it.contains("syncprov-checkpoint")).collect(Collectors.toList());
+                if (ObjectUtils.isEmpty(collect)) {
+                    log.error("系统配置错误,主服务的配置文件有问题");
+                    throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
+                }
+
+                String msg = collect.get(StaticValue.SPLIT_COUNT);
+                String[] split = msg.split(StaticValue.KG);
+                String max = split[StaticValue.ONE];
+                String credentials = split[StaticValue.TWO];
+                map.put("max", max);
+                map.put("interval", credentials);
+            } catch (IOException e) {
+                log.error(e.getMessage());
+                throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
+            }
+
+        } else if (ConfigEnum.FORM_SERVICE.getCode().equals(InitConfigData.getServiceType())) {
+            //从服务器
+            Wini wini = null;
+            try {
+                wini = new Wini(new File(configPath));
+                Profile.Section section = wini.get("?");
+                map.put("interval", section.get("interval"));
+                map.put("provider", section.get("provider"));
+                map.put("searchbase", section.get("searchbase"));
+                map.put("userName", section.get("binddn"));
+                map.put("passWord", section.get("credentials"));
+            } catch (IOException e) {
+                log.error(e.getMessage());
+                throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
+            }
+        } else {
+            throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
+        }
+        return ResultUtil.success(map);
+
+    }
 
     /**
      * 连接

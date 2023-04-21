@@ -5,6 +5,8 @@ import cn.ldap.ldap.common.entity.SyncStatus;
 import cn.ldap.ldap.common.vo.ResultVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Map;
+
 /**
  * @title:
  * @Author superMarie
@@ -29,4 +31,5 @@ public interface SyncStatusService extends IService<SyncStatus> {
     ResultVo<Object> followQuery();
 
 
+    ResultVo<Map<String, String>> queryServiceConfig();
 }
