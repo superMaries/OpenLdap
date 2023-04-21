@@ -34,11 +34,28 @@ public interface OperationMapper extends BaseMapper<OperationLogModel> {
             " FROM operation_log log" +
             " LEFT JOIN user u on log.user_id=u.id" +
             " WHERE log.create_time BETWEEN #{beginTime} and #{endTime} " +
+            " <if test=\" operateType!=null and operateType!=''\">" +
+            " AND operate_object = #{operateType}" +
+            " </if>" +
             " ORDER BY log.create_time DESC" +
             " LIMIT #{pagePage},#{pageSize}" +
             "</script>")
     List<LogVo> queryLog(@Param("pagePage") long pagePage, @Param("pageSize") long pageSize,
-                         @Param("beginTime") String beginTime, @Param("endTime") String endTime);
+                         @Param("beginTime") String beginTime, @Param("endTime") String endTime
+            , @Param("operateType") String operateType);
 
+    @Select("<script>" +
+            "SELECT count(1)" +
+            " FROM operation_log log" +
+            " LEFT JOIN user u on log.user_id=u.id" +
+            " WHERE log.create_time BETWEEN #{beginTime} and #{endTime} " +
+            " <if test=\" operateType!=null and operateType!=''\">" +
+            " AND operate_object = #{operateType}" +
+            " </if>" +
+            " ORDER BY log.create_time DESC" +
+            "</script>")
+    long countQueryLog(@Param("pagePage") long pagePage, @Param("pageSize") long pageSize,
+                       @Param("beginTime") String beginTime, @Param("endTime") String endTime
+            , @Param("operateType") String operateType);
 
 }

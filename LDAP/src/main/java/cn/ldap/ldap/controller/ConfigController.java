@@ -19,6 +19,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 配置接口
@@ -82,9 +83,20 @@ public class ConfigController {
      */
     @PostMapping("queryLog")
 //    @OperateAnnotation(operateModel = OperateMenuEnum.LOG_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
-    public ResultVo<List<LogVo>> queryLog(@RequestBody LogDto logDto) {
+    public ResultVo<Map<String ,Object>> queryLog(@RequestBody LogDto logDto) {
         return operationLogService.queryLog(logDto);
     }
+
+    /**
+     * 操作记录接口
+     * @return
+     */
+    @PostMapping("queryOperateType")
+//    @OperateAnnotation(operateModel = OperateMenuEnum.LOG_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
+    public ResultVo<List<String>>  queryOperateType() {
+        return operationLogService.queryOperateType();
+    }
+
 
     /**
      * 添加日志

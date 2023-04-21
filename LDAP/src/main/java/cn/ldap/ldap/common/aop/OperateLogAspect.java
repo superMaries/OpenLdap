@@ -171,6 +171,8 @@ public class OperateLogAspect {
         operationLogModel.setClientIp(clientIp);
         operationLogModel.setOperateType(operateAnnotation.operateType().getName());
         operationLogModel.setOperateMenu(operateAnnotation.operateModel().getName());
+        operationLogModel.setOperateObject(operateAnnotation.operateModel()
+                + StaticValue.LINE + operateAnnotation.operateType());
 //        operationLogModel.setRemark(remark.toString());
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         operationLogModel.setCreateTime(simpleDateFormat.format(new Date()));

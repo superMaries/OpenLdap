@@ -28,9 +28,12 @@ import org.springframework.util.ObjectUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @title:
@@ -52,7 +55,8 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
      * @Version 1.0
      */
     @Override
-    public ResultVo<List<LogVo>> queryLog(LogDto logDto) {
+    public ResultVo<Map<String, Object>> queryLog(LogDto logDto) {
+        Map<String, Object> map = new HashMap<>();
         String beginTime = null;
         String endTime = null;
         //设置时间
@@ -66,8 +70,11 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
         //设置参数
         long pageSize = logDto.getPageSize();
         long pagePage = (logDto.getPageNum() - 1) * logDto.getPageSize();
-
-        List<LogVo> logVos = operationMapper.queryLog(pagePage, pageSize, beginTime, endTime);
+        String operateType = logDto.getOperateType();
+        List<LogVo> logVos = operationMapper.queryLog(pagePage, pageSize,
+                beginTime, endTime, operateType);
+        long count = operationMapper.countQueryLog(pagePage, pageSize,
+                beginTime, endTime, operateType);
         //根据审计员ID获取用户信息
         List<Integer> aduitIds = logVos.stream().map(it -> it.getAuditId()).collect(Collectors.toList());
         List<UserModel> auditUser = userMapper.selectList(new LambdaQueryWrapper<UserModel>()
@@ -83,7 +90,9 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
                 throw new RuntimeException(e);
             }
         });
-        return ResultUtil.success(logVos);
+        map.put("total", count);
+        map.put("data", logVos);
+        return ResultUtil.success(map);
     }
 
     /**
@@ -233,5 +242,12 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
             log.error("保存日志错误:{}", e.getMessage());
             return ResultUtil.success(false);
         }
+    }
+
+    @Override
+    public ResultVo<List<String>> queryOperateType() {
+        List<OperationLogModel> operationLogModels = list();
+        List<String> distinct = operationLogModels.stream().map(it -> it.getOperateObject()).distinct().collect(Collectors.toList());
+        return ResultUtil.success(distinct);
     }
 }

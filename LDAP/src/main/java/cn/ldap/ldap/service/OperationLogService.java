@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @title:
@@ -18,7 +19,7 @@ import java.util.List;
  */
 public interface OperationLogService extends IService<OperationLogModel> {
 
-    ResultVo<List<LogVo>> queryLog(LogDto logDto);
+    ResultVo<Map<String ,Object>> queryLog(LogDto logDto);
 
     /**
      * 添加日志
@@ -33,5 +34,7 @@ public interface OperationLogService extends IService<OperationLogModel> {
      * @return true成功  false 失败
      */
     ResultVo<Boolean> auditLog(HttpServletRequest request, List<AuditDto> auditDtos);
+
+    ResultVo<List<String>>  queryOperateType();
 
 }
