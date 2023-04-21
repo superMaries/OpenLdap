@@ -99,8 +99,9 @@ public class AdminServiceImpl extends ServiceImpl<UserMapper, UserModel>
         userModel.setCertSn(userDto.getCertSn());
         userModel.setSignCert(userDto.getSignCert());
         userModel.setCertName(userDto.getCertName());
+        userModel.setSerialNum(userDto.getSerialNum());
         userModel.setIsEnable(UserEnableEnum.USER_ENALE.getCode());
-        userModel.setRoleId(UserRoleEnum.USER_ADMIN.getCode());
+        userModel.setRoleId(userDto.getRoleId());
         try {
             save(userModel);
             return ResultUtil.success(true);
@@ -136,7 +137,7 @@ public class AdminServiceImpl extends ServiceImpl<UserMapper, UserModel>
             }
             UserAccountModel userAccountModel = userAccountModels.size() > 0 ? userAccountModels.get(0) : new UserAccountModel();
             if (!adminVo.getOldPassword().equals(userAccountModel.getPassword())){
-                throw new SysException(ExceptionEnum.OLD_PASSWORD_ERROR);
+                return ResultUtil.fail(ExceptionEnum.OLD_PASSWORD_ERROR);
             }
             userAccountModel.setPassword(adminVo.getPassword());
             userAccountMapper.updateById(userAccountModel);

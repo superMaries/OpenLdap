@@ -97,7 +97,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         QueryWrapper<SyncStatus> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(SyncStatus::getFollowServerIp, syncStatusDto.getUrl());
+        queryWrapper.lambda().eq(SyncStatus::getId, syncStatusDto.getId());
         SyncStatus one = getOne(queryWrapper);
         if (ObjectUtils.isEmpty(one)) {
             return ResultUtil.fail(ExceptionEnum.COLLECTION_EMPTY);

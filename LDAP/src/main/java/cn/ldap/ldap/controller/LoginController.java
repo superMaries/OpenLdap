@@ -12,6 +12,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 /**
@@ -102,7 +103,7 @@ public class LoginController {
      */
     @PostMapping("certLogin")
    // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
-    public ResultVo<Map<String, Object>> certLogin(@RequestBody UserDto userDto, HttpServletRequest request) {
+    public ResultVo<Map<String, Object>> certLogin(@RequestBody UserDto userDto, HttpServletRequest request) throws UnsupportedEncodingException {
         return loginService.certLogin(userDto, request);
     }
 

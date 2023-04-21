@@ -32,4 +32,6 @@ public class UserDto extends SrcModel {
      */
     private Integer serviceType;
 
+    private String serialNum;
+
 }
