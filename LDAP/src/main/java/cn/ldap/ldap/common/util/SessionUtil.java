@@ -4,9 +4,7 @@ import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import org.apache.catalina.connector.RequestFacade;
-import org.omg.CORBA.SystemException;
 import org.springframework.util.ObjectUtils;
-
 
 import javax.servlet.ServletRequest;
 

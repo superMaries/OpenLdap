@@ -28,7 +28,7 @@ public class LdapFilter implements WebMvcConfigurer {
         InterceptorRegistration registration = registry.addInterceptor(new HandleConfig());
         registration.excludePathPatterns("/**")
                 .excludePathPatterns("/login/**")
-                .excludePathPatterns("/config/**")
+                .addPathPatterns("/config/**")
                 .addPathPatterns("/login/logout");
     }
 }

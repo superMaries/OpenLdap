@@ -7,6 +7,7 @@ import cn.ldap.ldap.common.vo.ResultVo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 /**
@@ -60,7 +61,7 @@ public interface LoginService {
      * @param userDto
      * @return
      */
-    ResultVo<Map<String, Object>> certLogin(UserDto userDto,HttpServletRequest  request);
+    ResultVo<Map<String, Object>> certLogin(UserDto userDto,HttpServletRequest  request) throws UnsupportedEncodingException;
 
     /**
      * 账号密码登录

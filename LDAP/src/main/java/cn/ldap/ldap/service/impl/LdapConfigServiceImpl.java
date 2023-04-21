@@ -1,12 +1,17 @@
 package cn.ldap.ldap.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.ldap.ldap.common.entity.MainConfig;
+import cn.ldap.ldap.common.entity.ParamConfig;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
+import cn.ldap.ldap.common.mapper.ParamConfigMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LdapConfigService;
+import cn.ldap.ldap.service.ParamConfigService;
+import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.omg.CORBA.SystemException;
@@ -14,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import java.io.*;
 
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_IS_EMPTY;
@@ -35,6 +41,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     private String configPath;
     @Value("${filePath.certPath}")
     private String certPath;
+
+    @Resource
+    private ParamConfigService paramConfigService;
 
 
     /**
@@ -67,7 +76,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String SERVER_NAME = "slapd";
 
-    private static final String ACTIVATING = "activating";
+    private static final String ACTIVATING = "active";
 
     private static final String CASERVER_CERT = "ca.cert";
 
@@ -82,6 +91,26 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     //添加配置
     @Override
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
+        ParamConfig paramConfig = paramConfigService.getOne(null);
+        if (!ObjectUtil.isEmpty(paramConfig)){
+            if (!BeanUtil.isEmpty(mainConfig.getLogLevel())){
+                paramConfig.setLogLevel(mainConfig.getLogLevel());
+            }
+            if (!BeanUtil.isEmpty(mainConfig.getLogLevelDirectory())){
+                paramConfig.setLogFile(mainConfig.getLogLevelDirectory());
+            }
+            paramConfigService.updateById(paramConfig);
+        }else {
+            ParamConfig paramConfigNew = new ParamConfig();
+            if (!BeanUtil.isEmpty(mainConfig.getLogLevel())){
+                paramConfigNew.setLogLevel(mainConfig.getLogLevel());
+            }
+            if (!BeanUtil.isEmpty(mainConfig.getLogLevelDirectory())){
+                paramConfigNew.setLogFile(mainConfig.getLogLevelDirectory());
+            }
+            paramConfigService.save(paramConfigNew);
+        }
+
         File file = new File(configPath);
         if (!file.exists()) {
             throw new SysException(FILE_NOT_EXIST);
@@ -142,9 +171,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             Runtime.getRuntime().exec(STOP_COMMAND, null);
             Boolean result = linuxCommand(SERVER_NAME);
             if (result) {
-                return ResultUtil.success(STOP_SUCCESS);
-            } else {
                 return ResultUtil.fail(STOP_FAIL);
+            } else {
+                return ResultUtil.success(STOP_SUCCESS);
             }
         }
     }

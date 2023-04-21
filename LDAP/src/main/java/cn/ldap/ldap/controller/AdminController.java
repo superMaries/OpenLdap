@@ -1,12 +1,9 @@
 package cn.ldap.ldap.controller;
 
-import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.AdminVo;
 import cn.ldap.ldap.common.dto.UpdateAdminVo;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.UserModel;
-import cn.ldap.ldap.common.enums.OperateMenuEnum;
-import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 管理员管理接口
@@ -47,7 +46,7 @@ public class AdminController {
      * @return 返回tru 成功   false 失败
      */
     @PostMapping("delUserKey")
-    @OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.DEL_USBKEY)
+    //@OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.DEL_USBKEY)
     public ResultVo<Boolean> delUserKey(@RequestBody AdminVo adminVo) {
         return adminService.delUserKey(adminVo);
     }
@@ -59,7 +58,7 @@ public class AdminController {
      * @return 返回tru 成功   false 失败
      */
     @PostMapping("addUserKey")
-    @OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.ADD_USBKEY)
+    //@OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.ADD_USBKEY)
     public ResultVo<Boolean> addUserKey(@RequestBody UserDto userDto) {
         return adminService.addUserKey(userDto);
     }
@@ -71,8 +70,8 @@ public class AdminController {
      * @return
      */
     @PostMapping("updatePwd")
-    @OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.UPDATE_USBKEY)
-    public ResultVo<Boolean> updatePwd( @RequestBody UpdateAdminVo adminVo) {
-        return adminService.updatePwd(adminVo);
+    //@OperateAnnotation(operateModel = OperateMenuEnum.ADMIN_MANAGER, operateType = OperateTypeEnum.UPDATE_USBKEY)
+    public ResultVo<Boolean> updatePwd(@RequestBody UpdateAdminVo adminVo, HttpServletRequest httpServletRequest) {
+        return adminService.updatePwd(adminVo,httpServletRequest);
     }
 }

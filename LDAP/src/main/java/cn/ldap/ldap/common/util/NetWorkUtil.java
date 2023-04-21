@@ -182,13 +182,12 @@ public class NetWorkUtil {
 
     public static Map<String, Object> listInfo(String cmd) throws Exception {
         log.info("命令：{}", cmd);
-        String[] comands = new String[]{"/bin/sh", cmd};
-
+       // String[] comands = new String[]{"/bin/sh", cmd};
         Process process = null;
         BufferedReader bufrIn = null;
         BufferedReader bufrError = null;
         try {
-            process = Runtime.getRuntime().exec(comands);
+            process = Runtime.getRuntime().exec(cmd);
             //方法阻塞，等待名录库执行完成
             process.waitFor();
 
