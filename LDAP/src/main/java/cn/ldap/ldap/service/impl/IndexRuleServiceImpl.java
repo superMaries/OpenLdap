@@ -5,6 +5,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.dto.ServerDto;
 import cn.ldap.ldap.common.entity.IndexRule;
 import cn.ldap.ldap.common.entity.PortLink;
+import cn.ldap.ldap.common.entity.SSLConfig;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.IndexRuleMapper;
@@ -14,6 +15,7 @@ import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexRuleService;
 import cn.ldap.ldap.service.PortLinkService;
+import cn.ldap.ldap.service.SSLConfigService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ import org.ini4j.Wini;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import java.io.*;
@@ -44,15 +47,19 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
     private static final String SERVICE = "Service";
 
-    private static final String LDAPS_HEAD = "SLAPD_URLS=ldaps://0.0.0.0:";
 
-    private static final String LDAP_HEAD = "SLAPD_URLS=ldap://0.0.0.0:";
+    private static final String CERT_Start_DROP = "---";
+
+    private static final String SPACE = " ";
+
+    private static final String LDAPS_HEAD = "ldaps://0.0.0.0:";
 
     private static final String AFTER_COMMAND = "/ ldapi://0.0.0.0:";
 
-    private static final String DOUBLE_COMMAND = "/\" \"SLAPD_OPTIONS=";
 
-    private static final String LAST_COMMAND = "SLAPD_OPTIONS=";
+    private static final String BEHIND = "nohup /usr/local/openldap/libexec/slapd -h";
+
+    private static final String LAST_COMMAND = "-f /usr/local/openldap/etc/openldap/slapd.conf > /dev/null 2>&1 &";
 
     private static final String RESTART_FAIL = "重启服务失败";
 
@@ -66,6 +73,12 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
      */
     @Value("${filePath.configPath}")
     private String configPath;
+
+    /**
+     * 配置文件所在路径
+     */
+    @Value("${filePath.shPath}")
+    private String shPath;
 
     /**
      * 空格数据
@@ -85,8 +98,13 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
     private static final String SERVER_CERT = "server.cert";
 
+    private static final String SERVER_KEY = "server.key";
+
     @Resource
     private PortLinkService portLinkService;
+
+    @Resource
+    private SSLConfigService sslConfigService;
 
     //证书路径
     @Value("${filePath.certPath}")
@@ -106,10 +124,10 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         return ResultUtil.success(indexRuleList);
     }
 
-    private static final String CERT_Start_DROP = "---";
     /**
      * 开启或关闭SSL
-     *_
+     * _
+     *
      * @param serverDto
      * @return
      */
@@ -119,6 +137,50 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
                 || (!serverDto.getOperation() && !serverDto.getSafeOperation())) {
             return ResultUtil.fail(ExceptionEnum.PARAM_EMPTY);
         }
+        SSLConfig sslConfig = sslConfigService.getOne(null);
+        if (ObjectUtils.isEmpty(sslConfig)) {
+            SSLConfig sslConfigNew = new SSLConfig();
+            if (!BeanUtil.isEmpty(serverDto.getOperation())) {
+                sslConfigNew.setOperation(serverDto.getOperation());
+            }
+            if (!BeanUtil.isEmpty(serverDto.getPort())) {
+                sslConfigNew.setPort(serverDto.getPort());
+            }
+            if (!BeanUtil.isEmpty(serverDto.getSafeOperation())) {
+                sslConfigNew.setSafeOperation(serverDto.getSafeOperation());
+            }
+            if (!BeanUtil.isEmpty(serverDto.getSafePort())) {
+                sslConfigNew.setSafePort(serverDto.getSafePort());
+            }
+            if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
+                sslConfigNew.setSslAuthStrategy(serverDto.getSslAuthStrategy());
+            }
+            sslConfigNew.setKeyName(SERVER_KEY);
+            sslConfigNew.setCaName(CASERVER_CERT);
+            sslConfigNew.setServerName(SERVER_CERT);
+            sslConfigService.save(sslConfigNew);
+        } else {
+            if (!BeanUtil.isEmpty(serverDto.getOperation())) {
+                sslConfig.setOperation(serverDto.getOperation());
+            }
+            if (!BeanUtil.isEmpty(serverDto.getPort())) {
+                sslConfig.setPort(serverDto.getPort());
+            }
+            if (!BeanUtil.isEmpty(serverDto.getSafeOperation())) {
+                sslConfig.setSafeOperation(serverDto.getSafeOperation());
+            }
+            if (!BeanUtil.isEmpty(serverDto.getSafePort())) {
+                sslConfig.setSafePort(serverDto.getSafePort());
+            }
+            if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
+                sslConfig.setSslAuthStrategy(serverDto.getSslAuthStrategy());
+            }
+            sslConfig.setKeyName(SERVER_KEY);
+            sslConfig.setCaName(CASERVER_CERT);
+            sslConfig.setServerName(SERVER_CERT);
+            sslConfigService.updateById(sslConfig);
+        }
+
 
         //CA证书
         String caCert = "";
@@ -159,21 +221,21 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         //标准协议
         if (serverDto.getOperation() && !serverDto.getSafeOperation()) {
             //标准协议命令
-            command = LDAP_HEAD + serverDto.getPort() + LAST_COMMAND;
+            command = BEHIND + SPACE + serverDto.getPort() + SPACE + LAST_COMMAND;
             objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
             log.info("标准协议配置为:{}", command);
         }
         //安全协议
         if (!serverDto.getOperation() && serverDto.getSafeOperation()) {
             //安全协议命令
-            command = LDAPS_HEAD + serverDto.getSafePort() + LAST_COMMAND;
+            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + LAST_COMMAND;
             objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
             log.info("安全协议开启端口:{}", command);
         }
         //安全协议标准协议全部开启
         if (serverDto.getOperation() && serverDto.getSafeOperation()) {
             //双重协议命令
-            command = LDAPS_HEAD + serverDto.getSafePort() + AFTER_COMMAND + serverDto.getPort() + DOUBLE_COMMAND;
+            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + AFTER_COMMAND + serverDto.getPort() + SPACE + LAST_COMMAND;
             objectResultVo = twice(command, serverDto);
         }
         if (serverDto.getSafeOperation()) {
@@ -193,12 +255,11 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
      */
     public ResultVo<Object> onlyOne(String command, ServerDto serverDto, String serverName) {
         log.info("安全协议、标准协议全部开启:{}", command);
-        //修改slapd.service 配置文件
-        try {
-            Wini wini = new Wini(new File(runPath));
-            Profile.Section section = wini.get(SERVICE);
-            section.put(ENVIRONMENT, command);
-            wini.store();
+        //修改sh文件
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(shPath))) {
+
+            bufferedWriter.write(command);
+            bufferedWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -226,12 +287,10 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
      */
     public ResultVo<Object> twice(String command, ServerDto serverDto) {
         log.info("安全协议、标准协议全部开启:{}", command);
-        //修改slapd.service 配置文件
-        try {
-            Wini wini = new Wini(new File(runPath));
-            Profile.Section section = wini.get(SERVICE);
-            section.put(ENVIRONMENT, command);
-            wini.store();
+        //修改sh文件
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(shPath))) {
+            bufferedWriter.write(command);
+            bufferedWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -250,9 +309,9 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         portLinkService.updateBatchById(portLinkList);
         //判断状态
         if (result) {
-            return ResultUtil.success(RESTART_SUCCESS);
+            return ResultUtil.success();
         } else {
-            return ResultUtil.fail(RESTART_FAIL);
+            return ResultUtil.fail();
         }
     }
 
@@ -269,7 +328,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         }
         StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));){
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));) {
             String lineStr = null;
             while ((lineStr = bufferedReader.readLine()) != null) {
                 if (lineStr.trim().startsWith(START)) {
@@ -278,7 +337,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
                 String oldData = lineStr;
                 stringBuilder.append(oldData).append(FEED);
             }
-        }  catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         String data = splicingConfigParam(stringBuilder, serverDto);

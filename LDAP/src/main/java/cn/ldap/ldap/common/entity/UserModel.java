@@ -46,4 +46,10 @@ public class UserModel {
      */
     @TableField("is_enable")
     private Integer isEnable;
+
+    /**
+     * 证书序列号
+     */
+    @TableField("serial_num")
+    private String serialNum;
 }

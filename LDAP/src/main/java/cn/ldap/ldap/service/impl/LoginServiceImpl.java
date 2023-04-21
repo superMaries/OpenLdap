@@ -1,8 +1,5 @@
 package cn.ldap.ldap.service.impl;
 
-import cn.hutool.core.util.HexUtil;
-import cn.hutool.crypto.BCUtil;
-import cn.hutool.crypto.asymmetric.SM2;
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.ConfigModel;
@@ -30,9 +27,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.crypto.engines.SM2Engine;
-import org.bouncycastle.crypto.params.ECPublicKeyParameters;
-import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -127,6 +121,10 @@ public class LoginServiceImpl implements LoginService {
     private static final String USER_NAME = "userName";
 
     private static final String DATA = "data";
+
+    private static final String SING_DATA = "sign";
+
+    private static final String ORGIN="orgin";
     @Resource
     private PermissionService permissionService;
 
@@ -312,8 +310,9 @@ public class LoginServiceImpl implements LoginService {
         }
     }
 
+
     @Override
-    public ResultVo<Map<String, Object>> certLogin(UserDto userDto, HttpServletRequest request) {
+    public ResultVo<Map<String, Object>> certLogin(UserDto userDto, HttpServletRequest request) throws UnsupportedEncodingException {
         log.info(userDto.toString());
         Map<String, Object> mapObj = new HashMap<>();
         if (com.baomidou.mybatisplus.core.toolkit.ObjectUtils.isNull(userDto, userDto.getCertSn())) {
@@ -343,37 +342,14 @@ public class LoginServiceImpl implements LoginService {
         log.info("验签开始");
 
 
-//        String key = "0444270bd267987f13b32846abb09c34c7c865b4d1559946b5734275ffc7cbcc932909eb815430ada80537bcd02f094dd1c79b04d90105923f57183ab9f076d36a";
-//
-//        if (key.length() == 130) {
-//            //这里需要去掉开始第一个字节 第一个字节表示标记
-//            key = key.substring(2);
-//        }
-//        String xhex = key.substring(0, 64);
-//        String yhex = key.substring(64, 128);
-//        ECPublicKeyParameters ecPublicKeyParameters = BCUtil.toSm2Params(xhex, yhex);
-//        //创建sm2 对象
-//        SM2 sm2 = new SM2(null, ecPublicKeyParameters);
-//        //这里需要手动设置，sm2 对象的默认值与我们期望的不一致 , 使用明文编码
-//        sm2.usePlainEncoding();
-//        sm2.setMode(SM2Engine.Mode.C1C2C3);
-//        boolean verify = sm2.verify(userDto.getSignCert().getBytes(), HexUtil.decodeHex(userDto.getSignData()));
-
-        String orgin = request.getHeader("orgin");
-        String sign = request.getHeader("sign");
-        try {
-            orgin = URLDecoder.decode(orgin, "UTF-8");
-            sign = URLDecoder.decode(sign, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-        boolean verify = false;
-        try {
-            verify = Sm2Util.verify(userDto.getSignCert(), orgin, sign);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        String sign = request.getHeader(SING_DATA);
+        String orgin = request.getHeader(ORGIN);
+        String decodedParam = URLDecoder.decode(orgin, "UTF-8");
+        log.info("签名原数据(可能为DER编码)为:{}", orgin);
+        log.info("签名值:{}", sign);
+        log.info("签名原数据解码后:{}", decodedParam);
+        boolean verify = Sm2Util.verify(userDto.getSignCert(), decodedParam, sign);
+        log.info("验签结果:{}", verify);
         if (!verify) {
             throw new SysException(VERIFY_FAIL);
         }
@@ -395,10 +371,10 @@ public class LoginServiceImpl implements LoginService {
         tokenInfo.setIsSync(InitConfigData.getIsSync());
 
         LoginResultVo loginResultVo = new LoginResultVo(token, tokenInfo);
-        mapObj.put(DATA, loginResultVo);
+        //mapObj.put(DATA, );
         HttpSession session = request.getSession();
         session.setAttribute(AUTHORIZATION, loginResultVo);
-        return ResultUtil.success(mapObj);
+        return ResultUtil.success(loginResultVo);
     }/**/
 
     /**
@@ -454,7 +430,6 @@ public class LoginServiceImpl implements LoginService {
 
     /**
      * 退出登录
-     *
      * @param request
      * @return
      */

@@ -10,6 +10,8 @@ import lombok.Data;
 @Data
 public class SyncStatusDto {
 
+    private Integer id;
+
     private String url;
 
     private String account;

@@ -7,10 +7,14 @@ import cn.ldap.ldap.common.dto.LogDto;
 import cn.ldap.ldap.common.entity.MainConfig;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
+import cn.ldap.ldap.common.entity.ParamConfig;
+import cn.ldap.ldap.common.entity.SSLConfig;
 import cn.ldap.ldap.common.vo.LogVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LdapConfigService;
 import cn.ldap.ldap.service.OperationLogService;
+import cn.ldap.ldap.service.ParamConfigService;
+import cn.ldap.ldap.service.SSLConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +41,11 @@ public class ConfigController {
 
     @Resource
     private OperationLogService operationLogService;
+    @Resource
+    private ParamConfigService paramConfigService;
+
+    @Resource
+    private SSLConfigService sslConfigService;
 
     /**
      * 添加配置
@@ -81,7 +90,7 @@ public class ConfigController {
      * @return
      */
     @PostMapping("queryLog")
-//    @OperateAnnotation(operateModel = OperateMenuEnum.LOG_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
+  //  @OperateAnnotation(operateModel = OperateMenuEnum.LOG_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
     public ResultVo<List<LogVo>> queryLog(@RequestBody LogDto logDto) {
         return operationLogService.queryLog(logDto);
     }
@@ -105,4 +114,24 @@ public class ConfigController {
     public ResultVo<Boolean> auditLog(HttpServletRequest request, @RequestBody List<AuditDto> auditDtos) {
         return operationLogService.auditLog(request, auditDtos);
     }
+
+    /**
+     * 参数配置展示
+     * @return
+     */
+    @PostMapping("queryParamConfig")
+    public ResultVo<ParamConfig> queryParamConfig(){
+        return paramConfigService.queryParamConfig();
+    }
+
+    /**
+     * 服务配置展示
+     * @return
+     */
+    @PostMapping("queryServerConfig")
+    public ResultVo<SSLConfig> queryServerConfig(){
+        return sslConfigService.queryServerConfig();
+    }
+
+
 }
