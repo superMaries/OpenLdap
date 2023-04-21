@@ -1,7 +1,10 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.IndexDataDto;
 import cn.ldap.ldap.common.entity.IndexDataModel;
+import cn.ldap.ldap.common.enums.OperateMenuEnum;
+import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexDataService;
@@ -32,6 +35,7 @@ public class IndexDataController {
      * @return true 成功 false 失败
      */
     @PostMapping("update")
+    @OperateAnnotation(operateModel = OperateMenuEnum.INDEX, operateType = OperateTypeEnum.INDEX_UPDATE_OR_INTER)
     public ResultVo<Boolean> updateIndexData(@RequestBody IndexDataDto indexDataDto) {
        return indexDataService.updateIndexData(indexDataDto);
     }
@@ -40,6 +44,7 @@ public class IndexDataController {
         return ResultUtil.success(indexDataService.list());
     }
     @PostMapping("delete/{id}")
+    @OperateAnnotation(operateModel = OperateMenuEnum.INDEX, operateType = OperateTypeEnum.INDEX_DELETE)
     public ResultVo<Boolean> deleteById(@PathVariable Integer id){
         return indexDataService.deleteById(id);
     }

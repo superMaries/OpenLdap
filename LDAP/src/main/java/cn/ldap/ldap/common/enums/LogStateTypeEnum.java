@@ -9,28 +9,27 @@ public enum LogStateTypeEnum {
     /**
      * 失败.
      */
-    FAIL(0,"失败"),
+    FAIL(0, "失败"),
 
     /**
      * 成功.
      */
-    SUCCEED(1,"成功")
-    ;
+    SUCCEED(200, "成功");
 
     /**
      * 名称.
      */
-    private  Integer code;
+    private Integer code;
 
     @JsonValue
-    private  String name;
+    private String name;
 
-    public static Map<String,String> getMap(){
-        Map<String,String> maps=new HashMap<>();
+    public static Map<String, String> getMap() {
+        Map<String, String> maps = new HashMap<>();
         for (LogStateTypeEnum logStateTypeEnum : values()) {
             maps.put(logStateTypeEnum.name, logStateTypeEnum.name);
         }
-        return  maps;
+        return maps;
     }
 
     LogStateTypeEnum(Integer code, String name) {
@@ -41,6 +40,7 @@ public enum LogStateTypeEnum {
     public String getName() {
         return name;
     }
+
     public Integer getCode() {
         return code;
     }

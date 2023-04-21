@@ -16,7 +16,6 @@ import javax.servlet.ServletRequest;
  */
 public class SessionUtil {
     private static final String AUTHORIZATION = "auth";
-
     public static LoginResultVo getUserInfo(ServletRequest requests) {
         LoginResultVo loginResultVo = null;
         try {

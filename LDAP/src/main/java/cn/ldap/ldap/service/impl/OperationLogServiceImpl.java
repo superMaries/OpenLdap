@@ -15,6 +15,7 @@ import cn.ldap.ldap.common.util.Sm2Util;
 import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.LogVo;
 import cn.ldap.ldap.common.vo.ResultVo;
+import cn.ldap.ldap.hander.InitConfigData;
 import cn.ldap.ldap.service.OperationLogService;
 import cn.ldap.ldap.util.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -26,6 +27,7 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -50,10 +52,10 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
      * @Version 1.0
      */
     @Override
-    public ResultVo<List<LogVo>>
-    queryLog(LogDto logDto) {
+    public ResultVo<List<LogVo>> queryLog(LogDto logDto) {
         String beginTime = null;
         String endTime = null;
+        //设置时间
         if (ObjectUtils.isEmpty(logDto.getBeginTime())) {
             beginTime = DateUtil.getBeginTime();
             endTime = DateUtil.getEndTime();
@@ -61,6 +63,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
             beginTime = logDto.getBeginTime();
             endTime = logDto.getEndTime();
         }
+        //设置参数
         long pageSize = logDto.getPageSize();
         long pagePage = (logDto.getPageNum() - 1) * logDto.getPageSize();
 
@@ -71,9 +74,14 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
                 .in(UserModel::getId, aduitIds));
 
         logVos.forEach(it -> {
+            //设置操作状态
             setOperateStateName(it);
             getLogs(it);
-            setAuditData(it, auditUser);
+            try {
+                setAuditData(it, auditUser);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
         return ResultUtil.success(logVos);
     }
@@ -103,9 +111,14 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
         if (ObjectUtils.isEmpty(it.getUserId()) || Objects.equals(it.getUserId(), StaticValue.ADMIN_ID)) {
             it.setAdminVerify(AdminVerifyEnum.NOT_SIGN.getMsg());
         } else {
-            if (Sm2Util.verify(it.getSignCert(), it.operateSrcToString(), it.getSignVlue())) {
-                it.setAdminVerify(AdminVerifyEnum.SIGN_SUCCESS.getMsg());
-            } else {
+//            if (Sm2Util.verify(it.getSignCert(), it.operateSrcToString(), it.getSignVlue())) {
+            try {
+                if (Sm2Util.verifyEx(InitConfigData.getPublicKey(), it.getSignSrc(), it.getSignVlue())) {
+                    it.setAdminVerify(AdminVerifyEnum.SIGN_SUCCESS.getMsg());
+                } else {
+                    it.setAdminVerify(AdminVerifyEnum.SIGN_ERROR.getMsg());
+                }
+            } catch (Exception e) {
                 it.setAdminVerify(AdminVerifyEnum.SIGN_ERROR.getMsg());
             }
         }
@@ -118,7 +131,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
      * @param it        日志Vo
      * @param auditUser 审计员信息
      */
-    private void setAuditData(LogVo it, List<UserModel> auditUser) {
+    private void setAuditData(LogVo it, List<UserModel> auditUser) throws IOException {
         //设置审计状态  、审计员名称、审计验签结果
         if (ObjectUtils.isEmpty(it.getAuditId()) || Objects.equals(it.getAuditStatus(), StaticValue.AUDIT_NOT_STATUS)) {
             //未审计
@@ -128,8 +141,8 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
             //验签审计的数据
             List<UserModel> collect = auditUser.stream().filter(audit -> Objects.equals(audit.getId(), it.getAuditId()))
                     .collect(Collectors.toList());
-            UserModel userModel = ObjectUtils.isEmpty(collect) ? collect.get(0) : null;
-            if (ObjectUtils.isEmpty(userModel)) {
+            UserModel userModel = ObjectUtils.isEmpty(collect) ? null : collect.get(0);
+            if (!ObjectUtils.isEmpty(userModel)) {
                 //审计员名称
                 it.setAuditName(userModel.getCertName());
                 String signCert = userModel.getSignCert();
@@ -207,7 +220,8 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
                     .collect(Collectors.toList()).get(0);
             it.setAuditId(auditDto.getAuditId());
             it.setAuditTime(auditDto.getAuditTime());
-            it.setAuditStatus(auditDto.getAuditStatus());
+            it.setAuditStatus(AuditEnum.AUDIT.getCode());
+            it.setPass(auditDto.getAuditStatus());
             it.setAuditSrc(auditDto.getAuditSrc());
             it.setAuditSignValue(auditDto.getAuditSignValue());
             it.setRemark(auditDto.getRemark());

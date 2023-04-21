@@ -1,9 +1,12 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.AddLogDto;
 import cn.ldap.ldap.common.dto.AuditDto;
 import cn.ldap.ldap.common.dto.LogDto;
 import cn.ldap.ldap.common.entity.MainConfig;
+import cn.ldap.ldap.common.enums.OperateMenuEnum;
+import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.LogVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LdapConfigService;
@@ -42,7 +45,7 @@ public class ConfigController {
      * @return
      */
     @PostMapping("addConfig")
- //   @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
+    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
     public ResultVo<T> addConfig(@RequestBody MainConfig mainConfig) throws IOException {
         return ldapConfigService.addConfig(mainConfig);
     }
@@ -55,7 +58,7 @@ public class ConfigController {
      * @throws IOException
      */
     @PostMapping("setServerStatus/{openOrClose}")
-  //  @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.OPEN_SERVICE)
+    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.OPEN_SERVICE)
     public ResultVo<String> setServerStatus(@PathVariable("openOrClose") Boolean openOrClose) throws IOException {
         return ldapConfigService.setServerStatus(openOrClose);
     }
@@ -66,7 +69,7 @@ public class ConfigController {
      * @return
      */
     @GetMapping("getServerStatus")
-  //  @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.LOOK_PARAM)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.LOOK_PARAM)
     public Boolean getServerStatus() {
         return ldapConfigService.getServerStatus();
     }
@@ -78,7 +81,7 @@ public class ConfigController {
      * @return
      */
     @PostMapping("queryLog")
-  //  @OperateAnnotation(operateModel = OperateMenuEnum.LOG_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.LOG_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
     public ResultVo<List<LogVo>> queryLog(@RequestBody LogDto logDto) {
         return operationLogService.queryLog(logDto);
     }

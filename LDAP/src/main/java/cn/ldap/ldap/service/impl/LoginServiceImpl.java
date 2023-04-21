@@ -17,6 +17,7 @@ import cn.ldap.ldap.common.mapper.UserAccountMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.util.SessionUtil;
+import cn.ldap.ldap.common.util.Sm2Util;
 import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -27,6 +28,7 @@ import cn.ldap.ldap.service.PermissionService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
@@ -41,6 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -247,7 +250,7 @@ public class LoginServiceImpl implements LoginService {
         LoginResultVo userInfo = SessionUtil.getUserInfo(request);
         if (ObjectUtils.isEmpty(userInfo) || ObjectUtils.isEmpty(userInfo.getUserInfo())) {
             log.info(USER_NOT_LOGIN.getMessage());
-           return ResultUtil.fail(USER_NOT_LOGIN);
+            return ResultUtil.fail(USER_NOT_LOGIN);
         }
         Integer roleId = userInfo.getUserInfo().getRoleId();
 
@@ -340,21 +343,37 @@ public class LoginServiceImpl implements LoginService {
         log.info("验签开始");
 
 
-        String key = "0444270bd267987f13b32846abb09c34c7c865b4d1559946b5734275ffc7cbcc932909eb815430ada80537bcd02f094dd1c79b04d90105923f57183ab9f076d36a";
+//        String key = "0444270bd267987f13b32846abb09c34c7c865b4d1559946b5734275ffc7cbcc932909eb815430ada80537bcd02f094dd1c79b04d90105923f57183ab9f076d36a";
+//
+//        if (key.length() == 130) {
+//            //这里需要去掉开始第一个字节 第一个字节表示标记
+//            key = key.substring(2);
+//        }
+//        String xhex = key.substring(0, 64);
+//        String yhex = key.substring(64, 128);
+//        ECPublicKeyParameters ecPublicKeyParameters = BCUtil.toSm2Params(xhex, yhex);
+//        //创建sm2 对象
+//        SM2 sm2 = new SM2(null, ecPublicKeyParameters);
+//        //这里需要手动设置，sm2 对象的默认值与我们期望的不一致 , 使用明文编码
+//        sm2.usePlainEncoding();
+//        sm2.setMode(SM2Engine.Mode.C1C2C3);
+//        boolean verify = sm2.verify(userDto.getSignCert().getBytes(), HexUtil.decodeHex(userDto.getSignData()));
 
-        if (key.length() == 130) {
-            //这里需要去掉开始第一个字节 第一个字节表示标记
-            key = key.substring(2);
+        String orgin = request.getHeader("orgin");
+        String sign = request.getHeader("sign");
+        try {
+            orgin = URLDecoder.decode(orgin, "UTF-8");
+            sign = URLDecoder.decode(sign, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
-        String xhex = key.substring(0, 64);
-        String yhex = key.substring(64, 128);
-        ECPublicKeyParameters ecPublicKeyParameters = BCUtil.toSm2Params(xhex, yhex);
-        //创建sm2 对象
-        SM2 sm2 = new SM2(null, ecPublicKeyParameters);
-        //这里需要手动设置，sm2 对象的默认值与我们期望的不一致 , 使用明文编码
-        sm2.usePlainEncoding();
-        sm2.setMode(SM2Engine.Mode.C1C2C3);
-        boolean verify = sm2.verify(userDto.getSignCert().getBytes(), HexUtil.decodeHex(userDto.getSignData()));
+        boolean verify = false;
+        try {
+            verify = Sm2Util.verify(userDto.getSignCert(), orgin, sign);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         if (!verify) {
             throw new SysException(VERIFY_FAIL);
         }
@@ -435,6 +454,7 @@ public class LoginServiceImpl implements LoginService {
 
     /**
      * 退出登录
+     *
      * @param request
      * @return
      */

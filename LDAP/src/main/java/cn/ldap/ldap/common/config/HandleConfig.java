@@ -27,6 +27,8 @@ public class HandleConfig implements HandlerInterceptor {
     private static String TOKEN_SECRET_KEY = "ldapKey";
     private static String BY_TOKEN = "auth";
     private static String CONTENT_TYPE = "application/json;charset=utf-8";
+    private final static String SIGN = "sign";
+    private final static String ORIGN = "orgin";
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         //获取头中的token

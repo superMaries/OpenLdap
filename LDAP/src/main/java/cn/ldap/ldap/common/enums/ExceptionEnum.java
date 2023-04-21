@@ -24,7 +24,6 @@ public enum ExceptionEnum {
     USER_INIT(203, "已被初始化"),
 
 
-
     //系统异常
     SYSTEM_ERROR(500, "系统异常"),
 
@@ -51,14 +50,16 @@ public enum ExceptionEnum {
 
     QUERY_POINT_ERROR(805, "查询节点失败"),
     DATA_EXIT(806, "数据已存在"),
-    READ_FILE_ERROR(808,"IO流异常"),
+    READ_FILE_ERROR(808, "IO流异常"),
     NOT_AUDIT(807, "该账号是管理员,不允许审计日志"),
     LINK_ERROR(808, "连接异常"),
-    SCHEMA_ERROR(809,"SCHEMA信息异常"),
-
+    SCHEMA_ERROR(809, "SCHEMA信息异常"),
 
     FILE_IO_ERROR(810, "文件流处理失败"),
     STR_ERROR(811, "字符格式错误"),
+
+
+    SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
     LINUX_ERROR(5007, "失败"),
     //上传失败
@@ -72,14 +73,14 @@ public enum ExceptionEnum {
     //验签失败
     VERIFY_FAIL(5012, "验签失败"),
 
-    VALIDATE_ERROR(5013,"验证书链错误"),
+    VALIDATE_ERROR(5013, "验证书链错误"),
 
 
     //LDAP接口中的错误 全部定义8开头
     LDAP_RDN_NOT_EXIT(8001, "删除RDN错误"),
     LDAP_QUERY_RDN_NOT_EXIT(8002, "解析RDN错误"),
     LDAP_DEL_RDN_NOT_EXIT(8002, "删除RDN错误"),
-    LDAP_DATA_ERROR(8004,"缺少从服务连接数据"),
+    LDAP_DATA_ERROR(8004, "缺少从服务连接数据"),
     ;
 
     /**

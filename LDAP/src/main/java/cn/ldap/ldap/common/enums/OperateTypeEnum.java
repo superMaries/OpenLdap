@@ -36,6 +36,14 @@ public enum OperateTypeEnum {
 
     //    目录树
     LOOK_DATA(601, "查询数据"),
+    DEL_LDAP(602, "删除节点"),
+    EDIT_LDAP_ATTRITE(603, "编辑属性"),
+    MIDIFY_LDAP_NAME(604, "修改节点名称"),
+    EXPORT_ALL(605, "查询导出全部"),
+    EXPORT_LDIF(607, "导入LDIF文件"),
+    IMPORT_LDAP(606, "导入LDIF文件"),
+    ADD_LDAF(608, "新增LDAP节点"),
+
 
     //参数配置
     LOOK_PARAM(701, "查询参数配置"),
@@ -46,12 +54,22 @@ public enum OperateTypeEnum {
 
     OPEN_SERVICE(704, "开启或关闭服务"),
 
-    ADD_DATA(705,"添加数据"),
+    ADD_DATA(705, "添加数据"),
 
     DEL_USBKEY(801, "删除USBKEY用户"),
+
     ADD_USBKEY(802, "添加USBKEY用户"),
+
     UPDATE_USBKEY(802, "修改密码"),
 
+
+    //索引管理
+    INDEX_UPDATE_OR_INTER(901, "更新或者插入"),
+    INDEX_DELETE(902, "删除索引"),
+
+
+    //服务管理
+    SERVICE_QUERY(1001, "服务管理"),
     ;
 
     public static Map<String, String> getMap() {

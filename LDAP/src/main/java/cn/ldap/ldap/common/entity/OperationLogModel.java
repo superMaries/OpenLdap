@@ -88,6 +88,11 @@ public class OperationLogModel {
      */
     @TableField("audit_status")
     private Integer auditStatus;
+    /**
+     * 0 未通过 1 通过
+     */
+    @TableField("pass")
+    private Integer pass ;
 
     /**
      * 审计时间
