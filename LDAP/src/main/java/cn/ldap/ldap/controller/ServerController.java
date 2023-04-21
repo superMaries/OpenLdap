@@ -32,13 +32,13 @@ public class ServerController {
     private PortLinkService portLinkService;
 
     @PostMapping("sslOperation")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPLOAD_FILE)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.SERVICE_MANAGER, operateType = OperateTypeEnum.UPLOAD_FILE)
     public ResultVo<Object> sslOperation(@RequestBody ServerDto serverDto) {
         return indexRuleService.sslOperation(serverDto);
     }
 
     @GetMapping("queryServerStatus")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPLOAD_FILE)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.SERVICE_MANAGER, operateType = OperateTypeEnum.UPLOAD_FILE)
     public ResultVo<List<PortLink>> queryServerStatus() {
         return ResultUtil.success(portLinkService.list());
     }

@@ -1,21 +1,31 @@
 package cn.ldap.ldap.common.aop;
 
+import cn.hutool.core.util.HexUtil;
+import cn.hutool.crypto.BCUtil;
+import cn.hutool.crypto.asymmetric.SM2;
 import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
+import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
 import cn.ldap.ldap.common.entity.OperationLogModel;
-import cn.ldap.ldap.common.enums.LogStateTypeEnum;
-import cn.ldap.ldap.common.enums.OperateMenuEnum;
-import cn.ldap.ldap.common.enums.OperateTypeEnum;
-import cn.ldap.ldap.common.enums.UserRoleEnum;
+import cn.ldap.ldap.common.entity.UserModel;
+import cn.ldap.ldap.common.enums.*;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.OperationMapper;
+import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ClientInfo;
 import cn.ldap.ldap.common.util.SessionUtil;
+import cn.ldap.ldap.common.util.Sm2Util;
 import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.LoginResultVo;
+import cn.ldap.ldap.common.vo.ResultVo;
+import cn.ldap.ldap.hander.InitConfigData;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.bouncycastle.crypto.engines.SM2Engine;
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
+import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -23,7 +33,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -42,7 +55,11 @@ import static cn.ldap.ldap.common.enums.OperateTypeEnum.DEL_USBKEY;
 public class OperateLogAspect {
 
     @Autowired
-    OperationMapper operationMapper;
+    private OperationMapper operationMapper;
+    @Autowired
+    private UserMapper userMapper;
+    private final static String SIGN = "sign";
+    private final static String ORIGN = "orgin";
     /**
      * 本地共享变量
      */
@@ -72,8 +89,21 @@ public class OperateLogAspect {
         }
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        //获取登录的信息
-        LoginResultVo userInfo = SessionUtil.getUserInfo(request);
+
+        //获取头部的签名值
+        String sign = request.getHeader(SIGN);
+        // 原数据
+        String orgin = request.getHeader(ORIGN);
+        if (ObjectUtils.isEmpty(sign) || ObjectUtils.isEmpty(orgin)) {
+            log.error("未传递签名值和原数据");
+        } else {
+            try {
+                orgin = URLDecoder.decode(orgin, "UTF-8");
+                sign = URLDecoder.decode(sign, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
+        }
         // 构建日志实体
         OperationLogModel operationLogModel = new OperationLogModel();
         StringBuffer remark = new StringBuffer();
@@ -81,37 +111,76 @@ public class OperateLogAspect {
         String name = operateAnnotation.operateType().getName();
         //记录日志时  登录登出 初始化需要特殊处理 并且不需要操作员验签
         boolean isLogin = false;
+        //获取登录的信息
+        LoginResultVo userInfo = null;
+        try {
+            userInfo = SessionUtil.getUserInfo(request);
+        } catch (SysException e) {
+            userInfo = null;
+        }
         /**
-         * 如果是用户管理
+         * 如果是用户管理下面的话就不需要记录谁做的
          */
         if (OperateMenuEnum.USER_MANAGER.equals(operateAnnotation.operateModel())) {
             //除了登出 其余不需要记录哪个用户操作
             if (OperateTypeEnum.USER_LOGOUT.equals(operateAnnotation.operateType())) {
                 if (UserRoleEnum.ACCOUNT_ADMIN.getCode().equals(userInfo.getUserInfo().getRoleId())) {
-                    //说明是admin 登录
+                    //说明是admin 登录的退出
                     operationLogModel.setUserId(0);
-                    remark.append("用户：").append(userInfo.getUserInfo().getRoleName()).append(name);
+//                    remark.append("用户：").append(UserRoleEnum.ACCOUNT_ADMIN.getMsg()).append(name);
                 } else {
                     operationLogModel.setUserId(userInfo.getUserInfo().getId());
-                    remark.append("用户：").append(userInfo.getUserInfo().getRoleName()).append(name);
+//                    remark.append("用户：").append(userInfo.getUserInfo().getRoleName()).append(name);
                 }
             } else {
                 //session 中 没有值
                 isLogin = true;
-                remark.append(name);
+                //判断是amdin 还是 usebKey 登录， usebKey 登录就需要对数据进行验签
+                if (param instanceof UserDto) {
+                    // usebKey登录
+                    try {
+                        String signCert = ((UserDto) param).getSignCert();
+                        boolean verify = Sm2Util.verify(signCert, orgin, sign);
+                        if (!verify) {
+                            log.error("{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage());
+                            throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
+                        }
+                    } catch (Exception e) {
+                        log.error("{}:{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage(), e.getMessage());
+                        throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
+                    }
+                }
+//                remark.append(name);
             }
-        }
+        } else {
+            UserModel userModel = userMapper.selectById(userInfo.getUserInfo().getId());
+            String signCert = userModel.getSignCert();
+            try {
+                boolean verify = false;
+                verify = Sm2Util.verify(signCert, orgin, sign);
+                if (!verify) {
+                    log.error("{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage());
+                    throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
+                }
+            } catch (IOException e) {
+                throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
+            }
 
+        }
         String clientIp = ClientInfo.getIpAdrress(request);
         operationLogModel.setClientIp(clientIp);
         operationLogModel.setOperateType(operateAnnotation.operateType().getName());
         operationLogModel.setOperateMenu(operateAnnotation.operateModel().getName());
-        operationLogModel.setRemark(remark.toString());
+//        operationLogModel.setRemark(remark.toString());
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         operationLogModel.setCreateTime(simpleDateFormat.format(new Date()));
+        //设置签名值
+        operationLogModel.setSignValue(sign);
+        //设置签名原数据
+        operationLogModel.setSignSrc(orgin);
 
-        log.info(!ObjectUtils.isEmpty(operateAnnotation.remark()) ?
-                operateAnnotation.remark() : name);
+//        log.info(!ObjectUtils.isEmpty(operateAnnotation.remark()) ?
+//                operateAnnotation.remark() : name);
         settTreadLocal(operateAnnotation, operationLogModel, remark, threadLocal);
     }
 
@@ -171,6 +240,27 @@ public class OperateLogAspect {
                     case LOOK_DATA:
                         threadLocal.set(operationLogModel);
                         break;
+                    case DEL_LDAP:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case EDIT_LDAP_ATTRITE:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case MIDIFY_LDAP_NAME:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case EXPORT_ALL:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case EXPORT_LDIF:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case IMPORT_LDAP:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case ADD_LDAF:
+                        threadLocal.set(operationLogModel);
+                        break;
                     default:
                         break;
                 }
@@ -206,6 +296,21 @@ public class OperateLogAspect {
                         threadLocal.set(operationLogModel);
                         break;
                     case ADD_USBKEY:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case UPDATE_USBKEY:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case INDEX:
+                switch (operateAnnotation.operateType()) {
+                    case INDEX_UPDATE_OR_INTER:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case INDEX_DELETE:
                         threadLocal.set(operationLogModel);
                         break;
                     default:
@@ -245,10 +350,17 @@ public class OperateLogAspect {
                 operationLog.setOperateState(LogStateTypeEnum.FAIL.getCode());
             }
         } else {
-            operationLog.setOperateState(LogStateTypeEnum.SUCCEED.getCode());
+            Integer code = ((ResultVo) returnValue).getCode();
+            operationLog.setOperateState(code);
         }
-        operationMapper.insert(operationLog);
+        //对原始数据+返回编码进行再次签名
+        String newSrc = operationLog.getSignValue() + operationLog.getOperateState();
+        operationLog.setSignSrc(newSrc);
 
+        String sign = Sm2Util.sign(InitConfigData.getPrivateKey(), newSrc);
+        operationLog.setSignValue(sign);
+
+        operationMapper.insert(operationLog);
     }
 
     /**

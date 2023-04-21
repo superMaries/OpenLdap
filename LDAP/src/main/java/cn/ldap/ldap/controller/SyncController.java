@@ -31,13 +31,13 @@ public class SyncController {
     private SyncStatusService syncStatusService;
 
     @PostMapping("mainSyncConfig")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
     public ResultVo<Object> mainSyncConfig(@RequestBody SyncDto syncDto) {
         return syncService.syncConfig(syncDto);
     }
 
     @PostMapping("fromSyncConfig")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
     public ResultVo<Object> fromSyncConfig(@RequestBody FromSyncDto fromSyncDto) {
         return syncService.fromSyncConfig(fromSyncDto);
     }

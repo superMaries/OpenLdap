@@ -18,7 +18,6 @@ import javax.servlet.ServletRequest;
  */
 public class SessionUtil {
     private static final String AUTHORIZATION = "auth";
-
     public static LoginResultVo getUserInfo(ServletRequest requests) {
         LoginResultVo loginResultVo = null;
         try {
@@ -28,7 +27,7 @@ public class SessionUtil {
             if (ObjectUtils.isEmpty(auth)) {
                 throw new SysException(ExceptionEnum.USER_NOT_LOGIN);
             }
-            if (auth.equals(loginResultVo.getAuthorization())) {
+            if (!auth.equals(loginResultVo.getAuthorization())) {
                 throw new SysException(ExceptionEnum.USER_NOT_LOGIN);
             }
         } catch (Exception e) {

@@ -1,9 +1,12 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.CertTreeDto;
 import cn.ldap.ldap.common.dto.ParamDto;
 import cn.ldap.ldap.common.dto.*;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
+import cn.ldap.ldap.common.enums.OperateMenuEnum;
+import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -90,6 +93,7 @@ public class CertTreeController {
      * @return true 成功 false 失败
      */
     @PostMapping("del")
+    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.DEL_LDAP)
     public ResultVo<Boolean> delLdapTreByRdn(@RequestBody LdapDto ldapDto) {
         return certTreeService.delLdapTreByRdn(ldapDto);
     }
@@ -101,6 +105,7 @@ public class CertTreeController {
      * @return true 成功 false 失败
      */
     @PostMapping("updateLdap")
+    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EDIT_LDAP_ATTRITE)
     public ResultVo<Boolean> updateLdapBindTree(@RequestBody LdapBindTreeDto ldapBindTreeDto) {
         return certTreeService.updateLdapBindTree(ldapBindTreeDto);
     }
@@ -112,6 +117,7 @@ public class CertTreeController {
      * @return true 成功 false 失败
      */
     @PostMapping("reBind")
+    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.MIDIFY_LDAP_NAME)
     public ResultVo<Boolean> reBIndLdapTree(@RequestBody ReBindTreDto bindTree) {
         return certTreeService.reBIndLdapTree(bindTree);
     }
@@ -130,6 +136,7 @@ public class CertTreeController {
      * @return
      */
     @PostMapping("exportQueryData")
+    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EXPORT_ALL)
     public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
         return certTreeService.exportQueryData(paramDto,response);
     }
@@ -150,6 +157,7 @@ public class CertTreeController {
      * @return
      */
     @PostMapping("export")
+    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EXPORT_LDIF)
     public ResultVo<Boolean> exportLdifByBaseDn(@RequestBody LdifDto exportDto, HttpServletResponse response) {
         return certTreeService.exportLdifByBaseDn(exportDto, response);
     }
@@ -161,6 +169,7 @@ public class CertTreeController {
      * @return true 成功 false 失败
      */
     @PostMapping("import")
+    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.IMPORT_LDAP)
     public ResultVo<Boolean> importLdifByBaseDn(ImportDto importDto) {
         return certTreeService.importLdifByBaseDn(importDto);
     }
@@ -172,6 +181,7 @@ public class CertTreeController {
      * @return true 成功 false 失败
      */
     @PostMapping("crate")
+    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.ADD_LDAF)
     public ResultVo<Boolean> crateLdap(@RequestBody CreateLdapDto createLdapDto) {
         return certTreeService.crateLdap(createLdapDto);
     }

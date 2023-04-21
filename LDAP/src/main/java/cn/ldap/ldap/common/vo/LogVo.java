@@ -83,6 +83,8 @@ public class LogVo {
      */
     private String remark;
 
+    private String passName;
+
     /**
      * 签名原数据
      */
@@ -115,7 +117,7 @@ public class LogVo {
 
     /**
      * 操作原数据
-     * 时间 + | +模块  -  操作 + 谁 + 编码
+     * 时间  | 模块  -  操作  | 谁
      *
      * @return 返回数据
      */
@@ -123,13 +125,14 @@ public class LogVo {
         return this.getCreateTime() + StaticValue.VERTICAL
                 + this.getOperateMenu()
                 + StaticValue.LINE + this.getOperateType()
+                + StaticValue.VERTICAL
                 + this.getUserName()
                 + StaticValue.VERTICAL + this.getFailCode();
     }
 
     /**
      * 审计原数据
-     * 时间 + | + 日志管理-审计日志 +| + 谁 + 审计结果(审计状态) -备注
+     * 时间  | + 日志管理-审计日志 |  谁 + 审计结果(审计状态) -备注
      *
      * @return
      */

@@ -69,7 +69,7 @@ public class ConfigController {
      * @return
      */
     @GetMapping("getServerStatus")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.LOOK_PARAM)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.LOOK_PARAM)
     public Boolean getServerStatus() {
         return ldapConfigService.getServerStatus();
     }
@@ -81,7 +81,7 @@ public class ConfigController {
      * @return
      */
     @PostMapping("queryLog")
-    @OperateAnnotation(operateModel = OperateMenuEnum.LOG_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.LOG_MANAGER, operateType = OperateTypeEnum.OPERATE_QUERY)
     public ResultVo<List<LogVo>> queryLog(@RequestBody LogDto logDto) {
         return operationLogService.queryLog(logDto);
     }
