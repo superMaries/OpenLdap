@@ -162,7 +162,7 @@ public class OperateLogAspect {
                     log.error("{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage());
                     throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
             }
 
