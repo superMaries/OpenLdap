@@ -67,7 +67,7 @@ public class IndexRuleController {
      * @return
      */
     @PostMapping("uploadKey")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER,operateType = OperateTypeEnum.UPLOAD_FILE)
     public ResultVo<T> uploadKey(@RequestParam("multipartFile") MultipartFile multipartFile){
         return ldapConfigService.uploadKey(multipartFile);
     }

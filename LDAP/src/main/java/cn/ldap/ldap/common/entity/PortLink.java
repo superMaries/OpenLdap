@@ -19,6 +19,7 @@ public class PortLink {
     private String serverName;
 
     @TableField("status")
-    private Boolean status;
+    private String status;
+
 
 }
