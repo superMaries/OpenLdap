@@ -183,15 +183,15 @@ public class SyncServiceImpl implements SyncService {
         stringBuilder.append(SYNCREPL).append(SPACE_DATA).append(RID).append(fromSyncDto.getRid()).append(FEED)
                 .append(SPACE_DATA).append(PROVIDER).append(fromSyncDto.getMainServerUrl()).append(FEED)
                 .append(SPACE_DATA).append(TYPE).append(REFRESH_AND_PERSIST).append(FEED)
-                .append(SPACE_DATA).append(INTERVAL).append(fromSyncDto.getSyncTime())
-                .append(SPACE_DATA).append(SEARCH_BASE).append(fromSyncDto.getSyncPoint())
-                .append(SPACE_DATA).append(FILTER).append(OBJ)
-                .append(SPACE_DATA).append(SCOPE).append(SUB)
-                .append(SPACE_DATA).append(SCHEMA_CHECK_ING).append(OFF)
-                .append(SPACE_DATA).append(BIND_METHOD).append(SIMPLE)
-                .append(SPACE_DATA).append(BIND_DN).append(fromSyncDto.getMainServerAccount())
-                .append(SPACE_DATA).append(CREDENTIALS).append(fromSyncDto.getMainServerPassword())
-                .append(SPACE_DATA).append(RETRY);
+                .append(SPACE_DATA).append(INTERVAL).append(fromSyncDto.getSyncTime()).append(FEED)
+                .append(SPACE_DATA).append(SEARCH_BASE).append(fromSyncDto.getSyncPoint()).append(FEED)
+                .append(SPACE_DATA).append(FILTER).append(OBJ).append(FEED)
+                .append(SPACE_DATA).append(SCOPE).append(SUB).append(FEED)
+                .append(SPACE_DATA).append(SCHEMA_CHECK_ING).append(OFF).append(FEED)
+                .append(SPACE_DATA).append(BIND_METHOD).append(SIMPLE).append(FEED)
+                .append(SPACE_DATA).append(BIND_DN).append(fromSyncDto.getMainServerAccount()).append(FEED)
+                .append(SPACE_DATA).append(CREDENTIALS).append(fromSyncDto.getMainServerPassword()).append(FEED)
+                .append(SPACE_DATA).append(RETRY).append(FEED);
         return stringBuilder.toString();
     }
 }

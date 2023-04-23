@@ -185,6 +185,10 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
         }
         SyncStatus syncStatus = new SyncStatus();
+        syncStatus.setMainServerIp(provider);
+        syncStatus.setSyncPoint(searchbase);
+        syncStatus.setAccount(binddn);
+        syncStatus.setPassword(credentials);
         //连接服务
         //查询主服务数据，判断连接状态，并且分别插入到返回值中
         Map<String, Object> mainMap = new HashMap<>();
