@@ -101,7 +101,8 @@ public class OperateLogAspect {
                 orgin = URLDecoder.decode(orgin, "UTF-8");
                 sign = URLDecoder.decode(sign, "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException(e);
+                log.error(e.getMessage());
+                throw new SysException(ExceptionEnum.HEADER_ERROR);
             }
         }
         // 构建日志实体
@@ -124,6 +125,9 @@ public class OperateLogAspect {
         if (OperateMenuEnum.USER_MANAGER.equals(operateAnnotation.operateModel())) {
             //除了登出 其余不需要记录哪个用户操作
             if (OperateTypeEnum.USER_LOGOUT.equals(operateAnnotation.operateType())) {
+                if (ObjectUtils.isEmpty(userInfo)) {
+                    return;
+                }
                 if (UserRoleEnum.ACCOUNT_ADMIN.getCode().equals(userInfo.getUserInfo().getRoleId())) {
                     //说明是admin 登录的退出
                     operationLogModel.setUserId(0);
@@ -153,19 +157,25 @@ public class OperateLogAspect {
 //                remark.append(name);
             }
         } else {
-            UserModel userModel = userMapper.selectById(userInfo.getUserInfo().getId());
-            String signCert = userModel.getSignCert();
-            try {
-                boolean verify = false;
-                verify = Sm2Util.verify(signCert, orgin, sign);
-                if (!verify) {
-                    log.error("{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage());
+            if (ObjectUtils.isEmpty(userInfo)) {
+                log.info("登录已过期");
+                throw new SysException(ExceptionEnum.USER_NOT_LOGIN);
+            }
+            if (!(UserRoleEnum.ACCOUNT_ADMIN.getCode().equals(userInfo.getUserInfo().getId()))) {
+                //ADMIN 用户不做验签
+                UserModel userModel = userMapper.selectById(userInfo.getUserInfo().getId());
+                String signCert = userModel.getSignCert();
+                try {
+                    boolean verify = false;
+                    verify = Sm2Util.verify(signCert, orgin, sign);
+                    if (!verify) {
+                        log.error("{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage());
+                        throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
+                    }
+                } catch (Exception e) {
                     throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
                 }
-            } catch (Exception e) {
-                throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
             }
-
         }
         String clientIp = ClientInfo.getIpAdrress(request);
         operationLogModel.setClientIp(clientIp);
