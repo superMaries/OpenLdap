@@ -1,6 +1,5 @@
 package cn.ldap.ldap.service.impl;
 
-import cn.ldap.ldap.common.dto.ConnectionDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
 import cn.ldap.ldap.common.entity.SyncStatus;
 import cn.ldap.ldap.common.enums.ConfigEnum;
@@ -16,7 +15,6 @@ import cn.ldap.ldap.service.SyncStatusService;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.unboundid.ldap.sdk.unboundidds.tools.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.ini4j.Profile;
 import org.ini4j.Wini;
@@ -30,7 +28,6 @@ import org.springframework.util.ObjectUtils;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -134,7 +131,6 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
                 return ResultUtil.fail(ExceptionEnum.LDAP_DATA_ERROR);
             }
             //连接服务
-            LdapTemplate connection = connection(syncStatus.getFollowServerIp(), syncStatus.getSyncPoint(), syncStatus.getAccount(), syncStatus.getPassword());
             //查询主服务数据，判断连接状态，并且分别插入到返回值中
             Map<String, Object> mainMap = new HashMap<>();
             mainMap = LdapUtil.queryTreeRdnOrNum(mainMap, ldapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
@@ -212,6 +208,59 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         }
         resultList.add(syncStatus);
         return ResultUtil.success(resultList);
+    }
+    /**
+     * 0, "主服务器"
+     * 1, "从服务器"
+     *
+     * @return
+     */
+    @Override
+    public ResultVo<Map<String, String>> queryServiceConfig() {
+        Map<String, String> map = new HashMap<>();
+        if (ConfigEnum.MAIN_SERVICE.getCode().equals(InitConfigData.getServiceType())) {
+            //主服务器
+            Wini wini = null;
+            try {
+                wini = new Wini(new File(configPath));
+                Profile.Section section = wini.get("?");
+                List<String> collect = section.keySet().stream().filter(it -> it.contains("syncprov-checkpoint")).collect(Collectors.toList());
+                if (ObjectUtils.isEmpty(collect)) {
+                    log.error("系统配置错误,主服务的配置文件有问题");
+                    throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
+                }
+
+                String msg = collect.get(StaticValue.SPLIT_COUNT);
+                String[] split = msg.split(StaticValue.KG);
+                String max = split[StaticValue.ONE];
+                String credentials = split[StaticValue.TWO];
+                map.put("max", max);
+                map.put("interval", credentials);
+            } catch (IOException e) {
+                log.error(e.getMessage());
+                throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
+            }
+
+        } else if (ConfigEnum.FORM_SERVICE.getCode().equals(InitConfigData.getServiceType())) {
+            //从服务器
+            Wini wini = null;
+            try {
+                wini = new Wini(new File(configPath));
+                Profile.Section section = wini.get("?");
+                map.put("interval", section.get("interval"));
+                map.put("provider", section.get("provider"));
+                map.put("searchbase", section.get("searchbase"));
+                map.put("userName", section.get("binddn"));
+                map.put("passWord", section.get("credentials"));
+            } catch (IOException e) {
+                log.error(e.getMessage());
+                throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
+            }
+        } else {
+            throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
+        }
+        return ResultUtil.success(map);
+
     }
 
     /**
