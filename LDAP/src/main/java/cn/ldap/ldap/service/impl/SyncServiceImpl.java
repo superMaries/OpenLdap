@@ -7,7 +7,6 @@ import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.SyncService;
 import lombok.extern.slf4j.Slf4j;
-import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +35,8 @@ public class SyncServiceImpl implements SyncService {
     private static final String FEED = "\n";
 
     private static final String START = "syncprov-checkpoint";
+
+    private static final String FIRST ="overlay syncprov";
 
     private static final String START_FROM = "syncrepl";
 
@@ -167,7 +168,7 @@ public class SyncServiceImpl implements SyncService {
      */
     public String splicingConfigParam(StringBuilder stringBuilder, SyncDto syncDto) {
         //主服务配置文件
-        stringBuilder.append(START).append(SPACE_DATA).append(syncDto.getTriggerSyncMaxNum()).append(SPACE_DATA).append(syncDto.getSyncTimeInterval()).append(FEED);
+        stringBuilder.append(FIRST).append(FEED).append(START).append(SPACE_DATA).append(syncDto.getTriggerSyncMaxNum()).append(SPACE_DATA).append(syncDto.getSyncTimeInterval()).append(FEED);
         return stringBuilder.toString();
     }
 

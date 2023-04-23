@@ -1,6 +1,5 @@
 package cn.ldap.ldap.service.impl;
 
-import cn.ldap.ldap.common.dto.ConnectionDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
 import cn.ldap.ldap.common.entity.SyncStatus;
 import cn.ldap.ldap.common.enums.ConfigEnum;
@@ -16,7 +15,6 @@ import cn.ldap.ldap.service.SyncStatusService;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.unboundid.ldap.sdk.unboundidds.tools.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.ini4j.Profile;
 import org.ini4j.Wini;
@@ -30,7 +28,6 @@ import org.springframework.util.ObjectUtils;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -134,17 +131,26 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
                 return ResultUtil.fail(ExceptionEnum.LDAP_DATA_ERROR);
             }
             //连接服务
-            LdapTemplate connection = connection(syncStatus.getFollowServerIp(), syncStatus.getSyncPoint(), syncStatus.getAccount(), syncStatus.getPassword());
             //查询主服务数据，判断连接状态，并且分别插入到返回值中
             Map<String, Object> mainMap = new HashMap<>();
             mainMap = LdapUtil.queryTreeRdnOrNum(mainMap, ldapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
             Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
             syncStatus.setMainServerNumber(mainCount);
+            //设置从服务数据初始值
+            Integer followCount = 0;
             //查询从服务数据，判断连接状态，并且分别插入到返回值中
-            Map<String, Object> followMap = new HashMap<>();
-            followMap = LdapUtil.queryTreeRdnOrNum(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
-
-            Integer followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
+           try {
+               LdapTemplate connection = connection(syncStatus.getFollowServerIp(), syncStatus.getSyncPoint(), syncStatus.getAccount(), syncStatus.getPassword());
+               Map<String, Object> followMap = new HashMap<>();
+               followMap = LdapUtil.queryTreeRdnOrNum(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
+               followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
+           }catch (Exception e){
+               followCount = NUM;
+               syncStatus.setFollowServerNumber(followCount);
+               syncStatus.setSyncStatusStr(CONNECTION_FAILD);
+               resultList.add(syncStatus);
+               continue;
+           }
             syncStatus.setFollowServerNumber(followCount);
             if (followCount.equals(NUM)) {
                 syncStatus.setSyncStatusStr(CONNECTION_FAILD);
@@ -179,7 +185,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
         }
         SyncStatus syncStatus = new SyncStatus();
-//连接服务
+        //连接服务
         LdapTemplate connection = connection(provider, searchbase, binddn, credentials);
         //查询主服务数据，判断连接状态，并且分别插入到返回值中
         Map<String, Object> mainMap = new HashMap<>();
@@ -203,8 +209,6 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         resultList.add(syncStatus);
         return ResultUtil.success(resultList);
     }
-
-
     /**
      * 0, "主服务器"
      * 1, "从服务器"
