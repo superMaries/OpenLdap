@@ -68,6 +68,8 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
     private static final String STANDART_SERVER = "标准协议服务";
 
+    private static final String SAFE_SERVER = "安全协议服务";
+
     /**
      * 配置文件所在路径
      */
@@ -182,39 +184,39 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         }
 
 
-        //CA证书
-        String caCert = "";
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + CASERVER_CERT));) {
-            while (null != bufferedReader.readLine()) {
-                String certLine = bufferedReader.readLine();
-                if (!certLine.startsWith(CERT_Start_DROP)) {
-                    caCert += certLine;
-                }
-            }
-        } catch (IOException e) {
-            log.error("文件流错误:{}", e.getMessage());
-            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
-        }
-        //服务器证书
-        String serverCert = "";
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + SERVER_CERT));) {
-            while (null != bufferedReader.readLine()) {
-                String certLine = bufferedReader.readLine();
-                if (!certLine.startsWith(CERT_Start_DROP)) {
-                    serverCert += certLine;
-                }
-            }
-        } catch (IOException e) {
-            log.error("文件流错误:{}", e.getMessage());
-            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
-        }
-        caCert = IscSignUtil.otherToBase64(caCert);
-        serverCert = IscSignUtil.otherToBase64(serverCert);
-        //验证书链
-        boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
-        if (StaticValue.FALSE == validateCertChain) {
-            return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
-        }
+//        //CA证书
+//        String caCert = "";
+//        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + CASERVER_CERT));) {
+//            while (null != bufferedReader.readLine()) {
+//                String certLine = bufferedReader.readLine();
+//                if (!certLine.startsWith(CERT_Start_DROP)) {
+//                    caCert += certLine;
+//                }
+//            }
+//        } catch (IOException e) {
+//            log.error("文件流错误:{}", e.getMessage());
+//            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+//        }
+//        //服务器证书
+//        String serverCert = "";
+//        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + SERVER_CERT));) {
+//            while (null != bufferedReader.readLine()) {
+//                String certLine = bufferedReader.readLine();
+//                if (!certLine.startsWith(CERT_Start_DROP)) {
+//                    serverCert += certLine;
+//                }
+//            }
+//        } catch (IOException e) {
+//            log.error("文件流错误:{}", e.getMessage());
+//            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+//        }
+//        caCert = IscSignUtil.otherToBase64(caCert);
+//        serverCert = IscSignUtil.otherToBase64(serverCert);
+//        //验证书链
+//        boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
+//        if (StaticValue.FALSE == validateCertChain) {
+//            return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
+//        }
         //定义一个命令
         String command = "";
         ResultVo<Object> objectResultVo = null;
@@ -222,6 +224,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         if (serverDto.getOperation() && !serverDto.getSafeOperation()) {
             //标准协议命令
             command = BEHIND + SPACE + serverDto.getPort() + SPACE + LAST_COMMAND;
+            updateOther(SAFE_SERVER);
             objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
             log.info("标准协议配置为:{}", command);
         }
@@ -229,7 +232,8 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         if (!serverDto.getOperation() && serverDto.getSafeOperation()) {
             //安全协议命令
             command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + LAST_COMMAND;
-            objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
+            updateOther(STANDART_SERVER);
+            objectResultVo = onlyOne(command, serverDto, SAFE_SERVER);
             log.info("安全协议开启端口:{}", command);
         }
         //安全协议标准协议全部开启
@@ -238,6 +242,8 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + AFTER_COMMAND + serverDto.getPort() + SPACE + LAST_COMMAND;
             objectResultVo = twice(command, serverDto);
         }
+
+
         if (serverDto.getSafeOperation()) {
             syncConfig(serverDto);
         }
@@ -245,6 +251,15 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         return objectResultVo;
     }
 
+
+
+    public void updateOther(String serverName){//修改数据库操作
+        Boolean status = false;
+        QueryWrapper<PortLink> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(PortLink::getServerName, serverName);
+        PortLink portLink = portLinkService.getOne(queryWrapper);
+        portLink.setStatus(status.toString());
+        portLinkService.updateById(portLink);}
     /**
      * 开启单协议方法
      *
@@ -268,8 +283,12 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         QueryWrapper<PortLink> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(PortLink::getServerName, serverName);
         PortLink portLink = portLinkService.getOne(queryWrapper);
-        portLink.setPort(serverDto.getPort());
-        portLink.setStatus(result);
+        if (serverName.equals(STANDART_SERVER)){
+            portLink.setPort(serverDto.getPort());
+        }else {
+            portLink.setPort(serverDto.getSafePort());
+        }
+        portLink.setStatus(result.toString());
         portLinkService.updateById(portLink);
         if (result) {
             return ResultUtil.success(RESTART_SUCCESS);
@@ -299,10 +318,10 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         //修改数据库
         for (PortLink portLink : portLinkList) {
             if (STANDART_SERVER.equals(portLink.getServerName())) {
-                portLink.setStatus(result);
+                portLink.setStatus(result.toString());
                 portLink.setPort(serverDto.getPort());
             } else {
-                portLink.setStatus(result);
+                portLink.setStatus(result.toString());
                 portLink.setPort(serverDto.getSafePort());
             }
         }

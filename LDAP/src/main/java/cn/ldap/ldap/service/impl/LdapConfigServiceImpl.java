@@ -76,7 +76,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String SERVER_NAME = "slapd";
 
-    private static final String ACTIVATING = "active";
+    private static final String ACTIVATING = "activating";
+
+    private static final String ACTIVE = "active";
 
     private static final String CASERVER_CERT = "ca.cert";
 
@@ -201,7 +203,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String outPut = reader.readLine();
             log.info("服务信息------:{}", outPut);
-            if (ACTIVATING.equals(outPut)) {
+            if (ACTIVATING.equals(outPut) || ACTIVE.equals(outPut)) {
                 return true;
             } else {
                 return false;

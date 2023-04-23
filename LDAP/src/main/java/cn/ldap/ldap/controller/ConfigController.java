@@ -68,7 +68,7 @@ public class ConfigController {
      * @throws IOException
      */
     @PostMapping("setServerStatus/{openOrClose}")
-    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.OPEN_SERVICE)
+   // @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.OPEN_SERVICE)
     public ResultVo<String> setServerStatus(@PathVariable("openOrClose") Boolean openOrClose) throws IOException {
         return ldapConfigService.setServerStatus(openOrClose);
     }

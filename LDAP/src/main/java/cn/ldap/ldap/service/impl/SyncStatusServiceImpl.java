@@ -140,11 +140,21 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             mainMap = LdapUtil.queryTreeRdnOrNum(mainMap, ldapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
             Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
             syncStatus.setMainServerNumber(mainCount);
+            //设置从服务数据初始值
+            Integer followCount = 0;
             //查询从服务数据，判断连接状态，并且分别插入到返回值中
-            Map<String, Object> followMap = new HashMap<>();
-            followMap = LdapUtil.queryTreeRdnOrNum(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
-
-            Integer followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
+           try {
+               LdapTemplate connection = connection(syncStatus.getFollowServerIp(), syncStatus.getSyncPoint(), syncStatus.getAccount(), syncStatus.getPassword());
+               Map<String, Object> followMap = new HashMap<>();
+               followMap = LdapUtil.queryTreeRdnOrNum(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
+               followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
+           }catch (Exception e){
+               followCount = NUM;
+               syncStatus.setFollowServerNumber(followCount);
+               syncStatus.setSyncStatusStr(CONNECTION_FAILD);
+               resultList.add(syncStatus);
+               continue;
+           }
             syncStatus.setFollowServerNumber(followCount);
             if (followCount.equals(NUM)) {
                 syncStatus.setSyncStatusStr(CONNECTION_FAILD);
@@ -179,7 +189,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
         }
         SyncStatus syncStatus = new SyncStatus();
-//连接服务
+        //连接服务
         LdapTemplate connection = connection(provider, searchbase, binddn, credentials);
         //查询主服务数据，判断连接状态，并且分别插入到返回值中
         Map<String, Object> mainMap = new HashMap<>();
@@ -202,61 +212,6 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         }
         resultList.add(syncStatus);
         return ResultUtil.success(resultList);
-    }
-
-
-    /**
-     * 0, "主服务器"
-     * 1, "从服务器"
-     *
-     * @return
-     */
-    @Override
-    public ResultVo<Map<String, String>> queryServiceConfig() {
-        Map<String, String> map = new HashMap<>();
-        if (ConfigEnum.MAIN_SERVICE.getCode().equals(InitConfigData.getServiceType())) {
-            //主服务器
-            Wini wini = null;
-            try {
-                wini = new Wini(new File(configPath));
-                Profile.Section section = wini.get("?");
-                List<String> collect = section.keySet().stream().filter(it -> it.contains("syncprov-checkpoint")).collect(Collectors.toList());
-                if (ObjectUtils.isEmpty(collect)) {
-                    log.error("系统配置错误,主服务的配置文件有问题");
-                    throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
-                }
-
-                String msg = collect.get(StaticValue.SPLIT_COUNT);
-                String[] split = msg.split(StaticValue.KG);
-                String max = split[StaticValue.ONE];
-                String credentials = split[StaticValue.TWO];
-                map.put("max", max);
-                map.put("interval", credentials);
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
-            }
-
-        } else if (ConfigEnum.FORM_SERVICE.getCode().equals(InitConfigData.getServiceType())) {
-            //从服务器
-            Wini wini = null;
-            try {
-                wini = new Wini(new File(configPath));
-                Profile.Section section = wini.get("?");
-                map.put("interval", section.get("interval"));
-                map.put("provider", section.get("provider"));
-                map.put("searchbase", section.get("searchbase"));
-                map.put("userName", section.get("binddn"));
-                map.put("passWord", section.get("credentials"));
-            } catch (IOException e) {
-                log.error(e.getMessage());
-                throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
-            }
-        } else {
-            throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
-        }
-        return ResultUtil.success(map);
-
     }
 
     /**
