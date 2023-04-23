@@ -5,6 +5,7 @@ import cn.hutool.core.codec.Base64Encoder;
 import cn.ldap.ldap.common.enums.CertificateEnum;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
+
 import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
 
