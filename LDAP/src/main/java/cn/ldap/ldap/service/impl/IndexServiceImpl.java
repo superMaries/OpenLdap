@@ -82,7 +82,7 @@ public class IndexServiceImpl implements IndexService {
         DeviceStatusRespVo deviceStatusRespVo = new DeviceStatusRespVo();
         deviceStatusRespVo.setCpuRate(cpuInfo);
         deviceStatusRespVo.setMemoryRate(memInfo);
-        deviceStatusRespVo.setDisRate(diskInfos);
+        deviceStatusRespVo.setDisRate(diskInfos*StaticValue.DISK_INFO_NUM);
         deviceStatusRespVo.setServerStatus(true);
         log.info("获取设备状态信息:" + deviceStatusRespVo);
         return ResultUtil.success(deviceStatusRespVo);

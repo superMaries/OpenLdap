@@ -162,9 +162,9 @@ public class NetWorkUtil {
             Map<String, Object> totalCmdResult = listInfo(totalCmd);
             Map<String, Object> usedCmdCmdResult = listInfo(usedCmd);
             List totalData = (List) totalCmdResult.get("data");
-            List usedCmdData = (List) totalCmdResult.get("data");
+            List usedCmdData = (List) usedCmdCmdResult.get("data");
             String totalStr = (String) totalData.get(0);
-            String usedStr = (String) totalData.get(0);
+            String usedStr = (String) usedCmdData.get(0);
 
             Integer memTotal = Integer.parseInt(totalStr);
             Integer meUsed = Integer.parseInt(usedStr);
@@ -181,16 +181,19 @@ public class NetWorkUtil {
     }
 
     public static Map<String, Object> listInfo(String cmd) throws Exception {
-        log.info("命令：{}", cmd);
-       // String[] comands = new String[]{"/bin/sh", cmd};
+        log.info("命令： {}", cmd);
+        String[] comands = new String[]{"/bin/sh", "-c", cmd};
+
         Process process = null;
         BufferedReader bufrIn = null;
         BufferedReader bufrError = null;
+
         try {
-            process = Runtime.getRuntime().exec(cmd);
+            process = Runtime.getRuntime().exec(comands);
             //方法阻塞，等待名录库执行完成
             process.waitFor();
 
+            // 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
             bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
             bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
 
@@ -240,6 +243,7 @@ public class NetWorkUtil {
         int line = 0;
         float diskInfo = 0;
         float yDiskInfo = 0;
+
         while ((str = in.readLine()) != null) {
             s = str.split(" ");
             int count = 0;
@@ -248,55 +252,62 @@ public class NetWorkUtil {
                     for (String para : s) {
                         boolean info = false;
                         if (count == 0) {
-                            if (!"0".equals(para)) {
+                            if (!para.equals("0")) {
                                 Float aFloat = 0f;
                                 if (para.endsWith("G")) {
                                     info = true;
                                     aFloat = Float.valueOf(para.substring(0, para.length() - 1));
-                                } else if (para.endsWith("M")) {
+                                }
+                                if (para.endsWith("M")) {
                                     info = true;
                                     aFloat = Float.valueOf(para.substring(0, para.length() - 1)) / 1000;
-                                } else if (para.endsWith("K")) {
+                                }
+                                if (para.endsWith("K")) {
                                     info = true;
                                     aFloat = Float.valueOf(para.substring(0, para.length() - 1)) / 1000 / 1000;
                                 }
                                 diskInfo += aFloat;
-                            } else if (count == 1) {
-                                if (!"0".equals(para)) {
-                                    Float aFloat = 0f;
-                                    if (para.endsWith("G")) {
-                                        info = false;
-                                        aFloat = Float.valueOf(para.substring(0, para.length() - 1));
-                                        count = 0;
-                                        yDiskInfo += aFloat;
-                                        break;
-                                    } else if (para.endsWith("M")) {
-                                        info = false;
-                                        aFloat = Float.valueOf(para.substring(0, para.length() - 1)) / 1000;
-                                        count = 0;
-                                        yDiskInfo += aFloat;
-                                        break;
-                                    } else if (para.endsWith("K")) {
-                                        info = false;
-                                        aFloat = Float.valueOf(para.substring(0, para.length() - 1)) / 1000 / 1000;
-                                        count = 0;
-                                        yDiskInfo += aFloat;
-                                        break;
-                                    }
-                                    diskInfo += aFloat;
-                                } else {
+                            }
+                        }
+                        if (count == 1) {
+                            if (!para.equals("0")) {
+                                Float aFloat = 0f;
+                                if (para.endsWith("G")) {
+                                    info = false;
+                                    aFloat = Float.valueOf(para.substring(0, para.length() - 1));
                                     count = 0;
-                                    yDiskInfo += 0;
+                                    yDiskInfo += aFloat;
                                     break;
                                 }
+                                if (para.endsWith("M")) {
+                                    info = false;
+                                    aFloat = Float.valueOf(para.substring(0, para.length() - 1)) / 1000;
+                                    count = 0;
+                                    yDiskInfo += aFloat;
+                                    break;
+                                }
+                                if (para.endsWith("K")) {
+                                    info = false;
+                                    aFloat = Float.valueOf(para.substring(0, para.length() - 1)) / 1000 / 1000;
+                                    count = 0;
+                                    yDiskInfo += aFloat;
+                                    break;
+                                }
+                            } else if (para.equals("0")) {
+                                count = 0;
+                                yDiskInfo += 0;
+                                break;
                             }
-                        } else {
+                        }
+                        if (info) {
                             count++;
                         }
                     }
                 }
+
             }
         }
+
         //diskInfo 为0
         if (Math.abs(diskInfo - StaticValue.FLOAT) < StaticValue.FLOAT_EQUALS) {
             return StaticValue.FLOAT;

@@ -63,6 +63,7 @@ public enum ExceptionEnum {
     SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
     LINUX_ERROR(5007, "失败"),
+
     //上传失败
     UPLOAD_ERR(5008, "上传失败"),
     //文件不存在
@@ -75,14 +76,17 @@ public enum ExceptionEnum {
     VERIFY_FAIL(5012, "验签失败"),
 
     VALIDATE_ERROR(5013, "验证书链错误"),
-
+    HEADER_ERROR(5014, "未有签名验签的值"),
 
     //LDAP接口中的错误 全部定义8开头
-    LDAP_RDN_NOT_EXIT(8001, "删除RDN错误"),
-    LDAP_QUERY_RDN_NOT_EXIT(8002, "解析RDN错误"),
-    LDAP_DEL_RDN_NOT_EXIT(8002, "删除RDN错误"),
-    LDAP_DATA_ERROR(8004, "缺少从服务连接数据"),
-    ;
+    LDAP_RDN_NOT_EXIT(8001,"删除RDN错误"),
+
+    LDAP_QUERY_RDN_NOT_EXIT(8002,"解析RDN错误"),
+
+    LDAP_DEL_RDN_NOT_EXIT(8002,"删除RDN错误"),
+
+    LDAP_DATA_ERROR(8004,"缺少从服务连接数据"),
+            ;
 
     /**
      * code
@@ -120,4 +124,4 @@ public enum ExceptionEnum {
     public String getMessage() {
         return message;
     }
-}
+    }
