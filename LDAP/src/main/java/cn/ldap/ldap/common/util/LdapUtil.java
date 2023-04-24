@@ -9,6 +9,8 @@ import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -157,8 +159,8 @@ public class LdapUtil {
         List<String> list = Arrays.asList(addStr);
 
         try {
-            //查询对应的属性值
-            if (isRetrunAttr && !ObjectUtils.isEmpty(attribute)) {
+            //查询对应的属性值 对返回属性的值进行解析
+            if (!ObjectUtils.isEmpty(attribute)) {
                 attributes = ctx.getAttributes(baseDN, attribute.split(StaticValue.SPLIT));
             } else {
                 attributes = ctx.getAttributes(baseDN);
@@ -168,6 +170,12 @@ public class LdapUtil {
             while (attributesAll.hasMore()) {
                 Attribute next = attributesAll.next();
                 String key = next.getID();
+                if (isRetrunAttr) {
+                    TreeVo treeVo = new TreeVo();
+                    treeVo.setKey(key);
+                    treeVos.add(treeVo);
+                    continue;
+                }
                 NamingEnumeration<?> keyAll = next.getAll();
                 while (keyAll.hasMore()) {
                     TreeVo treeVo = new TreeVo();
@@ -268,28 +276,66 @@ public class LdapUtil {
      * @return 返回节点数
      */
     public static List<CertTreeVo> queryCertTree(LdapTemplate ldapTemplate, String ldapSearchFilter,
-                                                 String ldapSearchBase, Integer scope, Integer pageSize) {
+                                                 String ldapSearchBase, Integer scope,
+                                                 Integer pageSize, Integer page,
+                                                 Map<String, Object> map) {
+
+        List<CertTreeVo> certTreeVos = new ArrayList<>();
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         SearchControls searchControls = new SearchControls();
         searchControls.setSearchScope(scope);
         //查询多少条
-        searchControls.setCountLimit(pageSize);
-        int totalNodeCount = 0;
-        List<CertTreeVo> certTreeVos = new ArrayList<>();
+
+        if (map != null) {
+            AttributesMapper mapper = new AttributesMapper() {
+                @Override
+                public Object mapFromAttributes(Attributes attributes) throws NamingException {
+                    return attributes;
+                }
+            };
+            long total = ldapTemplate.search(ldapSearchBase, ldapSearchFilter, mapper).size();
+            map.put("total", total);
+            map.put("page", total / pageSize + (total % pageSize != 0 ? 1 : 0));
+            map.put("data", certTreeVos);
+        }
+        //page 默认为1 pageSize 1000
+        //      总共需要查的数据
+        long endNum = page * pageSize;
+        //开始的数量
+        long startNum = (page - 1) * pageSize ;
+
+        long count = 0;
+//        searchControls.setCountLimit(totalNodeCount);
         try {
             //设置每页查询的数量
-            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, Control.CRITICAL)};
+//            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE,
+//                    Control.CRITICAL)};
+            Control[] controls = new Control[]{new PagedResultsControl(page * pageSize,
+                    Control.CRITICAL)};
             ctx.setRequestControls(controls);
 
             byte[] cookie = null;
 
             do {
                 //分页查询
-                NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, ldapSearchFilter, searchControls);
+                NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, ldapSearchFilter,
+                        searchControls);
                 //统计总数
                 while (results.hasMore()) {
-                    CertTreeVo certTreeVo = new CertTreeVo();
                     SearchResult result = results.next();
+                    if (count < startNum) {
+                        count++;
+                        continue;
+                    }
+                    if (count == endNum) {
+                        cookie = null;
+                        break;
+                    }
+                    count++;
+
+
+                    CertTreeVo certTreeVo = new CertTreeVo();
+
                     String baseDn = result.getName();
                     if (ObjectUtils.isEmpty(baseDn)) {
                         String[] split = ldapSearchBase.split(StaticValue.SPLIT);
@@ -312,6 +358,8 @@ public class LdapUtil {
                         certTreeVo.setParentRdn(parentRdn);
                     }
                     certTreeVos.add(certTreeVo);
+
+
                 }
                 //获取最近一次 LDAP 操作的响应控制器。
                 Control[] responseControls = ctx.getResponseControls();
@@ -445,7 +493,9 @@ public class LdapUtil {
                 List<TreeVo> keys = attributeList.stream()
                         .filter(it -> it.getKey().equals(key))
                         .collect(Collectors.toList());
-
+                if (ObjectUtils.isEmpty(keys)) {
+                    continue;
+                }
                 next.clear();
                 for (TreeVo value : keys) {
                     //判断是否是证书

@@ -71,7 +71,8 @@ public class CertTreeServiceImpl implements CertTreeService {
             log.info("参数异常；{}", ExceptionEnum.PARAM_ERROR);
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
-        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, treeVo.getFilter(), treeVo.getBaseDN(), treeVo.getScope(), treeVo.getPageSize());
+        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, treeVo.getFilter(), treeVo.getBaseDN(),
+                treeVo.getScope(), treeVo.getPageSize(), treeVo.getPage(),null);
         return ResultUtil.success(listResultVo);
     }
 
@@ -99,12 +100,16 @@ public class CertTreeServiceImpl implements CertTreeService {
      * @return 返回树型结构
      */
     @Override
-    public ResultVo<List<CertTreeVo>> queryTree(CertTreeDto treeVo) {
+    public ResultVo<Map<String, Object>> queryTree(CertTreeDto treeVo) {
         if (ObjectUtils.isEmpty(treeVo)) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
-        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, treeVo.getFilter(), treeVo.getBaseDN(), treeVo.getScope(), treeVo.getPageSize());
-        return ResultUtil.success(listResultVo);
+        Map<String, Object> map=new HashMap<>();
+         LdapUtil.queryCertTree(ldapTemplate, treeVo.getFilter(), treeVo.getBaseDN(),
+                treeVo.getScope(), treeVo.getPageSize(), treeVo.getPage(),map);
+
+
+        return ResultUtil.success(map);
     }
 
     /**
@@ -225,16 +230,16 @@ public class CertTreeServiceImpl implements CertTreeService {
             log.error("参数为空");
             throw new SysException(ExceptionEnum.PARAM_EMPTY);
         }
-        boolean result=LdapUtil.crateLdap(ldapTemplate,createLdapDto);
+        boolean result = LdapUtil.crateLdap(ldapTemplate, createLdapDto);
         return ResultUtil.success(result);
     }
 
     @Override
     public Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response) {
         String fileName = paramDto.getFileName();
-        if (StaticValue.TRUE ==paramDto.getWebOrFile()){
+        if (StaticValue.TRUE == paramDto.getWebOrFile()) {
             fileName = paramDto.getFileName() + LAST;
-        }else {
+        } else {
             if (!fileName.endsWith(StaticValue.LDIF)) {
                 fileName += StaticValue.LDIF;
             }
@@ -242,9 +247,10 @@ public class CertTreeServiceImpl implements CertTreeService {
         if (ObjectUtils.isEmpty(paramDto)) {
             return false;
         }
+        //获取查询的数据
         List<String> writeData = queryData(paramDto);
         exportToLdif(writeData, fileName);
-        if (paramDto.getWebOrFile().equals(StaticValue.TRUE)){
+        if (paramDto.getWebOrFile().equals(StaticValue.TRUE)) {
             // 下载ldif文件
             Path file = Paths.get(fileName);
             if (Files.exists(file)) {
@@ -258,7 +264,7 @@ public class CertTreeServiceImpl implements CertTreeService {
                     e.printStackTrace();
                 }
             }
-        }else {
+        } else {
             //下载到本地
             Path file = Paths.get(fileName);
             //下载到服务器。判断文件是否存在 不存在就创建 不需要返回下的文件
@@ -276,17 +282,18 @@ public class CertTreeServiceImpl implements CertTreeService {
         return true;
     }
 
-    public List<String> queryData(ParamDto paramDto){
-        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, paramDto.getFilter(), paramDto.getBaseDN(), paramDto.getScope(), paramDto.getPageSize());
+    public List<String> queryData(ParamDto paramDto) {
+        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, paramDto.getFilter(), paramDto.getBaseDN(),
+                paramDto.getScope(), paramDto.getPageSize(), paramDto.getPage(),null);
         List<String> strings = new ArrayList<>();
         for (CertTreeVo certTreeVo : listResultVo) {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
             List<TreeVo> treeVos = LdapUtil.queryAttributeBytesInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
-            map.put("dn:",certTreeVo.getRdn());
-            strings.add("dn:"+certTreeVo.getRdn());
+            map.put("dn:", certTreeVo.getRdn());
+            strings.add("dn:" + certTreeVo.getRdn());
             for (TreeVo treeVo : treeVos) {
-                map.put(treeVo.getKey(),treeVo.getValue());
-                strings.add(treeVo.getKey()+":"+treeVo.getValue());
+                map.put(treeVo.getKey(), treeVo.getValue());
+                strings.add(treeVo.getKey() + ":" + treeVo.getValue());
             }
             strings.add(FEED);
         }

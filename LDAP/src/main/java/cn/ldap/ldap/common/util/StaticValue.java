@@ -49,6 +49,7 @@ public class StaticValue {
     public final static String LINE = "-";
     public final static String REPLACE = "";
     public final static Integer SPLIT_COUNT = 0;
+    public final static Integer LDAP_COUNT = 1;
     public final static Integer ONE = 1;
     public final static Integer TWO = 2;
     public final static Integer AUDIT_STATUS = 1;

@@ -97,8 +97,14 @@ public class OperateLogAspect {
         String sign = request.getHeader(SIGN);
         // 原数据
         String orgin = request.getHeader(ORIGN);
+        if (ObjectUtils.isEmpty(sign)) {
+            sign = request.getParameter(SIGN);
+        }
+        if (ObjectUtils.isEmpty(orgin)) {
+            orgin = request.getParameter(ORIGN);
+        }
         if (ObjectUtils.isEmpty(sign) || ObjectUtils.isEmpty(orgin)) {
-            log.error("未传递签名值和原数据");
+            log.info("未传递签名值和原数据");
         } else {
             try {
                 orgin = URLDecoder.decode(orgin, "UTF-8");
@@ -168,7 +174,7 @@ public class OperateLogAspect {
                         throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
                     }
                 } else {
-                operationLogModel.setUserId(UserRoleEnum.ACCOUNT_ADMIN.getCode());
+                    operationLogModel.setUserId(UserRoleEnum.ACCOUNT_ADMIN.getCode());
                 }
             }
         } else {

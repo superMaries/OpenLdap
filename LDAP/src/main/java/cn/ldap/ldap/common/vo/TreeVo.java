@@ -17,12 +17,12 @@ public class TreeVo {
     /**
      * 属性值
      */
-    private String  value;
+    private String  value="";
 
     /**
      * 显示的值
      */
-    private String title;
+    private String title="";
 
     private boolean flag = false;
 }

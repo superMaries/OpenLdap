@@ -20,4 +20,5 @@ public class CertTreeVo {
     private String baseDn;
 
     private String parentRdn;
+
 }

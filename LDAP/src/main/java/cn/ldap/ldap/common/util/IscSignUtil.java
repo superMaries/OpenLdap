@@ -74,8 +74,9 @@ public class IscSignUtil {
      * @return
      */
     public static String replaceStartAndEnd(String cert) {
+        cert = cert.replaceAll(StaticValue.RN, StaticValue.REPLACE);
         if (cert.startsWith(StaticValue.BEGIN_CERTIFICATE)
-                && cert.replaceAll(StaticValue.RN, StaticValue.REPLACE).endsWith(StaticValue.END_CERTIFICATE)) {
+                && cert.contains(StaticValue.END_CERTIFICATE)) {
             /**
              * 将证书中的-----BEGIN CERTIFICATE-----
              * 和 -----END CERTIFICATE----- 移除

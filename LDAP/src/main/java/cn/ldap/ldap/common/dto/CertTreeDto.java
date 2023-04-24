@@ -15,11 +15,11 @@ public class CertTreeDto {
     /**
      * 查询条件
      */
-    private String baseDN="";
+    private String baseDN = "";
     /**
      * 过滤条件
      */
-    private String filter="";
+    private String filter = "";
     /**
      * 属性名称
      */
@@ -35,6 +35,10 @@ public class CertTreeDto {
     /**
      * 每页大小
      */
-    private Integer pageSize = 50;
+    private Integer pageSize = 1000;
+    /**
+     * 页码
+     */
+    private Integer page = 1;
 
 }

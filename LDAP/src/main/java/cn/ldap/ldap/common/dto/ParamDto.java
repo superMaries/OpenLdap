@@ -29,7 +29,8 @@ public class ParamDto {
     /**
      * 每页大小
      */
-    private Integer pageSize = 50;
+    private Integer pageSize = 1000;
+    private Integer page=1;
 
     private Boolean webOrFile;
 }

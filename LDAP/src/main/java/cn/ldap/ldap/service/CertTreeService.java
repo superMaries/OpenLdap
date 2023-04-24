@@ -40,7 +40,7 @@ public interface CertTreeService {
      * @param treeVo 参数
      * @return 返回树型结构
      */
-    ResultVo<List<CertTreeVo>> queryTree(CertTreeDto treeVo);
+    ResultVo<Map<String ,Object>> queryTree(CertTreeDto treeVo);
 
     /**
      * 只需要传递 rdn  scope 的值 （ one`：搜索指定的DN及其一级子节点。`sub`：搜索指定的DN及其所有子孙节点。）

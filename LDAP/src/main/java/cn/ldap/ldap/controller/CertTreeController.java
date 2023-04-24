@@ -71,7 +71,7 @@ public class CertTreeController {
      * @return 返回树型结构
      */
     @PostMapping("queryTree")
-    public ResultVo<List<CertTreeVo>> queryTree(@RequestBody CertTreeDto treeVo) {
+    public ResultVo<Map<String ,Object>> queryTree(@RequestBody CertTreeDto treeVo) {
         return certTreeService.queryTree(treeVo);
     }
 
