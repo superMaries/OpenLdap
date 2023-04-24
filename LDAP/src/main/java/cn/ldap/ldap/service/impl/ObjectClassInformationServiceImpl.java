@@ -38,6 +38,9 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
     @Value("${ldapLink.password}")
     private String password;
 
+    @Value("${objectClassConfig.open}")
+    private String objConfig;
+
 
     /**
      * 查询属性和objectClass
@@ -70,43 +73,71 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
         Set<ObjectClassDefinition> objectClasses = schema.getObjectClasses();
         //定义结果集合
         List<ObjectDataDto> resultList = new ArrayList<>();
+        //根据配置返回所有objectclass还是一个
+        log.info("是否展示全部objectClass;{}", objConfig);
+        if (objConfig.equals("all")) {
+            // 遍历所有 objectClass
 
-        // 遍历所有 objectClass
+            for (ObjectClassDefinition objectClass : objectClasses) {
+                ObjectDataDto objectDataDto = new ObjectDataDto();
+                log.info("ObjectClass:{}", objectClass.getNameOrOID());
+                //获取所有ObjectClass类
+                objectDataDto.setObjectClassName(objectClass.getNameOrOID());
+                //获取两种属性集合
+                List<AttributeDto> result = new ArrayList<>();
+                List<String> requireAttribute = Arrays.asList(objectClass.getRequiredAttributes());
+                for (String name : requireAttribute) {
+                    AttributeDto attributeDto = new AttributeDto();
+                    attributeDto.setName(name);
+                    attributeDto.setMust(true);
+                    result.add(attributeDto);
+                }
+                List<String> optionalAttribute = Arrays.asList(objectClass.getOptionalAttributes());
+                for (String name : optionalAttribute) {
+                    AttributeDto attributeDto = new AttributeDto();
+                    attributeDto.setName(name);
+                    attributeDto.setMust(false);
+                    result.add(attributeDto);
+                }
+                //存入到类中
+                objectDataDto.setAttributesName(result);
 
-        for (ObjectClassDefinition objectClass : objectClasses) {
-            ObjectDataDto objectDataDto = new ObjectDataDto();
-            log.info("ObjectClass:{}", objectClass.getNameOrOID());
-            //获取所有ObjectClass类
-            objectDataDto.setObjectClassName(objectClass.getNameOrOID());
-            //获取两种属性集合
-            List<AttributeDto> result = new ArrayList<>();
-            List<String> requireAttribute = Arrays.asList(objectClass.getRequiredAttributes());
-            for (String name : requireAttribute) {
-                AttributeDto attributeDto = new AttributeDto();
-                attributeDto.setName(name);
-                attributeDto.setMust(true);
-                result.add(attributeDto);
+                for (String attribute : objectClass.getRequiredAttributes()) {
+                    log.info("Attributes:{}", attribute);
+                }
+                for (String attribute : objectClass.getOptionalAttributes()) {
+                    log.info("Attributes:{}", attribute);
+                }
+                resultList.add(objectDataDto);
             }
-            List<String> optionalAttribute = Arrays.asList(objectClass.getOptionalAttributes());
-            for (String name : optionalAttribute) {
-                AttributeDto attributeDto = new AttributeDto();
-                attributeDto.setName(name);
-                attributeDto.setMust(false);
-                result.add(attributeDto);
+        } else {
+            for (ObjectClassDefinition objectClass : objectClasses) {
+                ObjectDataDto objectDataDto = new ObjectDataDto();
+                if (null != objectClass && objectClass.getNameOrOID().equals("gscertinfo")) {
+                    objectDataDto.setObjectClassName(objectClass.getNameOrOID());
+                    List<AttributeDto> result = new ArrayList<>();
+                    List<String> requireAttribute = Arrays.asList(objectClass.getRequiredAttributes());
+                    for (String name : requireAttribute) {
+                        AttributeDto attributeDto = new AttributeDto();
+                        attributeDto.setName(name);
+                        attributeDto.setMust(true);
+                        result.add(attributeDto);
+                    }
+                    List<String> optionalAttribute = Arrays.asList(objectClass.getOptionalAttributes());
+                    for (String name : optionalAttribute) {
+                        AttributeDto attributeDto = new AttributeDto();
+                        attributeDto.setName(name);
+                        attributeDto.setMust(false);
+                        result.add(attributeDto);
+                    }
+                    objectDataDto.setAttributesName(result);
+                    resultList.add(objectDataDto);
+                }
             }
-            //存入到类中
-            objectDataDto.setAttributesName(result);
-
-            for (String attribute : objectClass.getRequiredAttributes()) {
-                log.info("Attributes:{}", attribute);
-            }
-            for (String attribute : objectClass.getOptionalAttributes()) {
-                log.info("Attributes:{}", attribute);
-            }
-            resultList.add(objectDataDto);
         }
         return ResultUtil.success(resultList);
     }
+
     /**
      * 根据objectClassName查询属性
      *
@@ -140,7 +171,7 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
         List<String> attributeList = new ArrayList<>();
         for (ObjectClassDefinition objectClass : objectClasses) {
             //获取所有ObjectClass类
-            if (objectClassName.equals(objectClass.getNameOrOID())) {
+            if (objectClassName.contains(objectClass.getNameOrOID())) {
                 //获取两种属性集合
                 List<String> requireAttribute = Arrays.asList(objectClass.getRequiredAttributes());
                 List<String> optionalAttribute = Arrays.asList(objectClass.getOptionalAttributes());
