@@ -184,39 +184,46 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         }
 
 
-//        //CA证书
-//        String caCert = "";
-//        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + CASERVER_CERT));) {
-//            while (null != bufferedReader.readLine()) {
-//                String certLine = bufferedReader.readLine();
-//                if (!certLine.startsWith(CERT_Start_DROP)) {
-//                    caCert += certLine;
-//                }
-//            }
-//        } catch (IOException e) {
-//            log.error("文件流错误:{}", e.getMessage());
-//            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
-//        }
-//        //服务器证书
-//        String serverCert = "";
-//        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + SERVER_CERT));) {
-//            while (null != bufferedReader.readLine()) {
-//                String certLine = bufferedReader.readLine();
-//                if (!certLine.startsWith(CERT_Start_DROP)) {
-//                    serverCert += certLine;
-//                }
-//            }
-//        } catch (IOException e) {
-//            log.error("文件流错误:{}", e.getMessage());
-//            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
-//        }
-//        caCert = IscSignUtil.otherToBase64(caCert);
-//        serverCert = IscSignUtil.otherToBase64(serverCert);
-//        //验证书链
-//        boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
-//        if (StaticValue.FALSE == validateCertChain) {
-//            return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
-//        }
+        //CA证书
+        String caCert = "";
+        String certLine = "";
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + CASERVER_CERT))) {
+            while (null != (certLine=bufferedReader.readLine())) {
+
+                if (null !=certLine &&!certLine.startsWith(CERT_Start_DROP) ) {
+                    caCert += certLine;
+                }
+            }
+        } catch (IOException e) {
+            log.error("文件流错误:{}", e.getMessage());
+            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+        }
+        //服务器证书
+        String serverCert = "";
+        String line = "";
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + SERVER_CERT))) {
+
+            while (null !=(line= bufferedReader.readLine())) {
+
+                if (null != line &&!line.startsWith(CERT_Start_DROP)) {
+                    serverCert += line;
+                }
+            }
+        } catch (IOException e) {
+            log.error("文件流错误:{}", e.getMessage());
+            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+        }
+        log.info("处理前CA证书:{}",caCert);
+        log.info("处理前服务器证书:{}",serverCert);
+        caCert = IscSignUtil.otherToBase64(caCert);
+        log.info("CA证书:{}",caCert);
+        serverCert = IscSignUtil.otherToBase64(serverCert);
+        log.info("服务器证书:{}",serverCert);
+        //验证书链
+        boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
+        if (StaticValue.FALSE == validateCertChain) {
+            return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
+        }
         //定义一个命令
         String command = "";
         ResultVo<Object> objectResultVo = null;

@@ -18,6 +18,9 @@ public class SyncStatus {
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
+
+    @TableField(exist = false)
+    private String mainServerIp;
     /**
      * 从服务器IP地址
      */
