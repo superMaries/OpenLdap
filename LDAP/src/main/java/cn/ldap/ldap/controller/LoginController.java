@@ -101,7 +101,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("certLogin")
-   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
+    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
     public ResultVo<Map<String, Object>> certLogin(@RequestBody UserDto userDto, HttpServletRequest request) throws UnsupportedEncodingException {
         return loginService.certLogin(userDto, request);
     }
@@ -113,7 +113,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("login")
-   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
+    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
     public ResultVo<Object> login(@RequestBody LoginDto loginDto, HttpServletRequest request) {
         return loginService.login(loginDto, request);
     }

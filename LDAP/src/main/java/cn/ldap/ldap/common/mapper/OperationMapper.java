@@ -20,6 +20,8 @@ public interface OperationMapper extends BaseMapper<OperationLogModel> {
     @Select("<script>" +
             "SELECT " +
             " log.id id ,log.client_ip clientIp" +
+            " ,sign_value_ex signSrcEx" +
+            " ,audit_sign_ex auditSignValueEx" +
             " ,log.user_id userId " +
             " ,CASE WHEN log.user_id=0 THEN'Admin' ELSE u.cert_name END  AS userName" +
             " ,log.operate_menu operateMenu,log.operate_type operateType" +

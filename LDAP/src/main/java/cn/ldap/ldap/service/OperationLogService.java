@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public interface OperationLogService extends IService<OperationLogModel> {
 
-    ResultVo<Map<String ,Object>> queryLog(LogDto logDto);
+    ResultVo<Map<String, Object>> queryLog(LogDto logDto);
 
     /**
      * 添加日志
@@ -33,8 +33,8 @@ public interface OperationLogService extends IService<OperationLogModel> {
      *
      * @return true成功  false 失败
      */
-    ResultVo<Boolean> auditLog(HttpServletRequest request, List<AuditDto> auditDtos);
+    ResultVo<Map<String, Integer>> auditLog(HttpServletRequest request, List<AuditDto> auditDtos);
 
-    ResultVo<List<String>>  queryOperateType();
+    ResultVo<List<String>> queryOperateType();
 
 }

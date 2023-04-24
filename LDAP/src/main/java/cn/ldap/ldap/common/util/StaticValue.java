@@ -32,6 +32,8 @@ public class StaticValue {
     public final static Integer MSG_LENGTH = 200;
 
     public final static Integer COUNT = 1;
+    public final static Integer ERROR_COUNT =0 ;
+    public final static Integer SUCCESS_COUNT =0 ;
 
     public final static Integer COUN_TLIMIT = 1;
     public final static Long TOTAL_NODE_NUM = 0L;

@@ -1,6 +1,8 @@
 package cn.ldap.ldap.common.dto;
 
+import cn.ldap.ldap.common.util.StaticValue;
 import lombok.Data;
+import org.springframework.util.ObjectUtils;
 
 /**
  * 审计员数据
@@ -43,5 +45,21 @@ public class AuditDto {
      * 备注
      */
     private String remark;
+
+    public String toSrc() {
+        return this.auditTime + StaticValue.VERTICAL
+                + StaticValue.LOG + StaticValue.VERTICAL
+                + this.auditId + StaticValue.VERTICAL
+                + this.getAuditStatus() + StaticValue.LINE + this.remark;
+    }
+
+    public String toAuditSrc() {
+        auditSignValue = ObjectUtils.isEmpty(auditSignValue) ? "" : auditSignValue;
+        return this.auditTime + StaticValue.VERTICAL
+                + StaticValue.LOG + StaticValue.VERTICAL
+                + this.auditId + StaticValue.VERTICAL
+                + this.getAuditStatus() + StaticValue.LINE + this.remark + StaticValue.VERTICAL
+                + auditSignValue;
+    }
 
 }

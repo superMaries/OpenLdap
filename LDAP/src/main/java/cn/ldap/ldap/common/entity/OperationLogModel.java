@@ -1,5 +1,6 @@
 package cn.ldap.ldap.common.entity;
 
+import cn.ldap.ldap.common.util.StaticValue;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -54,17 +55,23 @@ public class OperationLogModel {
      * 操作状态（成功,失败）
      */
     @TableField("operate_state")
-    private Integer  operateState;
+    private Integer operateState;
     /**
      * 编码
      */
     @TableField("fail_code")
-    private String failCode  ;
+    private String failCode;
     /**
      * 签名值
      */
     @TableField("sign_value")
     private String signValue;
+    /**
+     * 后端的签名值
+     */
+    @TableField("sign_value_ex")
+    private String signValueEx;
+
 
     /**
      * 签名原数据
@@ -92,7 +99,7 @@ public class OperationLogModel {
      * 0 未通过 1 通过
      */
     @TableField("pass")
-    private Integer pass ;
+    private Integer pass;
 
     /**
      * 审计时间
@@ -112,8 +119,30 @@ public class OperationLogModel {
     private String auditSignValue;
 
     /**
+     * 审计签名值
+     */
+    @TableField("audit_sign_ex")
+    private String auditSignValueEx;
+
+    /**
      * 备注信息
      */
     @TableField("remark")
     private String remark;
+
+    /**
+     * 操作原数据
+     * 时间  | 模块  -  操作  | 谁 + code +签名值
+     *
+     * @return 返回数据
+     */
+    public String operateSrcToString() {
+        return this.getCreateTime() + StaticValue.VERTICAL
+                + this.getOperateMenu()
+                + StaticValue.LINE + this.getOperateType()
+                + StaticValue.VERTICAL
+                + this.getUserId()
+                + StaticValue.VERTICAL + this.getFailCode()
+                + StaticValue.VERTICAL + this.getSignSrc();
+    }
 }

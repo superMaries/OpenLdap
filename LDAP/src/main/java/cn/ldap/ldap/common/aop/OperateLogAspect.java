@@ -19,6 +19,7 @@ import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.hander.InitConfigData;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -39,6 +40,7 @@ import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import static cn.ldap.ldap.common.enums.OperateTypeEnum.ADD_USBKEY;
 import static cn.ldap.ldap.common.enums.OperateTypeEnum.DEL_USBKEY;
@@ -60,6 +62,7 @@ public class OperateLogAspect {
     private UserMapper userMapper;
     private final static String SIGN = "sign";
     private final static String ORIGN = "orgin";
+    private static final Integer IF_ENABLE = 1;
     /**
      * 本地共享变量
      */
@@ -131,10 +134,8 @@ public class OperateLogAspect {
                 if (UserRoleEnum.ACCOUNT_ADMIN.getCode().equals(userInfo.getUserInfo().getRoleId())) {
                     //说明是admin 登录的退出
                     operationLogModel.setUserId(0);
-//                    remark.append("用户：").append(UserRoleEnum.ACCOUNT_ADMIN.getMsg()).append(name);
                 } else {
                     operationLogModel.setUserId(userInfo.getUserInfo().getId());
-//                    remark.append("用户：").append(userInfo.getUserInfo().getRoleName()).append(name);
                 }
             } else {
                 //session 中 没有值
@@ -144,6 +145,19 @@ public class OperateLogAspect {
                     // usebKey登录
                     try {
                         String signCert = ((UserDto) param).getSignCert();
+                        String certSn = ((UserDto) param).getCertSn();
+                        LambdaQueryWrapper<UserModel> lambdaQueryWrapper = new LambdaQueryWrapper<UserModel>()
+                                .eq(UserModel::getCertSn, certSn)
+                                .eq(UserModel::getIsEnable, IF_ENABLE);
+                        List<UserModel> users = userMapper.selectList(lambdaQueryWrapper);
+                        if (ObjectUtils.isEmpty(users)) {
+                            log.error("用户不存在或已被禁用");
+                            throw new SysException(ExceptionEnum.USER_FAIL);
+                        }
+                        UserModel userModel = users.get(StaticValue.SPLIT_COUNT);
+                        operationLogModel.setUserId(userModel.getId());
+
+                        //验签
                         boolean verify = Sm2Util.verify(signCert, orgin, sign);
                         if (!verify) {
                             log.error("{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage());
@@ -153,8 +167,9 @@ public class OperateLogAspect {
                         log.error("{}:{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage(), e.getMessage());
                         throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
                     }
+                } else {
+                operationLogModel.setUserId(UserRoleEnum.ACCOUNT_ADMIN.getCode());
                 }
-//                remark.append(name);
             }
         } else {
             if (ObjectUtils.isEmpty(userInfo)) {
@@ -181,8 +196,8 @@ public class OperateLogAspect {
         operationLogModel.setClientIp(clientIp);
         operationLogModel.setOperateType(operateAnnotation.operateType().getName());
         operationLogModel.setOperateMenu(operateAnnotation.operateModel().getName());
-        operationLogModel.setOperateObject(operateAnnotation.operateModel()
-                + StaticValue.LINE + operateAnnotation.operateType());
+        operationLogModel.setOperateObject(operateAnnotation.operateModel().getName()
+                + StaticValue.LINE + operateAnnotation.operateType().getName());
 //        operationLogModel.setRemark(remark.toString());
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         operationLogModel.setCreateTime(simpleDateFormat.format(new Date()));
@@ -364,13 +379,13 @@ public class OperateLogAspect {
         } else {
             Integer code = ((ResultVo) returnValue).getCode();
             operationLog.setOperateState(code);
+            operationLog.setFailCode(String.valueOf(code));
         }
         //对原始数据+返回编码进行再次签名
-        String newSrc = operationLog.getSignValue() + operationLog.getOperateState();
-        operationLog.setSignSrc(newSrc);
+        String newSrc = operationLog.operateSrcToString();//operationLog.getSignValue() + operationLog.getOperateState();
 
         String sign = Sm2Util.sign(InitConfigData.getPrivateKey(), newSrc);
-        operationLog.setSignValue(sign);
+        operationLog.setSignValueEx(sign);
 
         operationMapper.insert(operationLog);
     }

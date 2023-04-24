@@ -123,7 +123,7 @@ public class ConfigController {
      * @return true成功  false 失败
      */
     @PostMapping("auditLog")
-    public ResultVo<Boolean> auditLog(HttpServletRequest request, @RequestBody List<AuditDto> auditDtos) {
+    public ResultVo<Map<String, Integer> > auditLog(HttpServletRequest request, @RequestBody List<AuditDto> auditDtos) {
         return operationLogService.auditLog(request, auditDtos);
     }
 

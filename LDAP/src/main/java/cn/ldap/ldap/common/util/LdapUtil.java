@@ -442,27 +442,28 @@ public class LdapUtil {
                 Attribute next = attributesAll.next();
                 String key = next.getID();
                 //查询到key对应的values 的值
-                List<String> keys = attributeList.stream()
+                List<TreeVo> keys = attributeList.stream()
                         .filter(it -> it.getKey().equals(key))
-                        .map(it -> it.getValue())
                         .collect(Collectors.toList());
 
                 next.clear();
-                for (String value : keys) {
+                for (TreeVo value : keys) {
                     //判断是否是证书
                     if (StaticValue.USER_CERTIFICATE.toLowerCase()
                             .equals(key.toLowerCase())) {
-                        String cert = IscSignUtil.otherToBase64(value);
+                        String cert = IscSignUtil.otherToBase64(value.getValue());
                         byte[] certByte = decodeCertificate(cert);
                         next.add(certByte);
                     } else {
-                        next.add(value);
+                        next.add(value.getValue());
                     }
                     //移除已经修改的数据
-                    TreeVo vo = new TreeVo();
-                    vo.setValue(value);
-                    vo.setKey(key);
-                    attributeList.remove(vo);
+//                    TreeVo vo = new TreeVo();
+//                    vo.setValue(value.getValue());
+//                    vo.setFlag(vo.isFlag());
+//                    vo.setTitle(vo.getTitle());
+//                    vo.setKey(key);
+                    attributeList.remove(value);
                 }
                 //获取以及添加的key
                 oldAtt.add(key);
@@ -470,7 +471,13 @@ public class LdapUtil {
             }
             //获取需要新增的属性并添加到条目中的属性
             for (TreeVo treeVo : attributeList) {
-                Attribute newAttr = new BasicAttribute(treeVo.getKey(), treeVo.getValue());
+                Object value = treeVo.getValue();
+                if (treeVo.getKey().toLowerCase().equals(StaticValue.USER_CERTIFICATE.toLowerCase())) {
+                    String cert = IscSignUtil.otherToBase64(treeVo.getValue());
+                    byte[] certByte = decodeCertificate(cert);
+                    value = certByte;
+                }
+                Attribute newAttr = new BasicAttribute(treeVo.getKey(), value);
                 // 将属性添加到条目中
                 attributes.put(newAttr);
                 // 将更改提交到LDAP服务器
@@ -922,12 +929,16 @@ public class LdapUtil {
         Attributes attributes = new BasicAttributes();
         for (CreateAttDto att : createAttDtos) {
             String name = att.getKey();
+            if (StaticValue.CREATE_USER_CERTIFICATE.toLowerCase()
+                    .equals(name.toLowerCase())) {
+                name = StaticValue.USER_CERTIFICATE;
+            }
             Attribute attribute = new BasicAttribute(name);
             attributes.put(attribute);
             List<String> values = att.getValues();
             for (String value : values) {
-                if (StaticValue.CREATE_USER_CERTIFICATE.toLowerCase()
-                        .equals(name.toUpperCase())) {
+                if (StaticValue.USER_CERTIFICATE.toLowerCase()
+                        .equals(name.toLowerCase())) {
                     //证书
                     String cert = IscSignUtil.otherToBase64(value);
                     byte[] certificate = decodeCertificate(cert);

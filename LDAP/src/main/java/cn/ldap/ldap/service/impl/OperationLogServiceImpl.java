@@ -9,11 +9,9 @@ import cn.ldap.ldap.common.enums.*;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.OperationMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
-import cn.ldap.ldap.common.util.ClientInfo;
-import cn.ldap.ldap.common.util.ResultUtil;
-import cn.ldap.ldap.common.util.Sm2Util;
-import cn.ldap.ldap.common.util.StaticValue;
+import cn.ldap.ldap.common.util.*;
 import cn.ldap.ldap.common.vo.LogVo;
+import cn.ldap.ldap.common.vo.LoginResultVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.hander.InitConfigData;
 import cn.ldap.ldap.service.OperationLogService;
@@ -21,7 +19,6 @@ import cn.ldap.ldap.util.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.omg.CORBA.SystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -33,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @title:
@@ -71,6 +67,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
         long pageSize = logDto.getPageSize();
         long pagePage = (logDto.getPageNum() - 1) * logDto.getPageSize();
         String operateType = logDto.getOperateType();
+
         List<LogVo> logVos = operationMapper.queryLog(pagePage, pageSize,
                 beginTime, endTime, operateType);
         long count = operationMapper.countQueryLog(pagePage, pageSize,
@@ -115,23 +112,15 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
      * @param it 日志Vo
      */
     private void getLogs(LogVo it) {
-
-        //设置操作验签结果 判断是Admin登录还是其他操作员操作
-        if (ObjectUtils.isEmpty(it.getUserId()) || Objects.equals(it.getUserId(), StaticValue.ADMIN_ID)) {
-            it.setAdminVerify(AdminVerifyEnum.NOT_SIGN.getMsg());
-        } else {
-//            if (Sm2Util.verify(it.getSignCert(), it.operateSrcToString(), it.getSignVlue())) {
-            try {
-                if (Sm2Util.verifyEx(InitConfigData.getPublicKey(), it.getSignSrc(), it.getSignVlue())) {
-                    it.setAdminVerify(AdminVerifyEnum.SIGN_SUCCESS.getMsg());
-                } else {
-                    it.setAdminVerify(AdminVerifyEnum.SIGN_ERROR.getMsg());
-                }
-            } catch (Exception e) {
+        try {
+            if (Sm2Util.verifyEx(InitConfigData.getPublicKey(), it.operateSrcToString(), it.getSignSrcEx())) {
+                it.setAdminVerify(AdminVerifyEnum.SIGN_SUCCESS.getMsg());
+            } else {
                 it.setAdminVerify(AdminVerifyEnum.SIGN_ERROR.getMsg());
             }
+        } catch (Exception e) {
+            it.setAdminVerify(AdminVerifyEnum.SIGN_ERROR.getMsg());
         }
-
     }
 
     /**
@@ -145,23 +134,24 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
         if (ObjectUtils.isEmpty(it.getAuditId()) || Objects.equals(it.getAuditStatus(), StaticValue.AUDIT_NOT_STATUS)) {
             //未审计
             it.setAuditStatusName(AuditEnum.NOT_AUDIT.getMsg());
+            it.setAuditVerify(AdminVerifyEnum.NOT_SIGN.getMsg());
         } else if (Objects.equals(it.getAuditStatus(), StaticValue.AUDIT_STATUS)) {
             it.setAuditName(AuditEnum.AUDIT.getMsg());
             //验签审计的数据
             List<UserModel> collect = auditUser.stream().filter(audit -> Objects.equals(audit.getId(), it.getAuditId()))
                     .collect(Collectors.toList());
             UserModel userModel = ObjectUtils.isEmpty(collect) ? null : collect.get(0);
+            System.out.println("审计原始数据为:  "+it.auditSrcToString());
+            System.out.println("审计签名数据为:  "+it.getAuditSignValueEx());
+            if (Sm2Util.verifyEx(InitConfigData.getPublicKey(), it.auditSrcToString(), it.getAuditSignValueEx())) {
+                it.setAuditVerify(AdminVerifyEnum.SIGN_SUCCESS.getMsg());
+            } else {
+                it.setAuditVerify(AdminVerifyEnum.SIGN_ERROR.getMsg());
+            }
             if (!ObjectUtils.isEmpty(userModel)) {
                 //审计员名称
                 it.setAuditName(userModel.getCertName());
-                String signCert = userModel.getSignCert();
-                if (Sm2Util.verify(signCert, it.auditSrcToString(), it.getSignVlue())) {
-                    it.setAuditVerify(AdminVerifyEnum.SIGN_SUCCESS.getMsg());
-                } else {
-                    it.setAuditVerify(AdminVerifyEnum.NOT_SIGN.getMsg());
-                }
             } else {
-                it.setAuditVerify(AdminVerifyEnum.NOT_SIGN.getMsg());
                 it.setAuditName(UserRoleEnum.ACCOUNT_ADMIN.getMsg());
             }
         } else {
@@ -212,36 +202,98 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
      * @return true成功  false 失败
      */
     @Override
-    public ResultVo<Boolean> auditLog(HttpServletRequest request, List<AuditDto> auditDtos) {
+    public ResultVo<Map<String, Integer>> auditLog(HttpServletRequest request, List<AuditDto> auditDtos) {
+        log.info("审计的参数：{}", auditDtos);
         if (ObjectUtils.isEmpty(auditDtos)) {
             throw new SysException(ExceptionEnum.PARAM_EMPTY);
         }
         //根据id查询数据
         List<Integer> ids = auditDtos.stream().map(it -> it.getId()).collect(Collectors.toList());
 
+        //查询到需要审计的数据
         List<OperationLogModel> operationLogs = list(new LambdaQueryWrapper<OperationLogModel>()
                 .in(OperationLogModel::getId, ids));
 
+        LoginResultVo userInfo = SessionUtil.getUserInfo(request);
+        if (ObjectUtils.isEmpty(userInfo) || ObjectUtils.isEmpty(userInfo.getUserInfo())) {
+            log.info("用户未登录或已过期");
+            throw new SysException(ExceptionEnum.USER_NOT_LOGIN);
+        }
+        Integer errorCount = StaticValue.ERROR_COUNT;
+        Integer successCount = StaticValue.SUCCESS_COUNT;
 
-        operationLogs.forEach(it -> {
+        //对每一条的日志进行批量处理
+        for (OperationLogModel it : operationLogs) {
+            //获取到需要更新的数据
             AuditDto auditDto = auditDtos.stream()
                     .filter(audit -> it.getId().equals(audit.getId()))
                     .collect(Collectors.toList()).get(0);
+            if (ObjectUtils.isEmpty(auditDto)) {
+                log.error("未找到数据");
+                errorCount++;
+                continue;
+            }
+
+            if (!checkAdminVerity(userInfo, auditDto)) {
+                errorCount++;
+                continue;
+            }
+            try {
+                //设置前端传递的签名值
+                it.setAuditSignValue(ObjectUtils.isEmpty(auditDto.getAuditSignValue()) ? "" : auditDto.getAuditSignValue());
+                String strSignValue = Sm2Util.sign(InitConfigData.getPrivateKey(),
+                        auditDto.toAuditSrc());
+                it.setAuditSignValueEx(strSignValue);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                errorCount++;
+                continue;
+            }
             it.setAuditId(auditDto.getAuditId());
             it.setAuditTime(auditDto.getAuditTime());
             it.setAuditStatus(AuditEnum.AUDIT.getCode());
             it.setPass(auditDto.getAuditStatus());
-            it.setAuditSrc(auditDto.getAuditSrc());
-            it.setAuditSignValue(auditDto.getAuditSignValue());
             it.setRemark(auditDto.getRemark());
-        });
-        try {
-            boolean b = saveOrUpdateBatch(operationLogs);
-            return ResultUtil.success(b);
-        } catch (Exception e) {
-            log.error("保存日志错误:{}", e.getMessage());
-            return ResultUtil.success(false);
+            try {
+                boolean b = saveOrUpdate(it);
+                if (b) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                }
+            } catch (Exception e) {
+                log.error("保存日志错误:{}", e.getMessage());
+                errorCount++;
+            }
         }
+        Map<String, Integer> map = new HashMap<>();
+        map.put("success", successCount);
+        map.put("error", successCount);
+        return ResultUtil.success(map);
+    }
+
+    private boolean checkAdminVerity(LoginResultVo userInfo, AuditDto auditDto) {
+        //ADMIN用户不要验签  KEY需要验签
+        if (!UserRoleEnum.ACCOUNT_ADMIN.getCode().equals(userInfo.getUserInfo().getRoleId())) {
+            //usbKey的用户进行验签
+            //获取当前用户的证书
+            String certData = userInfo.getUserInfo().getCertData();
+            log.info("用户证书:{}", certData);
+            //对数据进行验签
+            String src = auditDto.toSrc();
+            try {
+                boolean verify = Sm2Util.verify(certData, src, auditDto.getAuditSignValue());
+                if (verify) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
