@@ -134,7 +134,7 @@ public class CertTreeController {
      */
     @GetMapping("exportQueryData")
     @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EXPORT_ALL)
-    public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
+    public Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response) {
         return certTreeService.exportQueryData(paramDto,response);
     }
 
@@ -155,7 +155,7 @@ public class CertTreeController {
      */
     @GetMapping("export")
     @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EXPORT_LDIF)
-    public ResultVo<Boolean> exportLdifByBaseDn(@RequestBody LdifDto exportDto, HttpServletResponse response) {
+    public ResultVo<Boolean> exportLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
         return certTreeService.exportLdifByBaseDn(exportDto, response);
     }
 

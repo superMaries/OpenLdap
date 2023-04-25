@@ -302,7 +302,7 @@ public class LdapUtil {
         //      总共需要查的数据
         long endNum = page * pageSize;
         //开始的数量
-        long startNum = (page - 1) * pageSize ;
+        long startNum = (page - 1) * pageSize;
 
         long count = 0;
 //        searchControls.setCountLimit(totalNodeCount);
@@ -659,8 +659,10 @@ public class LdapUtil {
         String fileName = exportDto.getExportFilePath();
         if (StaticValue.EXPORT_LOCAL.equals(exportDto.getExportType())) {
             //下载到本地
-            String[] fileSplit = fileName.split(StaticValue.LDIF_END);
-            fileName = fileSplit[fileSplit.length - 1] + StaticValue.LDIF;
+//            String[] fileSplit = fileName.split(StaticValue.LDIF_END);
+//            fileName = fileSplit[fileSplit.length - 1] + StaticValue.LDIF;
+
+            fileName = TimeUtil.getNowTimeStr() + StaticValue.LDIF;
         } else {
             if (!fileName.endsWith(StaticValue.LDIF)) {
                 fileName += StaticValue.LDIF;

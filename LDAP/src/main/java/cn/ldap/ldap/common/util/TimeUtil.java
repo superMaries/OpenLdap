@@ -21,6 +21,10 @@ public class TimeUtil {
         return format.format(new Date());
     }
 
+    public static String getNowTimeStr() {
+        SimpleDateFormat format = new SimpleDateFormat(StaticValue.DATEFORMATEX);
+        return format.format(new Date());
+    }
     /**
      * 时间转字符串
      *
