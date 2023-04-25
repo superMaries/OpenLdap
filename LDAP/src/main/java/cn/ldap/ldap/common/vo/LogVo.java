@@ -139,7 +139,7 @@ public class LogVo {
                 + this.getOperateMenu()
                 + StaticValue.LINE + this.getOperateType()
                 + StaticValue.VERTICAL
-                + this.getUserName()
+                + this.getUserId()
                 + StaticValue.VERTICAL + this.getFailCode()
                 + StaticValue.VERTICAL + this.getSignVlue();
     }

@@ -387,7 +387,7 @@ public class OperateLogAspect {
             operationLog.setOperateState(code);
             operationLog.setFailCode(String.valueOf(code));
         }
-        //对原始数据+返回编码进行再次签名
+        //对原始数据+返回编码+签名值进行再次签名
         String newSrc = operationLog.operateSrcToString();//operationLog.getSignValue() + operationLog.getOperateState();
 
         String sign = Sm2Util.sign(InitConfigData.getPrivateKey(), newSrc);

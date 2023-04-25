@@ -143,6 +143,6 @@ public class OperationLogModel {
                 + StaticValue.VERTICAL
                 + this.getUserId()
                 + StaticValue.VERTICAL + this.getFailCode()
-                + StaticValue.VERTICAL + this.getSignSrc();
+                + StaticValue.VERTICAL + this.getSignValue();
     }
 }
