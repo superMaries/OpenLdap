@@ -268,7 +268,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
         }
         Map<String, Integer> map = new HashMap<>();
         map.put("success", successCount);
-        map.put("error", successCount);
+        map.put("error", errorCount);
         return ResultUtil.success(map);
     }
 

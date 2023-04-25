@@ -30,9 +30,19 @@ public class HandleConfig implements HandlerInterceptor {
     private final static String SIGN = "sign";
     private final static String ORIGN = "orgin";
 
+    private static final String GET="GET";
+
+    private static final String TOKEN="token";
+
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        //获取头中的token
-        String token = request.getHeader(BY_TOKEN);
+        String token = "";
+        if (request.getMethod().equals(GET)){
+            token = request.getParameter(TOKEN);
+        }else {
+            //获取头中的token
+            token = request.getHeader(BY_TOKEN);
+        }
+
         if (ObjectUtils.isEmpty(token)) {
             response.setCharacterEncoding(Charsets.UTF_8.toString());
             response.setContentType(CONTENT_TYPE);

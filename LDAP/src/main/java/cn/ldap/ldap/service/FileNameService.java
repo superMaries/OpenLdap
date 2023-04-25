@@ -11,5 +11,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface FileNameService extends IService<FileName> {
 
-    ResultVo<String> queryFileName();
+    ResultVo<Object> queryFileName();
 }
