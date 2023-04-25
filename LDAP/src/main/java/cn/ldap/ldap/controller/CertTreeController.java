@@ -143,7 +143,7 @@ public class CertTreeController {
      * @return
      */
     @PostMapping("queryFileName")
-    public ResultVo<String> queryFileName() {
+    public ResultVo<Object> queryFileName() {
         return fileNameService.queryFileName();
     }
 

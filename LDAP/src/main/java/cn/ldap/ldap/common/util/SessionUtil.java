@@ -16,12 +16,21 @@ import javax.servlet.ServletRequest;
  */
 public class SessionUtil {
     private static final String AUTHORIZATION = "auth";
+
+    private static final String GET="GET";
+
+    private static final String TOKEN="token";
     public static LoginResultVo getUserInfo(ServletRequest requests) {
         LoginResultVo loginResultVo = null;
+        String auth = "";
         try {
-
+            if (((RequestFacade) requests).getMethod().equals(GET)){
+                auth = ((RequestFacade) requests).getParameter(TOKEN);
+            }else {
+               // loginResultVo = (LoginResultVo) ((RequestFacade) requests).getSession().getAttribute(AUTHORIZATION);
+                 auth = ((RequestFacade) requests).getHeader(AUTHORIZATION);
+            }
             loginResultVo = (LoginResultVo) ((RequestFacade) requests).getSession().getAttribute(AUTHORIZATION);
-            String auth = ((RequestFacade) requests).getHeader(AUTHORIZATION);
             if (ObjectUtils.isEmpty(auth)) {
                 throw new SysException(ExceptionEnum.USER_NOT_LOGIN);
             }
