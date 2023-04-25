@@ -25,12 +25,11 @@ import cn.ldap.ldap.service.PermissionService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -214,26 +213,40 @@ public class LoginServiceImpl implements LoginService {
      * @throws IOException
      */
     @Override
-    public byte[] downloadManual() {
+    public Boolean downloadManual(HttpServletResponse response) throws IOException {
 
         String filePath = manualPath; // 本地Word文档的路径
-        InputStream in = null;
-        try {
-            in = new FileInputStream(filePath);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        log.info("下载地址为:{}", filePath);
+        // 读取 PDF 文件
+        File file = new File(filePath);
+        InputStream inputStream = new FileInputStream(file);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, len);
         }
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try {
-            StreamUtils.copy(in, out);
-            out.close();
-            in.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        log.info(Arrays.toString(out.toByteArray()));
-        return out.toByteArray();
+        inputStream.close();
+        outputStream.flush();
+
+        // 将 PDF 文件转换为字节数组
+        byte[] pdfBytes = outputStream.toByteArray();
+
+        // 设置响应头
+        response.setContentType(MediaType.APPLICATION_PDF_VALUE);
+        response.setHeader("Content-Disposition", "attachment;filename=file.pdf");
+        response.setContentLength(pdfBytes.length);
+
+        // 将字节数组写入响应输出流
+        OutputStream out = response.getOutputStream();
+        out.write(pdfBytes);
+        out.flush();
+        out.close();
+        return true;
     }
+
+
+
 
     /**
      * 查看菜单
