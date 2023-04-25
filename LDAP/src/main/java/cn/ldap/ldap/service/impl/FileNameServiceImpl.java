@@ -12,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @title:
  * @Author superMarie
@@ -21,12 +24,14 @@ import org.springframework.util.ObjectUtils;
 @Slf4j
 public class FileNameServiceImpl extends ServiceImpl<FileNameMapper, FileName> implements FileNameService {
     @Override
-    public ResultVo<String> queryFileName() {
+    public ResultVo<Object> queryFileName() {
         FileName fileName = getOne(null);
         if (ObjectUtils.isEmpty(fileName.getFileName())){
             return ResultUtil.fail(ExceptionEnum.COLLECTION_EMPTY);
         }
         log.info("文件路径为:{}",fileName.getFileName());
-        return ResultUtil.success(fileName.getFileName());
+        Map<String,String> resultMap = new HashMap<>();
+        resultMap.put("data",fileName.getFileName());
+        return ResultUtil.success(resultMap);
     }
 }
