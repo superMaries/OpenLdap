@@ -178,7 +178,7 @@ public class CertTreeServiceImpl implements CertTreeService {
                 || ObjectUtils.isEmpty(exportDto.getBaseDN())
                 || ObjectUtils.isEmpty(exportDto.getScope())
                 || ObjectUtils.isEmpty(exportDto.getExportType())
-                || ObjectUtils.isEmpty(exportDto.getExportFilePath())) {
+                ) {
             log.error("缺少参数:{}", exportDto);
             throw new SysException(ExceptionEnum.PARAM_ERROR);
         }

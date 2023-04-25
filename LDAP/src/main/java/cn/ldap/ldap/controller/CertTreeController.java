@@ -13,10 +13,7 @@ import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 import cn.ldap.ldap.service.CertTreeService;
 import cn.ldap.ldap.service.FileNameService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -135,9 +132,9 @@ public class CertTreeController {
      * @param response
      * @return
      */
-    @PostMapping("exportQueryData")
+    @GetMapping("exportQueryData")
     @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EXPORT_ALL)
-    public Boolean exportQueryData(@RequestBody ParamDto paramDto, HttpServletResponse response) {
+    public Boolean exportQueryData(ParamDto paramDto, HttpServletResponse response) {
         return certTreeService.exportQueryData(paramDto,response);
     }
 
@@ -156,9 +153,9 @@ public class CertTreeController {
      * @param exportDto
      * @return
      */
-    @PostMapping("export")
+    @GetMapping("export")
     @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EXPORT_LDIF)
-    public ResultVo<Boolean> exportLdifByBaseDn(@RequestBody LdifDto exportDto, HttpServletResponse response) {
+    public ResultVo<Boolean> exportLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
         return certTreeService.exportLdifByBaseDn(exportDto, response);
     }
 

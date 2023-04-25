@@ -19,7 +19,7 @@ public class StaticValue {
     public final static String TX_PERCENT = "txPercent";
     public final static String TIME_FORMAT = "HH:mm:ss";
     public final static String DATEFORMAT = "yyyy-MM-dd HH:SS:MM";
-
+    public final static String DATEFORMATEX = "yyyyMMddHHSSMM";
     public final static Integer LENGTH = 10;
     public final static String IP_ADDRESS_INDEX_OF = ",";
     public final static Integer IP_ADDRESS_LENGTH = 15;
