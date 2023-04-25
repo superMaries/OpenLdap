@@ -38,4 +38,23 @@ public class LdifDto {
      * 导出文件位置
      */
     private String exportFilePath;
+
+    /**
+     * 属性名称
+     */
+    private String attribute;
+    /**
+     * 是否只返回属性名称
+     */
+    private boolean returnAttr = false;
+
+    /**
+     * 每页大小
+     */
+    private Integer pageSize = 1000;
+    /**
+     * 页码
+     */
+    private Integer page = 1;
+
 }

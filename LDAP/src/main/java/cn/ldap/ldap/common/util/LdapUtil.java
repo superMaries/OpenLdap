@@ -659,11 +659,12 @@ public class LdapUtil {
         String fileName = exportDto.getExportFilePath();
         if (StaticValue.EXPORT_LOCAL.equals(exportDto.getExportType())) {
             //下载到本地
-//            String[] fileSplit = fileName.split(StaticValue.LDIF_END);
-//            fileName = fileSplit[fileSplit.length - 1] + StaticValue.LDIF;
-
             fileName = TimeUtil.getNowTimeStr() + StaticValue.LDIF;
         } else {
+            if (ObjectUtils.isEmpty(fileName)) {
+                log.error("缺少文件保存地址参数");
+                throw new SysException(ExceptionEnum.PARAM_ERROR);
+            }
             if (!fileName.endsWith(StaticValue.LDIF)) {
                 fileName += StaticValue.LDIF;
             }
@@ -742,9 +743,10 @@ public class LdapUtil {
             Path file = Paths.get(fileName);
             try {
                 response.setContentType("application/ldif");
-                response.addHeader("Content-Disposition", "attachment; filename=" + fileName);
+                response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
                 Files.copy(file, response.getOutputStream());
                 response.getOutputStream().flush();
+                response.getOutputStream().close();
                 return true;
             } catch (Exception e) {
                 log.error(e.getMessage());

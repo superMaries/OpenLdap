@@ -154,7 +154,7 @@ public class CertTreeController {
      * @return
      */
     @GetMapping("export")
-    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EXPORT_LDIF)
+//    @OperateAnnotation(operateModel = OperateMenuEnum.CATALOGUE_MANAGER, operateType = OperateTypeEnum.EXPORT_LDIF)
     public ResultVo<Boolean> exportLdifByBaseDn(LdifDto exportDto, HttpServletResponse response) {
         return certTreeService.exportLdifByBaseDn(exportDto, response);
     }

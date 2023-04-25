@@ -259,6 +259,7 @@ public class CertTreeServiceImpl implements CertTreeService {
                 try {
                     Files.copy(file, response.getOutputStream());
                     response.getOutputStream().flush();
+                    response.getOutputStream().close();
                     return true;
                 } catch (IOException e) {
                     e.printStackTrace();
