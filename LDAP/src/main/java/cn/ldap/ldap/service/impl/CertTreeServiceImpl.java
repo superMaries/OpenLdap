@@ -250,7 +250,7 @@ public class CertTreeServiceImpl implements CertTreeService {
         //获取查询的数据
         List<String> writeData = queryData(paramDto);
         exportToLdif(writeData, fileName);
-        if (paramDto.getWebOrFile().equals(StaticValue.TRUE)) {
+        if (paramDto.getWebOrFile().equals(StaticValue.FALSE)) {
             // 下载ldif文件
             Path file = Paths.get(fileName);
             if (Files.exists(file)) {
