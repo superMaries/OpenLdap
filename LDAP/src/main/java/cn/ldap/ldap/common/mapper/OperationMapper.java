@@ -31,6 +31,7 @@ public interface OperationMapper extends BaseMapper<OperationLogModel> {
             " ,log.audit_id auditId,log.fail_code failCode " +
             " ,CASE WHEN log.audit_id=0 THEN'Admin' ELSE u.cert_name END  AS aduitName" +
             " ,log.audit_status auditStatus,log.audit_src auditSrc" +
+            " ,log.pass pass" +
             " ,CASE WHEN log.pass=1 THEN'通过'  WHEN log.pass=0 THEN '不通过' ELSE '--' END  AS passName" +
             " ,log.audit_sign_value auditSignValue,log.audit_time auditTime " +
             " FROM operation_log log" +

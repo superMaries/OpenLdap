@@ -1029,4 +1029,27 @@ public class LdapUtil {
         }
         return StaticValue.TRUE;
     }
+
+    public static boolean isExitRdn(LdapTemplate ldapTemplate, String rdn) {
+        List<CertTreeVo> certTreeVos = new ArrayList<>();
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        SearchControls searchControls = new SearchControls();
+        searchControls.setSearchScope(SearchControls.OBJECT_SCOPE);
+        AttributesMapper mapper = new AttributesMapper() {
+            @Override
+            public Object mapFromAttributes(Attributes attributes) throws NamingException {
+                return attributes;
+            }
+        };
+        try {
+            long total = ldapTemplate.search(rdn, StaticValue.FILTER, mapper).size();
+            if (total < StaticValue.COUNT) {
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
 }

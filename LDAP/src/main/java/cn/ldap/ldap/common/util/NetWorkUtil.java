@@ -114,24 +114,24 @@ public class NetWorkUtil {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
             StringTokenizer tokenizer = new StringTokenizer(reader.readLine());
             tokenizer.nextToken();
-            int user1 = Integer.parseInt(tokenizer.nextToken());
-            int nice1 = Integer.parseInt(tokenizer.nextToken());
-            int sys1 = Integer.parseInt(tokenizer.nextToken());
-            int idle1 = Integer.parseInt(tokenizer.nextToken());
+            Long user1 = Long.valueOf(tokenizer.nextToken());
+            Long nice1 = Long.valueOf(tokenizer.nextToken());
+            Long sys1 = Long.valueOf(tokenizer.nextToken());
+            Long idle1 = Long.valueOf(tokenizer.nextToken());
 
             Thread.sleep(1000);
 
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
             tokenizer = new StringTokenizer(reader.readLine());
             tokenizer.nextToken();
-            int user2 = Integer.parseInt(tokenizer.nextToken());
-            int nice2 = Integer.parseInt(tokenizer.nextToken());
-            int sys2 = Integer.parseInt(tokenizer.nextToken());
-            int idle2 = Integer.parseInt(tokenizer.nextToken());
+            Long user2 = Long.valueOf(tokenizer.nextToken());
+            Long nice2 = Long.valueOf(tokenizer.nextToken());
+            Long sys2 = Long.valueOf(tokenizer.nextToken());
+            Long idle2 = Long.valueOf(tokenizer.nextToken());
 
-            Integer v1 = (user2 + nice2 + sys2) - (user1 + nice1 + sys1);
+            Long v1 = (user2 + nice2 + sys2) - (user1 + nice1 + sys1);
 
-            Integer v2 = (user2 + nice2 + sys2 + idle2) - (user1 + nice1 + sys1 + idle1);
+            Long v2 = (user2 + nice2 + sys2 + idle2) - (user1 + nice1 + sys1 + idle1);
             float v3 = (v1 * 1.0f / v2) * 100;
             return v3;
 

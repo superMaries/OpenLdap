@@ -23,7 +23,7 @@ public class LogVo {
     /**
      * 操作用户名称
      */
-    private String  userName;
+    private String userName;
     /**
      * 操作模块
      */
@@ -91,6 +91,7 @@ public class LogVo {
      */
     @JsonIgnore
     private String signSrc;
+    private Integer pass;
 
     /**
      * 签名原数据 后端做的签名值
@@ -155,7 +156,7 @@ public class LogVo {
         return this.auditTime + StaticValue.VERTICAL
                 + StaticValue.LOG + StaticValue.VERTICAL
                 + this.auditId + StaticValue.VERTICAL
-                + this.getAuditStatus() + StaticValue.LINE + this.remark + StaticValue.VERTICAL
+                + this.getPass() + StaticValue.LINE + this.remark + StaticValue.VERTICAL
                 + auditSignValue;
     }
 }

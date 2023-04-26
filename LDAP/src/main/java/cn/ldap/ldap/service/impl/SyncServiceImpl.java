@@ -2,13 +2,19 @@ package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.FromSyncDto;
 import cn.ldap.ldap.common.dto.SyncDto;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
+import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.SyncService;
+import com.unboundid.util.LDAPTestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.io.*;
 
@@ -36,11 +42,11 @@ public class SyncServiceImpl implements SyncService {
 
     private static final String START = "syncprov-checkpoint";
 
-    private static final String FIRST ="overlay syncprov";
+    private static final String FIRST = "overlay syncprov";
 
     private static final String START_FROM = "syncrepl";
 
-    private static final String RID="rid=";
+    private static final String RID = "rid=";
 
     private static final String SYNCREPL = "syncrepl";
 
@@ -48,7 +54,7 @@ public class SyncServiceImpl implements SyncService {
 
     private static final String TYPE = "type=";
 
-    private static final String REFRESH_AND_PERSIST= "refreshAndPersist";
+    private static final String REFRESH_AND_PERSIST = "refreshAndPersist";
 
     private static final String INTERVAL = "interval=";
 
@@ -58,7 +64,7 @@ public class SyncServiceImpl implements SyncService {
 
     private static final String OBJ = "(objectClass=*)";
 
-    private static final String SCOPE="scope=";
+    private static final String SCOPE = "scope=";
 
     private static final String SUB = "sub";
 
@@ -74,10 +80,13 @@ public class SyncServiceImpl implements SyncService {
 
     private static final String CREDENTIALS = "credentials=";
 
-    private static final String RETRY ="retry=\"60 +\"";
+    private static final String RETRY = "retry=\"60 +\"";
+    @Autowired
+    private LdapTemplate ldapTemplate;
 
     /**
      * 主服务同步配置
+     *
      * @param syncDto
      * @return
      */
@@ -120,11 +129,23 @@ public class SyncServiceImpl implements SyncService {
 
     /**
      * 从服务同步配置
+     *
      * @param fromSyncDto
      * @return
      */
     @Override
     public ResultVo<Object> fromSyncConfig(FromSyncDto fromSyncDto) {
+        log.info("从服务配置入参：", fromSyncDto);
+        if (ObjectUtils.isEmpty(fromSyncDto)
+                || ObjectUtils.isEmpty(fromSyncDto.getSyncPoint())) {
+            throw new SysException(ExceptionEnum.PARAM_ERROR);
+        }
+
+        //判断节点是否存在
+        if (LdapUtil.isExitRdn(ldapTemplate, fromSyncDto.getSyncPoint())) {
+           throw new SysException(ExceptionEnum.NODE_NOT_EXIT);
+        }
+
         File file = new File(configPath);
         if (!file.exists()) {
             throw new SysException(FILE_NOT_EXIST);
@@ -162,6 +183,7 @@ public class SyncServiceImpl implements SyncService {
 
     /**
      * 主服务配置数据拼接
+     *
      * @param stringBuilder
      * @param syncDto
      * @return
@@ -174,6 +196,7 @@ public class SyncServiceImpl implements SyncService {
 
     /**
      * 从服务配置数据拼接
+     *
      * @param stringBuilder
      * @param fromSyncDto
      * @return

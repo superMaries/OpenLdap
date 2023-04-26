@@ -12,6 +12,7 @@ import java.text.DateFormat;
  * @Version 1.0
  */
 public class StaticValue {
+    public final static String FILTER="(objectClass=*)";
     public final static String TOTAL = "total";
     public final static String CERT_TOTAL = "certTotal";
     public final static String CRL_TOTAL = "crlTotal";

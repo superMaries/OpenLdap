@@ -76,7 +76,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
         List<Integer> aduitIds = logVos.stream().map(it -> it.getAuditId()).collect(Collectors.toList());
         List<UserModel> auditUser = userMapper.selectList(new LambdaQueryWrapper<UserModel>()
                 .in(UserModel::getId, aduitIds));
-
+        System.out.println("查询的数据为" + logVos);
         logVos.forEach(it -> {
             //设置操作状态
             setOperateStateName(it);
@@ -141,8 +141,8 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
             List<UserModel> collect = auditUser.stream().filter(audit -> Objects.equals(audit.getId(), it.getAuditId()))
                     .collect(Collectors.toList());
             UserModel userModel = ObjectUtils.isEmpty(collect) ? null : collect.get(0);
-            System.out.println("审计原始数据为:  "+it.auditSrcToString());
-            System.out.println("审计签名数据为:  "+it.getAuditSignValueEx());
+            System.out.println("查询审计原始数据为:  " + it.auditSrcToString());
+            System.out.println("查询签名数据为:  " + it.getAuditSignValueEx());
             if (Sm2Util.verifyEx(InitConfigData.getPublicKey(), it.auditSrcToString(), it.getAuditSignValueEx())) {
                 it.setAuditVerify(AdminVerifyEnum.SIGN_SUCCESS.getMsg());
             } else {
@@ -244,6 +244,8 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
                 String strSignValue = Sm2Util.sign(InitConfigData.getPrivateKey(),
                         auditDto.toAuditSrc());
                 it.setAuditSignValueEx(strSignValue);
+                System.out.println("审计原数据：" + auditDto.toAuditSrc());
+                System.out.println("审计签名值：" + strSignValue);
             } catch (Exception e) {
                 log.error(e.getMessage());
                 errorCount++;
@@ -251,6 +253,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationMapper, Operat
             }
             it.setAuditId(auditDto.getAuditId());
             it.setAuditTime(auditDto.getAuditTime());
+            System.out.println("审计时间：" + it.getAuditTime());
             it.setAuditStatus(AuditEnum.AUDIT.getCode());
             it.setPass(auditDto.getAuditStatus());
             it.setRemark(auditDto.getRemark());

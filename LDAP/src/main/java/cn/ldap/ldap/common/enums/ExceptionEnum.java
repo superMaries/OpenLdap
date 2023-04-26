@@ -58,7 +58,7 @@ public enum ExceptionEnum {
 
     FILE_IO_ERROR(810, "文件流处理失败"),
     STR_ERROR(811, "字符格式错误"),
-
+    NODE_NOT_EXIT(812, "节点不存在，从新配置"),
 
     SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
@@ -79,14 +79,14 @@ public enum ExceptionEnum {
     HEADER_ERROR(5014, "未有签名验签的值"),
 
     //LDAP接口中的错误 全部定义8开头
-    LDAP_RDN_NOT_EXIT(8001,"删除RDN错误"),
+    LDAP_RDN_NOT_EXIT(8001, "删除RDN错误"),
 
-    LDAP_QUERY_RDN_NOT_EXIT(8002,"解析RDN错误"),
+    LDAP_QUERY_RDN_NOT_EXIT(8002, "解析RDN错误"),
 
-    LDAP_DEL_RDN_NOT_EXIT(8002,"删除RDN错误"),
+    LDAP_DEL_RDN_NOT_EXIT(8002, "删除RDN错误"),
 
-    LDAP_DATA_ERROR(8004,"缺少从服务连接数据"),
-            ;
+    LDAP_DATA_ERROR(8004, "缺少从服务连接数据"),
+    ;
 
     /**
      * code
@@ -124,4 +124,4 @@ public enum ExceptionEnum {
     public String getMessage() {
         return message;
     }
-    }
+}
