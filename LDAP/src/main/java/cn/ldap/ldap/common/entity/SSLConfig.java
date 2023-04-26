@@ -47,4 +47,12 @@ public class SSLConfig {
 
     @TableField("key_name")
     private String keyName;
+
+    @TableField(exist = false)
+    private String caCertBase64;
+
+    @TableField(exist = false)
+    private String serverCertBase64;
+    @TableField(exist = false)
+    private String keyBase64;
 }

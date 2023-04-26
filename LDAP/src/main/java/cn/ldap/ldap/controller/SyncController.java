@@ -37,7 +37,7 @@ public class SyncController {
      * @return
      */
     @PostMapping("mainSyncConfig")
-//    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
+    @OperateAnnotation(operateModel = OperateMenuEnum.PARAM_MANAGER, operateType = OperateTypeEnum.UPDATE_PARAM)
     public ResultVo<Object> mainSyncConfig(@RequestBody SyncDto syncDto) {
         return syncService.syncConfig(syncDto);
     }

@@ -192,22 +192,22 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         //连接服务
         //查询主服务数据，判断连接状态，并且分别插入到返回值中
         Map<String, Object> mainMap = new HashMap<>();
-        mainMap = LdapUtil.queryTreeRdnOrNum(mainMap, ldapTemplate, SCOPE,searchbase , FILTER);
+        LdapTemplate connection = connection(provider,searchbase,binddn,credentials);
+        mainMap = LdapUtil.queryTreeRdnOrNum(mainMap, connection, SCOPE,searchbase , FILTER);
         Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
         syncStatus.setMainServerNumber(mainCount);
         //设置从服务数据初始值
         Integer followCount = 0;
         //查询从服务数据，判断连接状态，并且分别插入到返回值中
         try {
-            LdapTemplate connection = connection(provider,searchbase,binddn,credentials);
+
             Map<String, Object> followMap = new HashMap<>();
-            followMap = LdapUtil.queryTreeRdnOrNum(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
+            followMap = LdapUtil.queryTreeRdnOrNum(followMap, ldapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
             followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
         }catch (Exception e){
             followCount = NUM;
             syncStatus.setFollowServerNumber(followCount);
             syncStatus.setSyncStatusStr(CONNECTION_FAILD);
-            resultList.add(syncStatus);
         }
         syncStatus.setFollowServerNumber(followCount);
         if (followCount.equals(NUM)) {

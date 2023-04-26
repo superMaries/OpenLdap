@@ -2,14 +2,18 @@ package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.IndexDataDto;
 import cn.ldap.ldap.common.entity.IndexDataModel;
+import cn.ldap.ldap.common.entity.IndexRule;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.IndexDataMapper;
+import cn.ldap.ldap.common.mapper.IndexRuleMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexDataService;
+import cn.ldap.ldap.service.IndexRuleService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.omg.CORBA.SystemException;
@@ -17,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import javax.annotation.Resource;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +62,9 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
      */
     private static final String FEED = "\n";
 
+    @Resource
+    private IndexRuleMapper indexRuleMapper;
+
     /**
      * 更新或者插入
      *
@@ -79,11 +87,15 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
             log.info(ExceptionEnum.DATA_EXIT.getMessage());
             return ResultUtil.fail(ExceptionEnum.DATA_EXIT);
         }
+        QueryWrapper<IndexRule> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(IndexRule::getType,indexDataDto.getIndexRule());
+        IndexRule indexRule = indexRuleMapper.selectOne(queryWrapper);
         //新增
         if (ObjectUtils.isEmpty(indexDataDto.getId())) {
             IndexDataModel indexDataModel = new IndexDataModel();
             indexDataModel.setIndexAttribute(indexDataDto.getAttributeName());
             indexDataModel.setIndexRule(indexDataDto.getIndexRule());
+            indexDataModel.setDescription(indexRule.getDescription());
             saveOrUpdate(indexDataModel);
         }
         //根据规则拿到对应数据

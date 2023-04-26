@@ -2,6 +2,7 @@ package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.FromSyncDto;
 import cn.ldap.ldap.common.dto.SyncDto;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -146,6 +147,9 @@ public class SyncServiceImpl implements SyncService {
             throw new RuntimeException(e);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        if (!fromSyncDto.getMainServerUrl().startsWith("ldap://")){
+            return ResultUtil.fail(ExceptionEnum.LDAP_URL_ERROR);
         }
         String data = splicingConfigFrom(stringBuilder, fromSyncDto);
         try {
