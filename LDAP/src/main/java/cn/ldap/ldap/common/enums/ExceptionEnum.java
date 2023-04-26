@@ -40,8 +40,9 @@ public enum ExceptionEnum {
     USER_ACCOUNT_ERROR(587, "账号或密码错误"),
     REQUEST_WAY_ERROR(588, "请求方式有误,请检查 GET/POST"),
     OLD_PASSWORD_ERROR(589, "旧密码与新密码不符"),
-    SYSTEM_CONFIG_ERRROR(590, "系统配置错误"),
+    SYSTEM_CONFIG_ERRROR(590, "系统配置错误,请输入或修改配置文件"),
     //未获取到配置文件信息
+    DATABASE_ERROR(799,"SSL配置文件不正确"),
     NO_CONFIG(800, "未获取到配置文件信息"),
     PARAM_EMPTY(801, "参数为空"),
 
@@ -58,10 +59,11 @@ public enum ExceptionEnum {
 
     FILE_IO_ERROR(810, "文件流处理失败"),
     STR_ERROR(811, "字符格式错误"),
-    NODE_NOT_EXIT(812, "节点不存在，从新配置"),
+
 
     SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
+    FILE_PATH_NOT_EXIST(5006,"文件路径不存在"),
     LINUX_ERROR(5007, "失败"),
 
     //上传失败
@@ -79,14 +81,19 @@ public enum ExceptionEnum {
     HEADER_ERROR(5014, "未有签名验签的值"),
 
     //LDAP接口中的错误 全部定义8开头
-    LDAP_RDN_NOT_EXIT(8001, "删除RDN错误"),
+    LDAP_RDN_NOT_EXIT(8001,"删除RDN错误"),
 
-    LDAP_QUERY_RDN_NOT_EXIT(8002, "解析RDN错误"),
+    LDAP_QUERY_RDN_NOT_EXIT(8002,"解析RDN错误"),
 
-    LDAP_DEL_RDN_NOT_EXIT(8002, "删除RDN错误"),
+    LDAP_DEL_RDN_NOT_EXIT(8002,"删除RDN错误"),
 
-    LDAP_DATA_ERROR(8004, "缺少从服务连接数据"),
-    ;
+
+    LDAP_DATA_ERROR(8004,"缺少从服务连接数据"),
+
+    LDAP_PORT_ERROR(8006,"端口配置相同"),
+
+    LDAP_URL_ERROR(8007,"地址配置错误，URL地址需要以ldap://开始"),
+            ;
 
     /**
      * code
@@ -124,4 +131,4 @@ public enum ExceptionEnum {
     public String getMessage() {
         return message;
     }
-}
+    }

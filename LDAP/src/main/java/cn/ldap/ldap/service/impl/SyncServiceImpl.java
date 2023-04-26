@@ -168,6 +168,9 @@ public class SyncServiceImpl implements SyncService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        if (!fromSyncDto.getMainServerUrl().startsWith("ldap://")){
+            return ResultUtil.fail(ExceptionEnum.LDAP_URL_ERROR);
+        }
         String data = splicingConfigFrom(stringBuilder, fromSyncDto);
         try {
             //采用流的方式进行写入配置
