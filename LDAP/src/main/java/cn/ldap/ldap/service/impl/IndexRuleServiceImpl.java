@@ -42,24 +42,24 @@ import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
 public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule> implements IndexRuleService {
 
 
-    @Value("${filePath.runPath}")
-    private String runPath;
-
-    private static final String SERVICE = "Service";
 
 
     private static final String CERT_Start_DROP = "---";
 
     private static final String SPACE = " ";
 
-    private static final String LDAPS_HEAD = "ldaps://0.0.0.0:";
+    private static final String LDAPS_HEAD = "\"ldaps://0.0.0.0:";
 
-    private static final String AFTER_COMMAND = "/ ldapi://0.0.0.0:";
+    private static final String YIN = "\"";
+
+    private static final String AFTER_COMMAND = "\"ldap://0.0.0.0:";
+
+    private static final String UNDER_COMMAND="ldap://0.0.0.0:";
 
 
     private static final String BEHIND = "nohup /usr/local/openldap/libexec/slapd -h";
 
-    private static final String LAST_COMMAND = "-f /usr/local/openldap/etc/openldap/slapd.conf > /dev/null 2>&1 &";
+    private static final String LAST_COMMAND = "-f \"/usr/local/openldap/etc/openldap/slapd.conf\" > /dev/null 2>&1 &";
 
     private static final String RESTART_FAIL = "重启服务失败";
 
@@ -96,9 +96,9 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
     private static final String ENVIRONMENT = "Environment";
 
-    private static final String CASERVER_CERT = "ca.cert";
+    private static final String CASERVER_CERT = "ca.cer";
 
-    private static final String SERVER_CERT = "server.cert";
+    private static final String SERVER_CERT = "server.cer";
 
     private static final String SERVER_KEY = "server.key";
 
@@ -157,9 +157,6 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
                 sslConfigNew.setSslAuthStrategy(serverDto.getSslAuthStrategy());
             }
-            sslConfigNew.setKeyName(SERVER_KEY);
-            sslConfigNew.setCaName(CASERVER_CERT);
-            sslConfigNew.setServerName(SERVER_CERT);
             sslConfigService.save(sslConfigNew);
         } else {
             if (!BeanUtil.isEmpty(serverDto.getOperation())) {
@@ -177,13 +174,55 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
                 sslConfig.setSslAuthStrategy(serverDto.getSslAuthStrategy());
             }
-            sslConfig.setKeyName(SERVER_KEY);
-            sslConfig.setCaName(CASERVER_CERT);
-            sslConfig.setServerName(SERVER_CERT);
             sslConfigService.updateById(sslConfig);
         }
 
+        //定义一个命令
+        String command = "";
+        ResultVo<Object> objectResultVo = null;
+        //标准协议
+        if (serverDto.getOperation() && !serverDto.getSafeOperation()) {
+            if (serverDto.getPort().equals(serverDto.getSafePort())){
+                return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
+            }
+            //标准协议命令
+            command = BEHIND + SPACE +AFTER_COMMAND+ serverDto.getPort()+YIN + SPACE + LAST_COMMAND;
+            updateOther(SAFE_SERVER);
+            objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
+            log.info("标准协议配置为:{}", command);
+        }
+        //安全协议
+        if (!serverDto.getOperation() && serverDto.getSafeOperation()) {
+            if (serverDto.getPort().equals(serverDto.getSafePort())){
+                return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
+            }
+            validCert();
+            //安全协议命令
+            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort()+YIN + SPACE + LAST_COMMAND;
+            updateOther(STANDART_SERVER);
+            objectResultVo = onlyOne(command, serverDto, SAFE_SERVER);
+            log.info("安全协议开启端口:{}", command);
+        }
+        //安全协议标准协议全部开启
+        if (serverDto.getOperation() && serverDto.getSafeOperation()) {
+            if (serverDto.getPort().equals(serverDto.getSafePort())){
+                return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
+            }
+            validCert();
+            //双重协议命令
+            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + UNDER_COMMAND + serverDto.getPort()+YIN + SPACE + LAST_COMMAND;
+            objectResultVo = twice(command, serverDto);
+        }
 
+
+        if (serverDto.getSafeOperation()) {
+            syncConfig(serverDto);
+        }
+
+        return objectResultVo;
+    }
+
+    public ResultVo<Object> validCert(){
         //CA证书
         String caCert = "";
         String certLine = "";
@@ -196,7 +235,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             }
         } catch (IOException e) {
             log.error("文件流错误:{}", e.getMessage());
-            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
         }
         //服务器证书
         String serverCert = "";
@@ -211,7 +250,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             }
         } catch (IOException e) {
             log.error("文件流错误:{}", e.getMessage());
-            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
         }
         log.info("处理前CA证书:{}",caCert);
         log.info("处理前服务器证书:{}",serverCert);
@@ -222,40 +261,9 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         //验证书链
         boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
         if (StaticValue.FALSE == validateCertChain) {
-            return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
+            throw new SysException(ExceptionEnum.VALIDATE_ERROR);
         }
-        //定义一个命令
-        String command = "";
-        ResultVo<Object> objectResultVo = null;
-        //标准协议
-        if (serverDto.getOperation() && !serverDto.getSafeOperation()) {
-            //标准协议命令
-            command = BEHIND + SPACE + serverDto.getPort() + SPACE + LAST_COMMAND;
-            updateOther(SAFE_SERVER);
-            objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
-            log.info("标准协议配置为:{}", command);
-        }
-        //安全协议
-        if (!serverDto.getOperation() && serverDto.getSafeOperation()) {
-            //安全协议命令
-            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + LAST_COMMAND;
-            updateOther(STANDART_SERVER);
-            objectResultVo = onlyOne(command, serverDto, SAFE_SERVER);
-            log.info("安全协议开启端口:{}", command);
-        }
-        //安全协议标准协议全部开启
-        if (serverDto.getOperation() && serverDto.getSafeOperation()) {
-            //双重协议命令
-            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + AFTER_COMMAND + serverDto.getPort() + SPACE + LAST_COMMAND;
-            objectResultVo = twice(command, serverDto);
-        }
-
-
-        if (serverDto.getSafeOperation()) {
-            syncConfig(serverDto);
-        }
-
-        return objectResultVo;
+        return null;
     }
 
 

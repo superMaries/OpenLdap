@@ -4,26 +4,33 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.ldap.ldap.common.entity.MainConfig;
 import cn.ldap.ldap.common.entity.ParamConfig;
+import cn.ldap.ldap.common.entity.PortLink;
+import cn.ldap.ldap.common.entity.SSLConfig;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.ParamConfigMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
+import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.LdapConfigService;
 import cn.ldap.ldap.service.ParamConfigService;
+import cn.ldap.ldap.service.PortLinkService;
+import cn.ldap.ldap.service.SSLConfigService;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.*;
+import java.util.List;
 
-import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_IS_EMPTY;
-import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
+import static cn.ldap.ldap.common.enums.ExceptionEnum.*;
 
 /**
  * @title:
@@ -44,6 +51,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     @Resource
     private ParamConfigService paramConfigService;
+
+    @Resource
+    private SSLConfigService sslConfigService;
+
+    @Resource
+    private PortLinkService portLinkService;
 
 
     /**
@@ -80,9 +93,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
     private static final String ACTIVE = "active";
 
-    private static final String CASERVER_CERT = "ca.cert";
+    private static final String CASERVER_CERT = "ca.cer";
 
-    private static final String SERVER_CERT = "server.cert";
+    private static final String SERVER_CERT = "server.cer";
 
     private static final String SERVER_KEY = "server.key";
 
@@ -100,22 +113,17 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             }
             if (!BeanUtil.isEmpty(mainConfig.getLogLevelDirectory())){
                 paramConfig.setLogFile(mainConfig.getLogLevelDirectory());
+                File file = new File(mainConfig.getLogLevelDirectory());
+                if (!file.exists()){
+                    return ResultUtil.fail(FILE_PATH_NOT_EXIST);
+                }
             }
             paramConfigService.updateById(paramConfig);
-        }else {
-            ParamConfig paramConfigNew = new ParamConfig();
-            if (!BeanUtil.isEmpty(mainConfig.getLogLevel())){
-                paramConfigNew.setLogLevel(mainConfig.getLogLevel());
-            }
-            if (!BeanUtil.isEmpty(mainConfig.getLogLevelDirectory())){
-                paramConfigNew.setLogFile(mainConfig.getLogLevelDirectory());
-            }
-            paramConfigService.save(paramConfigNew);
         }
 
         File file = new File(configPath);
         if (!file.exists()) {
-            throw new SysException(FILE_NOT_EXIST);
+            return ResultUtil.fail(FILE_NOT_EXIST);
         }
         StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;
@@ -159,8 +167,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         if (openOrClose) {
+
             //开启
             Runtime.getRuntime().exec(START_COMMAND, null);
+            updatePortStatus(String.valueOf(StaticValue.TRUE));
             log.info("开启命令执行:{}", START_COMMAND);
             Boolean result = linuxCommand(SERVER_NAME);
             if (result) {
@@ -169,8 +179,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 return ResultUtil.fail(START_FAIL);
             }
         } else {
+
             //关闭
             Runtime.getRuntime().exec(STOP_COMMAND, null);
+            updatePortStatus(String.valueOf(StaticValue.FALSE));
             Boolean result = linuxCommand(SERVER_NAME);
             if (result) {
                 return ResultUtil.fail(STOP_FAIL);
@@ -178,6 +190,14 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 return ResultUtil.success(STOP_SUCCESS);
             }
         }
+    }
+
+    public void updatePortStatus(String status){
+        List<PortLink> list = portLinkService.list();
+        for (PortLink portLink : list) {
+            portLink.setStatus(status);
+        }
+        portLinkService.updateBatchById(list);
     }
 
     /**
@@ -235,7 +255,13 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        List<SSLConfig> list = sslConfigService.list();
+        if (CollectionUtils.isEmpty(list) || list.size()>1){
+            return ResultUtil.fail(ExceptionEnum.DATABASE_ERROR);
+        }
+        SSLConfig sslConfig = list.get(0);
+        sslConfig.setCaName(filePath);
+        sslConfigService.updateById(sslConfig);
         return ResultUtil.success();
     }
 
@@ -253,7 +279,13 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        List<SSLConfig> list = sslConfigService.list();
+        if (CollectionUtils.isEmpty(list) || list.size()>1){
+            return ResultUtil.fail(ExceptionEnum.DATABASE_ERROR);
+        }
+        SSLConfig sslConfig = list.get(0);
+        sslConfig.setServerName(filePath);
+        sslConfigService.updateById(sslConfig);
         return ResultUtil.success();
     }
 
@@ -271,7 +303,13 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        List<SSLConfig> list = sslConfigService.list();
+        if (CollectionUtils.isEmpty(list) || list.size()>1){
+            return ResultUtil.fail(ExceptionEnum.DATABASE_ERROR);
+        }
+        SSLConfig sslConfig = list.get(0);
+        sslConfig.setKeyName(filePath);
+        sslConfigService.updateById(sslConfig);
         return ResultUtil.success();
     }
 
