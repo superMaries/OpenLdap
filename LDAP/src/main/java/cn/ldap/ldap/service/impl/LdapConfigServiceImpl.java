@@ -113,9 +113,16 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             }
             if (!BeanUtil.isEmpty(mainConfig.getLogLevelDirectory())){
                 paramConfig.setLogFile(mainConfig.getLogLevelDirectory());
-                File file = new File(mainConfig.getLogLevelDirectory());
+                int i = mainConfig.getLogLevelDirectory().lastIndexOf("/");
+                String filePath = mainConfig.getLogLevelDirectory().substring(0, i);
+                String[] split = mainConfig.getLogLevelDirectory().split("/");
+                File file = new File(filePath);
                 if (!file.exists()){
                     return ResultUtil.fail(FILE_PATH_NOT_EXIST);
+                }
+                String fileName = split[split.length-1];
+                if (""!=fileName && !fileName.endsWith(".log")){
+                    return ResultUtil.fail(FILE_LOG);
                 }
             }
             paramConfigService.updateById(paramConfig);
@@ -169,7 +176,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         if (openOrClose) {
 
             //开启
-            Runtime.getRuntime().exec(START_COMMAND, null);
+          //  Runtime.getRuntime().exec(START_COMMAND, null);
             updatePortStatus(String.valueOf(StaticValue.TRUE));
             log.info("开启命令执行:{}", START_COMMAND);
             Boolean result = linuxCommand(SERVER_NAME);
@@ -179,7 +186,6 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 return ResultUtil.fail(START_FAIL);
             }
         } else {
-
             //关闭
             Runtime.getRuntime().exec(STOP_COMMAND, null);
             updatePortStatus(String.valueOf(StaticValue.FALSE));
