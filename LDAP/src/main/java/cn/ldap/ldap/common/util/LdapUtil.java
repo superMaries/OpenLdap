@@ -112,8 +112,16 @@ public class LdapUtil {
                 return attributes;
             }
         };
-        long size = ldapTemplate.search(ldapSearchBase, andFilter.encode(), mapper).size();
-        return size;
+        try {
+            long size = ldapTemplate.search(ldapSearchBase, andFilter.encode(), mapper).size();
+            return size;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            if (e.getMessage().contains(StaticValue.NOT_CONNECT)) {
+                throw new SysException(ExceptionEnum.LDAP_CONNECT_ERROR);
+            }
+            throw new SysException(ExceptionEnum.LDAP_ERROR);
+        }
     }
 
     /**
@@ -425,6 +433,35 @@ public class LdapUtil {
      * @param filter       过滤条件
      * @return
      */
+    public static Map<String, Object> queryTreeRdnOrNumEx(Map<String, Object> map, LdapTemplate ldapTemplate, Integer scope, String baseDN, String filter) {
+        SearchControls searchControls = new SearchControls();
+        searchControls.setSearchScope(scope);
+
+        int pageSize = StaticValue.LDAP_PAGE_SIZE;
+        map.put(StaticValue.RDN, baseDN);
+        AttributesMapper mapper = new AttributesMapper() {
+            @Override
+            public Object mapFromAttributes(Attributes attributes) throws NamingException {
+                return attributes;
+            }
+        };
+
+        long total = ldapTemplate.search(baseDN, filter, SearchControls.SUBTREE_SCOPE, mapper).size();
+        long totalNodeCount = ldapTemplate.search(baseDN, filter, SearchControls.ONELEVEL_SCOPE, mapper).size();
+
+
+        map.put(StaticValue.RDN_NUM_KEY, totalNodeCount);
+        map.put(StaticValue.RDN_CHILD_NUM_KEY,  total);
+        return map;
+    }
+
+    /**
+     * @param ldapTemplate 查询模板
+     * @param scope        查询范围
+     * @param baseDN       查询条件
+     * @param filter       过滤条件
+     * @return
+     */
     public static Map<String, Object> queryTreeRdnOrNum(Map<String, Object> map, LdapTemplate ldapTemplate, Integer scope, String baseDN, String filter) {
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         SearchControls searchControls = new SearchControls();
@@ -433,6 +470,7 @@ public class LdapUtil {
         int pageSize = StaticValue.LDAP_PAGE_SIZE;
 
         map.put(StaticValue.RDN, baseDN);
+
         // 执行搜索操作
         NamingEnumeration<SearchResult> searchResults = null;
         try {

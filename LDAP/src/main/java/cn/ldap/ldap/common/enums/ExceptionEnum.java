@@ -86,6 +86,9 @@ public enum ExceptionEnum {
     LDAP_DEL_RDN_NOT_EXIT(8002, "删除RDN错误"),
 
     LDAP_DATA_ERROR(8004, "缺少从服务连接数据"),
+
+    LDAP_CONNECT_ERROR(8005, "连接LDAP服务异常"),
+    LDAP_ERROR(8006, "LDAP服务异常"),
     ;
 
     /**

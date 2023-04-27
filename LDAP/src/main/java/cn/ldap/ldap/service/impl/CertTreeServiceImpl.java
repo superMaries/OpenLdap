@@ -124,7 +124,7 @@ public class CertTreeServiceImpl implements CertTreeService {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         Map<String, Object> map = new HashMap<>();
-        map = LdapUtil.queryTreeRdnOrNum(map, ldapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
+        map = LdapUtil.queryTreeRdnOrNumEx(map, ldapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
         return ResultUtil.success(map);
     }
 

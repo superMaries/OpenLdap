@@ -12,7 +12,7 @@ import java.text.DateFormat;
  * @Version 1.0
  */
 public class StaticValue {
-
+    public final static String  NOT_CONNECT="Connection refused: connect";
     public final static String SERIALNUMBER = "(serialNumber=*)";
     public final static String CACRL = "(cn=cacrl*)";
     public final static String CRL = "(cn=crl*)";
