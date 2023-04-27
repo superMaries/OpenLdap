@@ -65,6 +65,8 @@ public enum ExceptionEnum {
     SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
     FILE_PATH_NOT_EXIST(5006,"文件路径不存在"),
+
+    FILE_LOG(5005,"请输入以.log结尾的文件"),
     LINUX_ERROR(5007, "失败"),
 
     //上传失败
