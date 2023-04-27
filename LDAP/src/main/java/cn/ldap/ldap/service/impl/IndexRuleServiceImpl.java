@@ -96,9 +96,9 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
     private static final String ENVIRONMENT = "Environment";
 
-    private static final String CASERVER_CERT = "ca.cert";
+    private static final String CASERVER_CERT = "ca.cer";
 
-    private static final String SERVER_CERT = "server.cert";
+    private static final String SERVER_CERT = "server.cer";
 
     private static final String SERVER_KEY = "server.key";
 
@@ -235,7 +235,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             }
         } catch (IOException e) {
             log.error("文件流错误:{}", e.getMessage());
-            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
         }
         //服务器证书
         String serverCert = "";
@@ -250,7 +250,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             }
         } catch (IOException e) {
             log.error("文件流错误:{}", e.getMessage());
-            return ResultUtil.fail(ExceptionEnum.FILE_IO_ERROR);
+            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
         }
         log.info("处理前CA证书:{}",caCert);
         log.info("处理前服务器证书:{}",serverCert);
@@ -261,7 +261,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         //验证书链
         boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
         if (StaticValue.FALSE == validateCertChain) {
-            return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
+            throw new SysException(ExceptionEnum.VALIDATE_ERROR);
         }
         return null;
     }

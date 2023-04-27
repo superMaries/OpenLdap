@@ -27,6 +27,7 @@ public enum ExceptionEnum {
     //系统异常
     SYSTEM_ERROR(500, "系统异常"),
 
+
     //登录失败
     USER_LOGIN_ERROR(581, "登录失败"),
     //用户不存在或已被禁用
@@ -59,7 +60,7 @@ public enum ExceptionEnum {
 
     FILE_IO_ERROR(810, "文件流处理失败"),
     STR_ERROR(811, "字符格式错误"),
-
+    NODE_NOT_EXIT(812, "节点不存在，重新配置"),
 
     SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
