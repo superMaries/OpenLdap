@@ -176,7 +176,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         if (openOrClose) {
 
             //开启
-          //  Runtime.getRuntime().exec(START_COMMAND, null);
+            Runtime.getRuntime().exec(START_COMMAND, null);
             updatePortStatus(String.valueOf(StaticValue.TRUE));
             log.info("开启命令执行:{}", START_COMMAND);
             Boolean result = linuxCommand(SERVER_NAME);
