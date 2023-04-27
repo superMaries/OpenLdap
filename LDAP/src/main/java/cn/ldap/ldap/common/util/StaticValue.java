@@ -12,7 +12,11 @@ import java.text.DateFormat;
  * @Version 1.0
  */
 public class StaticValue {
-    public final static String FILTER="(objectClass=*)";
+
+    public final static String SERIALNUMBER = "(serialNumber=*)";
+    public final static String CACRL = "(cn=cacrl*)";
+    public final static String CRL = "(cn=crl*)";
+    public final static String FILTER = "(objectClass=*)";
     public final static String TOTAL = "total";
     public final static String CERT_TOTAL = "certTotal";
     public final static String CRL_TOTAL = "crlTotal";
@@ -33,8 +37,8 @@ public class StaticValue {
     public final static Integer MSG_LENGTH = 200;
 
     public final static Integer COUNT = 1;
-    public final static Integer ERROR_COUNT =0 ;
-    public final static Integer SUCCESS_COUNT =0 ;
+    public final static Integer ERROR_COUNT = 0;
+    public final static Integer SUCCESS_COUNT = 0;
 
     public final static Integer COUN_TLIMIT = 1;
     public final static Long TOTAL_NODE_NUM = 0L;

@@ -82,7 +82,7 @@ public class IndexServiceImpl implements IndexService {
         DeviceStatusRespVo deviceStatusRespVo = new DeviceStatusRespVo();
         deviceStatusRespVo.setCpuRate(cpuInfo);
         deviceStatusRespVo.setMemoryRate(memInfo);
-        deviceStatusRespVo.setDisRate(diskInfos*StaticValue.DISK_INFO_NUM);
+        deviceStatusRespVo.setDisRate(diskInfos * StaticValue.DISK_INFO_NUM);
         deviceStatusRespVo.setServerStatus(true);
         log.info("获取设备状态信息:" + deviceStatusRespVo);
         return ResultUtil.success(deviceStatusRespVo);
@@ -239,7 +239,7 @@ public class IndexServiceImpl implements IndexService {
         if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
             ldapSearchBase = tree.getBaseDN();
         }
-        long crlTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, "ou=crl", "ou=cacrl");
+        long crlTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, StaticValue.CRL, StaticValue.CACRL);
         return crlTotal;
     }
 
@@ -255,7 +255,7 @@ public class IndexServiceImpl implements IndexService {
         if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
             ldapSearchBase = tree.getBaseDN();
         }
-        long certTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, "serialNumber=");
+        long certTotal = LdapUtil.queryLdapNum(ldapTemplate, ldapSearchFilter, ldapSearchBase, StaticValue.SERIALNUMBER);
         return certTotal;
     }
 
@@ -270,7 +270,7 @@ public class IndexServiceImpl implements IndexService {
         if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
             ldapSearchBase = tree.getBaseDN();
         }
-        long certTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, null);
+        long certTotal = LdapUtil.queryLdapNum(ldapTemplate, ldapSearchFilter, ldapSearchBase, null);
         return certTotal;
     }
 

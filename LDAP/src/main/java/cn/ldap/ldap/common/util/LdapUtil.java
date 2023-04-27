@@ -12,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.filter.AndFilter;
+import org.springframework.ldap.filter.OrFilter;
+import org.springframework.ldap.query.LdapQuery;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +33,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.springframework.ldap.query.LdapQueryBuilder.query;
 
 /**
  * @title: LdapUtil
@@ -78,6 +83,37 @@ public class LdapUtil {
             return totalNodeCount;
         }
         return totalNodeCount;
+    }
+
+    /**
+     * 查询总数 CRL cert 节点总数
+     *
+     * @param ldapTemplate     ldap 连接模板
+     * @param ldapSearchFilter 过滤条件
+     * @param ldapSearchBase   查询条件
+     * @param whereParam       查询总数的条件
+     * @return
+     */
+    public static Long queryLdapNum(LdapTemplate ldapTemplate, String ldapSearchFilter, String ldapSearchBase, String... whereParam) {
+        LdapQuery filter = query().filter(ldapSearchFilter);
+        AndFilter andFilter = new AndFilter();
+        andFilter.and(filter.filter());
+        if (!ObjectUtils.isEmpty(whereParam)) {
+            for (int i = 0; i < whereParam.length; i++) {
+                LdapQuery orF = query().filter(whereParam[i]);
+                OrFilter orFilter = new OrFilter();
+                orFilter.or(orF.filter());
+                andFilter.and(orFilter);
+            }
+        }
+        AttributesMapper mapper = new AttributesMapper() {
+            @Override
+            public Object mapFromAttributes(Attributes attributes) throws NamingException {
+                return attributes;
+            }
+        };
+        long size = ldapTemplate.search(ldapSearchBase, andFilter.encode(), mapper).size();
+        return size;
     }
 
     /**
