@@ -102,6 +102,12 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
     private static final String SERVER_KEY = "server.key";
 
+    private static final String CA_CERT = "TLSCACertificateFile";
+
+    private static final String SER_CERT = "TLSCertificateFile";
+
+    private static final String SER_KEY = "TLSCertificateKeyFile";
+
     @Resource
     private PortLinkService portLinkService;
 
@@ -214,9 +220,10 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             objectResultVo = twice(command, serverDto);
         }
 
-
         if (serverDto.getSafeOperation()) {
             syncConfig(serverDto);
+        }else {
+            deleteTLS();
         }
 
         return objectResultVo;
@@ -386,6 +393,45 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         }
     }
 
+    public void deleteTLS(){
+        try {
+            // 读取文件
+            File inputFile = new File(configPath);
+            FileInputStream inputStream = new FileInputStream(inputFile);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            // 写入文件
+            File outputFile = new File("output.conf");
+            FileOutputStream outputStream = new FileOutputStream(outputFile);
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
+
+            // 逐行读取并处理
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // 判断是否以TLS开头
+                if (!line.startsWith("TLS")) {
+                    // 写入到输出文件
+                    writer.write(line + "\n");
+                }
+            }
+
+            // 关闭文件流
+            reader.close();
+            writer.close();
+
+            // 删除原文件
+            inputFile.delete();
+
+            // 重命名输出文件
+            outputFile.renameTo(inputFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
     /**
      * 配置拼接
      *
@@ -395,7 +441,10 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
      */
     public String splicingConfigParam(StringBuilder stringBuilder, ServerDto serverDto) {
         //配置方式
-        stringBuilder.append(START).append(SPACE_DATA).append(serverDto.getSslAuthStrategy()).append(FEED);
+        stringBuilder.append(START).append(SPACE_DATA).append(serverDto.getSslAuthStrategy()).append(FEED)
+                .append(CA_CERT).append(SPACE).append(certPath).append(CASERVER_CERT).append(FEED)
+                .append(SER_CERT).append(SPACE).append(certPath).append(SERVER_CERT).append(FEED)
+                .append(SER_KEY).append(SPACE).append(certPath).append(SERVER_KEY).append(FEED);
         return stringBuilder.toString();
     }
 }

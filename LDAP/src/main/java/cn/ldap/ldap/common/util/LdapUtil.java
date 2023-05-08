@@ -12,8 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.OrFilter;
+import org.springframework.ldap.pool2.factory.PooledContextSource;
 import org.springframework.ldap.query.LdapQuery;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -104,6 +106,7 @@ public class LdapUtil {
                 OrFilter orFilter = new OrFilter();
                 orFilter.or(orF.filter());
                 andFilter.and(orFilter);
+
             }
         }
         AttributesMapper mapper = new AttributesMapper() {
@@ -113,7 +116,13 @@ public class LdapUtil {
             }
         };
         try {
-            long size = ldapTemplate.search(ldapSearchBase, andFilter.encode(), mapper).size();
+            log.info("开始查询");
+            String encode = andFilter.encode();
+         //   String encode = "(&(objectClass=*)(serialNumber=*))";
+            log.info("查询过滤:{}",encode);
+
+            long size = ldapTemplate.search(ldapSearchBase, encode, mapper).size();
+            log.info("结束查询，查询结果为:{}",size);
             return size;
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -135,6 +144,7 @@ public class LdapUtil {
      */
     public static Long queryTotal(LdapTemplate ldapTemplate, String ldapSearchFilter, String ldapSearchBase, String... whereParam) {
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+
         SearchControls searchControls = new SearchControls();
         searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
@@ -319,13 +329,20 @@ public class LdapUtil {
      * @param pageSize         条数
      * @return 返回节点数
      */
+
+
     public static List<CertTreeVo> queryCertTree(LdapTemplate ldapTemplate, String ldapSearchFilter,
                                                  String ldapSearchBase, Integer scope,
                                                  Integer pageSize, Integer page,
                                                  Map<String, Object> map) {
 
-        List<CertTreeVo> certTreeVos = new ArrayList<>();
-        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+       List<CertTreeVo> certTreeVos = new ArrayList<>();
+       //DirContext ctx = null;
+        //ctx = ldapTemplate.getContextSource().getReadOnlyContext();
+       // LdapContextSource contextSource = (LdapContextSource) ldapTemplate.getContextSource();
+       // LdapContext ctx =null;
+      // ctx= (LdapContext)contextSource.getReadWriteContext();
+         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         SearchControls searchControls = new SearchControls();
         searchControls.setSearchScope(scope);
         //查询多少条
@@ -349,14 +366,14 @@ public class LdapUtil {
         long startNum = (page - 1) * pageSize;
 
         long count = 0;
-//        searchControls.setCountLimit(totalNodeCount);
+        //        searchControls.setCountLimit(totalNodeCount);
         try {
             //设置每页查询的数量
 //            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE,
 //                    Control.CRITICAL)};
             Control[] controls = new Control[]{new PagedResultsControl(page * pageSize,
                     Control.CRITICAL)};
-            ctx.setRequestControls(controls);
+           ctx.setRequestControls(controls);
 
             byte[] cookie = null;
 
@@ -426,6 +443,112 @@ public class LdapUtil {
         return certTreeVos;
     }
 
+//    public static List<CertTreeVo> queryCertTree(LdapTemplate ldapTemplate, String ldapSearchFilter,
+//                                                 String ldapSearchBase, Integer scope,
+//                                                 Integer pageSize, Integer page,
+//                                                 Map<String, Object> map) {
+//
+//        List<CertTreeVo> certTreeVos = new ArrayList<>();
+//        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+//        SearchControls searchControls = new SearchControls();
+//        searchControls.setSearchScope(scope);
+//        //查询多少条
+//
+//        if (map != null) {
+//            AttributesMapper mapper = new AttributesMapper() {
+//                @Override
+//                public Object mapFromAttributes(Attributes attributes) throws NamingException {
+//                    return attributes;
+//                }
+//            };
+//            long total = ldapTemplate.search(ldapSearchBase, ldapSearchFilter, mapper).size();
+//            map.put("total", total);
+//            map.put("page", total / pageSize + (total % pageSize != 0 ? 1 : 0));
+//            map.put("data", certTreeVos);
+//        }
+//        //page 默认为1 pageSize 1000
+//        //      总共需要查的数据
+//        long endNum = page * pageSize;
+//        //开始的数量
+//        long startNum = (page - 1) * pageSize;
+//
+//        long count = 0;
+//        //        searchControls.setCountLimit(totalNodeCount);
+//        try {
+//            //设置每页查询的数量
+////            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE,
+////                    Control.CRITICAL)};
+//            Control[] controls = new Control[]{new PagedResultsControl(page * pageSize,
+//                    Control.CRITICAL)};
+//            ctx.setRequestControls(controls);
+//
+//            byte[] cookie = null;
+//
+//            do {
+//                //分页查询
+//                NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, ldapSearchFilter,
+//                        searchControls);
+//                //统计总数
+//                while (results.hasMore()) {
+//                    SearchResult result = results.next();
+//                    if (count < startNum) {
+//                        count++;
+//                        continue;
+//                    }
+//                    if (count == endNum) {
+//                        cookie = null;
+//                        break;
+//                    }
+//                    count++;
+//
+//
+//                    CertTreeVo certTreeVo = new CertTreeVo();
+//
+//                    String baseDn = result.getName();
+//                    if (ObjectUtils.isEmpty(baseDn)) {
+//                        String[] split = ldapSearchBase.split(StaticValue.SPLIT);
+//                        baseDn = split[0];
+//                    }
+//                    certTreeVo.setBaseDn(baseDn);
+//
+//                    String newName = baseDn.split(StaticValue.SPLIT)[StaticValue.SPLIT_COUNT];
+//                    try {
+//                        String fullName = result.getNameInNamespace();
+//                        String parentRdn = fullName.replace(newName + StaticValue.SPLIT, StaticValue.REPLACE);
+//                        //设置父级的RDN
+//                        certTreeVo.setParentRdn(parentRdn);
+//                        certTreeVo.setRdn(fullName);
+//                    } catch (Exception e) {
+//                        log.error(e.getMessage());
+//                        certTreeVo.setRdn(certTreeVo.getBaseDn());
+//                        String parentRdn = certTreeVo.getBaseDn().replace(newName + StaticValue.SPLIT, StaticValue.REPLACE);
+//                        //设置父级的RDN
+//                        certTreeVo.setParentRdn(parentRdn);
+//                    }
+//                    certTreeVos.add(certTreeVo);
+//
+//
+//                }
+//                //获取最近一次 LDAP 操作的响应控制器。
+//                Control[] responseControls = ctx.getResponseControls();
+//                //设置Cookies
+//                if (responseControls != null) {
+//                    for (Control control : responseControls) {
+//                        if (control instanceof PagedResultsResponseControl) {
+//                            PagedResultsResponseControl prrc = (PagedResultsResponseControl) control;
+//                            cookie = prrc.getCookie();
+//                        }
+//                    }
+//                }
+//                ctx.setRequestControls(new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE, cookie, Control.CRITICAL)});
+//            } while (cookie != null);
+//            ctx.close();
+//        } catch (NamingException | IOException e) {
+//            log.error(e.getMessage());
+//            return certTreeVos;
+//        }
+//        return certTreeVos;
+//    }
     /**
      * @param ldapTemplate 查询模板
      * @param scope        查询范围

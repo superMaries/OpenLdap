@@ -25,6 +25,8 @@ import cn.ldap.ldap.service.PermissionService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import isc.bc.crypto.signers.ISOTrailers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -76,6 +78,7 @@ public class LoginServiceImpl implements LoginService {
     @Value("${token.validTime}")
     private Integer tokenValidTime;
 
+
     private static final String TOKEN_SECRET_KEY = "ldapKey";
     /**
      * 密码长度限制
@@ -111,6 +114,10 @@ public class LoginServiceImpl implements LoginService {
 
     private static final Integer IF_ENABLE = 1;
 
+    private static final Integer IF_USB = 0;
+
+    private static final Integer NO_SYNC = 0;
+
     private static final Integer SIZE = 1;
 
     private static final String AUTHORIZATION = "auth";
@@ -124,6 +131,14 @@ public class LoginServiceImpl implements LoginService {
     private static final String SING_DATA = "sign";
 
     private static final String ORGIN="orgin";
+
+    private static final String SHOW_ALL = "yes";
+
+    private static final String USER_MANAGEMENT = "管理员管理";
+
+    private static final String USBKey = "USBKey";
+
+    private static final String SYNC_NAME = "同步管理";
     @Resource
     private PermissionService permissionService;
 
@@ -270,6 +285,14 @@ public class LoginServiceImpl implements LoginService {
                 (new LambdaQueryWrapper<Permission>()
                         .isNull(Permission::getParentId)
                         .eq((!Objects.equals(roleId, StaticValue.ADMIN_ID)), Permission::getRoleId, roleId));
+        ConfigModel configModel = configMapper.selectOne(new QueryWrapper<ConfigModel>().lambda().eq(ConfigModel::getCode, USBKey));
+        if (IF_USB.equals(configModel.getServiceType())){
+            permissions = permissions.stream().filter(permission -> !permission.getMenuName().equals(USER_MANAGEMENT)).collect(Collectors.toList());
+        }
+        Integer isSync = InitConfigData.getIsSync();
+        if (NO_SYNC.equals(isSync)){
+            permissions = permissions.stream().filter(permission -> !permission.getMenuName().equals(SYNC_NAME)).collect(Collectors.toList());
+        }
 
         try {
             //获取子集菜单
@@ -277,12 +300,12 @@ public class LoginServiceImpl implements LoginService {
             List<Permission> parentPermissionList = permissionService
                     .list(new LambdaQueryWrapper<Permission>()
                             .in(Permission::getParentId, parentIds));
-
             //解析菜单
             permissions.forEach(it -> {
                 List<Permission> childrens = parentPermissionList.stream().
                         filter(child -> child.getParentId().equals(it.getId()))
                         .collect(Collectors.toList());
+
                 it.setChildren(childrens);
             });
         } catch (Exception e) {
@@ -459,18 +482,11 @@ public class LoginServiceImpl implements LoginService {
      */
     @Override
     public ResultVo<Boolean> isShowUsbKey() {
-        List<UserModel> userModels = null;
-        try {
-            userModels = userMapper.selectList(null);
-        } catch (Exception e) {
-            log.error("错误日志:{}", e.getMessage());
-            throw new SysException(SQL_ERROR);
-        }
-
-        if (ObjectUtils.isEmpty(userModels)) {
-            return ResultUtil.success(false);
-        } else {
+        ConfigModel configModel = configMapper.selectOne(new QueryWrapper<ConfigModel>().lambda().eq(ConfigModel::getCode, USBKey));
+        if (IF_USB.equals(configModel.getServiceType())){
             return ResultUtil.success(true);
+        } else {
+            return ResultUtil.success(false);
         }
 
     }

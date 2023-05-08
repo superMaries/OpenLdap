@@ -40,6 +40,6 @@ public class ServerController {
     @GetMapping("queryServerStatus")
 //    @OperateAnnotation(operateModel = OperateMenuEnum.SERVICE_MANAGER, operateType = OperateTypeEnum.UPLOAD_FILE)
     public ResultVo<List<PortLink>> queryServerStatus() {
-        return ResultUtil.success(portLinkService.list());
+        return portLinkService.getPortLinkList();
     }
 }

@@ -71,7 +71,7 @@ public class LoginController {
      */
     @PostMapping("menus")
     public  ResultVo<List<Permission>> queryMenus(HttpServletRequest request) {
-        return loginService.queryMenus(request);
+            return loginService.queryMenus(request);
     }
 
     /**

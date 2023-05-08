@@ -16,6 +16,7 @@ import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import javax.annotation.Resource;
 import java.io.*;
 
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
@@ -84,6 +85,9 @@ public class SyncServiceImpl implements SyncService {
     @Autowired
     private LdapTemplate ldapTemplate;
 
+    @Resource
+    private CertTreeServiceImpl certTreeService;
+
     /**
      * 主服务同步配置
      *
@@ -102,7 +106,7 @@ public class SyncServiceImpl implements SyncService {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
             String lineStr = null;
             while ((lineStr = bufferedReader.readLine()) != null) {
-                if (lineStr.trim().startsWith(START)) {
+                if (lineStr.trim().startsWith(START)|| lineStr.trim().startsWith(FIRST)) {
                     break;
                 }
                 String oldData = lineStr;
@@ -142,7 +146,8 @@ public class SyncServiceImpl implements SyncService {
         }
 
         //判断节点是否存在
-        if (LdapUtil.isExitRdn(ldapTemplate, fromSyncDto.getSyncPoint())) {
+        LdapTemplate newLdapTemplate = certTreeService.fromPool();
+        if (LdapUtil.isExitRdn(newLdapTemplate, fromSyncDto.getSyncPoint())) {
            throw new SysException(ExceptionEnum.NODE_NOT_EXIT);
         }
 

@@ -14,11 +14,12 @@ import com.google.common.collect.EvictingQueue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.ldap.core.*;
+import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.pool2.factory.PooledContextSource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -51,6 +52,12 @@ public class IndexServiceImpl implements IndexService {
 
     @Autowired
     private LdapTemplate ldapTemplate;
+
+  //  @Autowired
+  //  private PooledContextSource pooledContextSource;
+
+    @Resource
+    private CertTreeServiceImpl certTreeService;
 
     /**
      * 获取设备状态信息
@@ -235,11 +242,18 @@ public class IndexServiceImpl implements IndexService {
      * @return
      */
     private long queryCrlTotal(CertTreeDto tree) {
-        System.out.println("查询CRL接口");
+        log.info("查询CRL接口");
         if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
             ldapSearchBase = tree.getBaseDN();
         }
-        long crlTotal = LdapUtil.queryTotal(ldapTemplate, ldapSearchFilter, ldapSearchBase, StaticValue.CRL, StaticValue.CACRL);
+        log.info("开始查询CRL，查询条件为:{}",StaticValue.CRL+ StaticValue.CACRL);
+     //  log.info("Number of active connections: " + pooledContextSource.getNumActive());
+     //   log.info("Number of idle connections: " + pooledContextSource.getNumIdle());
+        LdapTemplate newLdapTemplate = certTreeService.fromPool();
+        long crlTotal = LdapUtil.queryTotal(newLdapTemplate, ldapSearchFilter, ldapSearchBase, StaticValue.CRL, StaticValue.CACRL);
+
+        log.info("查询结束，数量为:{}",crlTotal);
+
         return crlTotal;
     }
 
@@ -251,11 +265,17 @@ public class IndexServiceImpl implements IndexService {
      */
 
     private long queryCertTotal(CertTreeDto tree) {
-        System.out.println("查询CERT接口");
+        log.info("查询CERT接口");
         if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
             ldapSearchBase = tree.getBaseDN();
         }
-        long certTotal = LdapUtil.queryLdapNum(ldapTemplate, ldapSearchFilter, ldapSearchBase, StaticValue.SERIALNUMBER);
+        log.info("开始查询证书，查询条件为:{}",StaticValue.SERIALNUMBER);
+     //   log.info("Number of active connections: " + pooledContextSource.getNumActive());
+      //  log.info("Number of idle connections: " + pooledContextSource.getNumIdle());
+        LdapTemplate newLdapTemplate = certTreeService.fromPool();
+
+        long certTotal = LdapUtil.queryLdapNum(newLdapTemplate, ldapSearchFilter, ldapSearchBase, StaticValue.SERIALNUMBER);
+        log.info("查询结束，数量为:{}",certTotal);
         return certTotal;
     }
 
@@ -270,7 +290,11 @@ public class IndexServiceImpl implements IndexService {
         if (ObjectUtils.isEmpty(tree) && ObjectUtils.isEmpty(tree.getBaseDN())) {
             ldapSearchBase = tree.getBaseDN();
         }
-        long certTotal = LdapUtil.queryLdapNum(ldapTemplate, ldapSearchFilter, ldapSearchBase, null);
+      //  log.info("Number of active connections: " + pooledContextSource.getNumActive());
+       // log.info("Number of idle connections: " + pooledContextSource.getNumIdle());
+        LdapTemplate newLdapTemplate = certTreeService.fromPool();
+
+        long certTotal = LdapUtil.queryLdapNum(newLdapTemplate, ldapSearchFilter, ldapSearchBase, null);
         return certTotal;
     }
 

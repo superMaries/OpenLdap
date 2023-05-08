@@ -10,9 +10,13 @@ import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 import cn.ldap.ldap.service.CertTreeService;
+import com.unboundid.ldap.sdk.LDAPConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ldap.core.ContextSource;
 import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.pool2.factory.PooledContextSource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -71,7 +75,8 @@ public class CertTreeServiceImpl implements CertTreeService {
             log.info("参数异常；{}", ExceptionEnum.PARAM_ERROR);
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
-        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, treeVo.getFilter(), treeVo.getBaseDN(),
+        LdapTemplate newLdapTemplate = fromPool();
+        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(newLdapTemplate, treeVo.getFilter(), treeVo.getBaseDN(),
                 treeVo.getScope(), treeVo.getPageSize(), treeVo.getPage(),null);
         return ResultUtil.success(listResultVo);
     }
@@ -88,8 +93,8 @@ public class CertTreeServiceImpl implements CertTreeService {
                 || ObjectUtils.isEmpty(treeDto.getBaseDN())) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
-
-        List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(ldapTemplate, treeDto.getBaseDN(), treeDto.isReturnAttr(), treeDto.getAttribute());
+        LdapTemplate newLdapTemplate = fromPool();
+        List<TreeVo> treeVos = LdapUtil.queryAttributeInfo(newLdapTemplate, treeDto.getBaseDN(), treeDto.isReturnAttr(), treeDto.getAttribute());
         return ResultUtil.success(treeVos);
     }
 
@@ -105,7 +110,8 @@ public class CertTreeServiceImpl implements CertTreeService {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         Map<String, Object> map=new HashMap<>();
-         LdapUtil.queryCertTree(ldapTemplate, treeVo.getFilter(), treeVo.getBaseDN(),
+        LdapTemplate newLdapTemplate = fromPool();
+        LdapUtil.queryCertTree(newLdapTemplate, treeVo.getFilter(), treeVo.getBaseDN(),
                 treeVo.getScope(), treeVo.getPageSize(), treeVo.getPage(),map);
 
 
@@ -124,7 +130,8 @@ public class CertTreeServiceImpl implements CertTreeService {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         Map<String, Object> map = new HashMap<>();
-        map = LdapUtil.queryTreeRdnOrNumEx(map, ldapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
+        LdapTemplate newLdapTemplate = fromPool();
+        map = LdapUtil.queryTreeRdnOrNumEx(map, newLdapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
         return ResultUtil.success(map);
     }
 
@@ -137,7 +144,8 @@ public class CertTreeServiceImpl implements CertTreeService {
      */
     @Override
     public ResultVo<Boolean> delLdapTreByRdn(LdapDto ldapDto) {
-        boolean result = LdapUtil.delLdapTreByRdn(ldapTemplate, ldapDto, ldapSearchFilter);
+        LdapTemplate newLdapTemplate = fromPool();
+        boolean result = LdapUtil.delLdapTreByRdn(newLdapTemplate, ldapDto, ldapSearchFilter);
         return ResultUtil.success(result);
     }
 
@@ -149,7 +157,8 @@ public class CertTreeServiceImpl implements CertTreeService {
      */
     @Override
     public ResultVo<Boolean> updateLdapBindTree(LdapBindTreeDto ldapBindTreeDto) {
-        boolean result = LdapUtil.updateLdapBindTree(ldapTemplate, ldapBindTreeDto, ldapSearchFilter);
+        LdapTemplate newLdapTemplate= fromPool();
+        boolean result = LdapUtil.updateLdapBindTree(newLdapTemplate, ldapBindTreeDto, ldapSearchFilter);
         return ResultUtil.success(true);
     }
 
@@ -161,7 +170,8 @@ public class CertTreeServiceImpl implements CertTreeService {
      */
     @Override
     public ResultVo<Boolean> reBIndLdapTree(ReBindTreDto bindTree) {
-        boolean b = LdapUtil.reBIndLdapTree(ldapTemplate, bindTree, ldapSearchFilter);
+        LdapTemplate newLdapTemplate = fromPool();
+        boolean b = LdapUtil.reBIndLdapTree(newLdapTemplate, bindTree, ldapSearchFilter);
         return ResultUtil.success(b);
     }
 
@@ -184,7 +194,8 @@ public class CertTreeServiceImpl implements CertTreeService {
         }
         //设置默认值
         exportDto.setBaseFilter(ldapSearchFilter);
-        Boolean result = LdapUtil.exportLdifFile(ldapTemplate, exportDto, response);
+        LdapTemplate newLdapTemplate = fromPool();
+        Boolean result = LdapUtil.exportLdifFile(newLdapTemplate, exportDto, response);
         return ResultUtil.success(result);
     }
 
@@ -212,7 +223,8 @@ public class CertTreeServiceImpl implements CertTreeService {
         //获取文件名称
         String name = file.getName();
         //对上传的文件进行解析
-        boolean result = LdapUtil.importLap(ldapTemplate, file, name, importDto.getType());
+        LdapTemplate newLdapTemplate = fromPool();
+        boolean result = LdapUtil.importLap(newLdapTemplate, file, name, importDto.getType());
         return ResultUtil.success(result);
     }
 
@@ -230,7 +242,8 @@ public class CertTreeServiceImpl implements CertTreeService {
             log.error("参数为空");
             throw new SysException(ExceptionEnum.PARAM_EMPTY);
         }
-        boolean result = LdapUtil.crateLdap(ldapTemplate, createLdapDto);
+        LdapTemplate newLdapTemplate = fromPool();
+        boolean result = LdapUtil.crateLdap(newLdapTemplate, createLdapDto);
         return ResultUtil.success(result);
     }
 
@@ -284,12 +297,14 @@ public class CertTreeServiceImpl implements CertTreeService {
     }
 
     public List<String> queryData(ParamDto paramDto) {
-        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(ldapTemplate, paramDto.getFilter(), paramDto.getBaseDN(),
+        LdapTemplate newLdapTemplate = fromPool();
+        List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(newLdapTemplate, paramDto.getFilter(), paramDto.getBaseDN(),
                 paramDto.getScope(), paramDto.getPageSize(), paramDto.getPage(),null);
         List<String> strings = new ArrayList<>();
         for (CertTreeVo certTreeVo : listResultVo) {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-            List<TreeVo> treeVos = LdapUtil.queryAttributeBytesInfo(ldapTemplate, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
+            LdapTemplate ldapTemplateIn = fromPool();
+            List<TreeVo> treeVos = LdapUtil.queryAttributeBytesInfo(ldapTemplateIn, certTreeVo.getRdn(), paramDto.isReturnAttr(), paramDto.getAttribute());
             map.put("dn:", certTreeVo.getRdn());
             strings.add("dn:" + certTreeVo.getRdn());
             for (TreeVo treeVo : treeVos) {
@@ -310,6 +325,16 @@ public class CertTreeServiceImpl implements CertTreeService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public LdapTemplate fromPool(){
+        // 从连接池获取PooledContextSource对象
+        PooledContextSource pooledContextSource = (PooledContextSource) ldapTemplate.getContextSource();
+// 将PooledContextSource转换为LdapContextSource
+        LdapContextSource ldapContextSource = (LdapContextSource) pooledContextSource.getContextSource();
+// 创建新的LdapTemplate对象
+        LdapTemplate newLdapTemplate = new LdapTemplate(ldapContextSource);
+        return newLdapTemplate;
     }
 
 }
