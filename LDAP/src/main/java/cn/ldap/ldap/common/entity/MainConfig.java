@@ -14,4 +14,6 @@ public class MainConfig {
      */
     private Integer logLevel;
 
+    private String openAcl;
+
 }

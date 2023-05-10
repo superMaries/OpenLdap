@@ -142,4 +142,15 @@ public class LoginController {
         return loginService.isShowUsbKey();
     }
 
+    /**
+     * 只读模式
+     * @param loginDto
+     * @return
+     */
+    @PostMapping("readOnly")
+    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_LOGIN)
+    public ResultVo<Object> readOnly(@RequestBody LoginDto loginDto) {
+        return loginService.readOnly(loginDto);
+    }
+
 }

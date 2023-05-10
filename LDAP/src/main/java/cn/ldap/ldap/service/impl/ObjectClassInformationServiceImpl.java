@@ -82,6 +82,10 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
                 ObjectDataDto objectDataDto = new ObjectDataDto();
                 log.info("ObjectClass:{}", objectClass.getNameOrOID());
                 //获取所有ObjectClass类
+                //当获取的objectclass的名称为top，则需要过滤掉
+                if(objectClass.getNameOrOID().equals("top")){
+                    continue;
+                }
                 objectDataDto.setObjectClassName(objectClass.getNameOrOID());
                 //获取两种属性集合
                 List<AttributeDto> result = new ArrayList<>();

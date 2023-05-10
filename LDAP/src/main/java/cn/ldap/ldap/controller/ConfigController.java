@@ -36,7 +36,6 @@ import java.util.Map;
 @Slf4j
 @RequestMapping("/config/")
 public class ConfigController {
-
     @Resource
     private LdapConfigService ldapConfigService;
 

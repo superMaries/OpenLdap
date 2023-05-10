@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.dto.*;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
@@ -104,7 +105,10 @@ public class CertTreeServiceImpl implements CertTreeService {
      * @return 返回树型结构
      */
     @Override
-    public ResultVo<Map<String, Object>> queryTree(CertTreeDto treeVo) {
+    public ResultVo<Map<String, Object>>  queryTree(CertTreeDto treeVo) {
+        if (ObjectUtils.isEmpty(treeVo.getFilter())){
+            return ResultUtil.fail(ExceptionEnum.LDAP_ERROR_FILTER);
+        }
         if (ObjectUtils.isEmpty(treeVo)) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
@@ -279,7 +283,7 @@ public class CertTreeServiceImpl implements CertTreeService {
                 }
             }
         } else {
-            //下载到本地
+
             Path file = Paths.get(fileName);
             //下载到服务器。判断文件是否存在 不存在就创建 不需要返回下的文件
             if (!Files.exists(file)) {

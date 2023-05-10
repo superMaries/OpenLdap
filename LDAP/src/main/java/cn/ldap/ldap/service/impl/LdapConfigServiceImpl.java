@@ -125,6 +125,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                     return ResultUtil.fail(FILE_LOG);
                 }
             }
+            if (BeanUtil.isEmpty(mainConfig.getOpenAcl())){
+                return ResultUtil.fail(ACL_FAIL);
+            }
             paramConfigService.updateById(paramConfig);
         }
 
@@ -326,8 +329,21 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      * @return
      */
     public String splicingConfigParam(StringBuilder stringBuilder, MainConfig mainConfig) {
-        //配置log文件目录
-        stringBuilder.append(LOG_FILE).append(SPACE_DATA).append(mainConfig.getLogLevelDirectory()).append(FEED)
+
+        String command = "";
+        if (mainConfig.getOpenAcl().equals("true")){
+            String openAcl = "access to * by * read";
+            command=openAcl;
+        }else {
+            String closeAcl = "access to * by * none";
+            command = closeAcl;
+        }
+
+        stringBuilder
+                //配置是否开启匿名访问
+                .append(command).append(FEED)
+                //配置log文件目录
+                .append(LOG_FILE).append(SPACE_DATA).append(mainConfig.getLogLevelDirectory()).append(FEED)
                 //配置之日志输出等级
                 .append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
         return stringBuilder.toString();

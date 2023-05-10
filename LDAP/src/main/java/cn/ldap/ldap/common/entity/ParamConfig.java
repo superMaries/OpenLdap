@@ -22,4 +22,8 @@ public class ParamConfig {
 
     @TableField("log_file")
     private String logFile;
+
+
+    @TableField("open_acl")
+    private String openAcl;
 }

@@ -100,9 +100,8 @@ public class InitConfigData implements InitializingBean, ServletContextAware {
         for (ConfigModel configModel : configModels) {
             if (SERVICE.equals(configModel.getCode())) {
                 serviceType = configModel.getServiceType();
-            } else {
+            } else if (SYNC.equals(configModel.getCode())){
                 isSync = configModel.getServiceType();
-
             }
         }
         List<KeyModel> keyModels = keyMapper.selectList(null);

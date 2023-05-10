@@ -64,6 +64,8 @@ public enum ExceptionEnum {
 
     SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
+
+    ACL_FAIL(5004,"请选择是否开启匿名访问"),
     FILE_PATH_NOT_EXIST(5006,"文件路径不存在"),
 
     FILE_LOG(5005,"请输入以.log结尾的文件"),
@@ -98,6 +100,7 @@ public enum ExceptionEnum {
     LDAP_URL_ERROR(8007,"地址配置错误，URL地址需要以ldap://开始"),
     LDAP_CONNECT_ERROR(8005, "连接LDAP服务异常"),
     LDAP_ERROR(8008, "LDAP服务异常"),
+    LDAP_ERROR_FILTER(8009,"过滤条件为空"),
             ;
 
     /**

@@ -491,4 +491,33 @@ public class LoginServiceImpl implements LoginService {
 
     }
 
+    /**
+     * 获取只读模式
+     * @param loginDto
+     * @return
+     */
+    @Override
+    public ResultVo<Object> readOnly(LoginDto loginDto) {
+        if (ObjectUtils.isEmpty(loginDto.getUserName())) {
+            return ResultUtil.fail(USER_NAME_FAIL);
+        }
+        if (ObjectUtils.isEmpty(loginDto.getPassword())) {
+            return ResultUtil.fail(USER_PASSWORD_FAIL);
+        }
+        if (PASSWORD_LENGTH < loginDto.getPassword().length()) {
+            return ResultUtil.fail(MORE_PASSWORD_LENGTH);
+        }
+
+        //查询数据库判断账号密码是否正确
+        List<UserAccountModel> userAccountModels = userAccountMapper.selectList(new LambdaQueryWrapper<UserAccountModel>()
+                .eq(UserAccountModel::getAccount, loginDto.getUserName())
+                .eq(UserAccountModel::getPassword, loginDto.getPassword())
+                .orderByDesc(UserAccountModel::getId));
+        if (ObjectUtils.isEmpty(userAccountModels)) {
+            log.info(USER_ACCOUNT_ERROR.getMessage());
+            return ResultUtil.fail(ExceptionEnum.USER_ACCOUNT_ERROR);
+        }
+        return ResultUtil.success(StaticValue.TRUE);
+    }
+
 }

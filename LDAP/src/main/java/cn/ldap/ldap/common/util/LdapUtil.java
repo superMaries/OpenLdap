@@ -11,6 +11,7 @@ import cn.ldap.ldap.common.vo.TreeVo;
 import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ldap.core.AttributesMapper;
+import org.springframework.ldap.core.DirContextProcessor;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.OrFilter;

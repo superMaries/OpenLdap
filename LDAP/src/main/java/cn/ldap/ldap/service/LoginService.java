@@ -85,4 +85,7 @@ public interface LoginService {
      * @return true 显示 false 不显示
      */
     ResultVo<Boolean> isShowUsbKey();
+
+    ResultVo<Object> readOnly(LoginDto loginDto);
+
 }
