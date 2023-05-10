@@ -39,7 +39,6 @@ import java.util.*;
 @Service
 @Slf4j
 public class CertTreeServiceImpl implements CertTreeService {
-
     @Resource
     private LdapTemplate ldapTemplate;
     @Value("${ldap.searchBase}")
@@ -223,6 +222,7 @@ public class CertTreeServiceImpl implements CertTreeService {
         //获取文件名称
         String name = file.getName();
         //对上传的文件进行解析
+
         LdapTemplate newLdapTemplate = fromPool();
         boolean result = LdapUtil.importLap(newLdapTemplate, file, name, importDto.getType());
         return ResultUtil.success(result);

@@ -6,19 +6,18 @@ import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.ImportEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
+import cn.ldap.ldap.common.vo.LdapAccountVo;
 import cn.ldap.ldap.common.vo.TreeVo;
 import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Mapper;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.OrFilter;
-import org.springframework.ldap.pool2.factory.PooledContextSource;
 import org.springframework.ldap.query.LdapQuery;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
 
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
@@ -30,6 +29,8 @@ import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,6 +47,36 @@ import static org.springframework.ldap.query.LdapQueryBuilder.query;
  */
 @Slf4j
 public class LdapUtil {
+
+
+    public static List<LdapAccountVo> queryLdapAccount(LdapTemplate newLdapTemplate, String filter, String baseDn) {
+        List<LdapAccountVo> ldapList = new ArrayList<>();
+        LdapContext ctx = (LdapContext) newLdapTemplate.getContextSource().getReadOnlyContext();
+        SearchControls controls = new SearchControls();
+        controls.setSearchScope(SearchControls.OBJECT_SCOPE);
+        String[] attrIDs = {"uid", "userPassword"};
+        controls.setReturningAttributes(attrIDs);
+
+        try {
+            NamingEnumeration<SearchResult> answer = ctx.search(baseDn, "(objectClass=inetOrgPerson)", controls);
+            boolean hasMore = answer.hasMore();
+            while (hasMore) {
+                LdapAccountVo vo = new LdapAccountVo();
+                SearchResult sr = answer.next();
+                Attributes attrs = sr.getAttributes();
+                System.out.println("Username: " + attrs.get("uid").get());
+                System.out.println("Password: " + new String((byte[]) attrs.get("userPassword").get()));
+                vo.setAccount(attrs.get("uid").toString());
+                vo.setAccount(new String((byte[]) attrs.get("userPassword").get()));
+                answer.hasMore();
+                ldapList.add(vo);
+            }
+        } catch (NamingException e) {
+            log.error(e.getMessage());
+        }
+        return ldapList;
+    }
+
 
     public static long total(LdapTemplate ldapTemplate, String ldapSearchFilter, String ldapSearchBase) {
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
@@ -118,11 +149,11 @@ public class LdapUtil {
         try {
             log.info("开始查询");
             String encode = andFilter.encode();
-         //   String encode = "(&(objectClass=*)(serialNumber=*))";
-            log.info("查询过滤:{}",encode);
+            //   String encode = "(&(objectClass=*)(serialNumber=*))";
+            log.info("查询过滤:{}", encode);
 
             long size = ldapTemplate.search(ldapSearchBase, encode, mapper).size();
-            log.info("结束查询，查询结果为:{}",size);
+            log.info("结束查询，查询结果为:{}", size);
             return size;
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -336,13 +367,13 @@ public class LdapUtil {
                                                  Integer pageSize, Integer page,
                                                  Map<String, Object> map) {
 
-       List<CertTreeVo> certTreeVos = new ArrayList<>();
-       //DirContext ctx = null;
+        List<CertTreeVo> certTreeVos = new ArrayList<>();
+        //DirContext ctx = null;
         //ctx = ldapTemplate.getContextSource().getReadOnlyContext();
-       // LdapContextSource contextSource = (LdapContextSource) ldapTemplate.getContextSource();
-       // LdapContext ctx =null;
-      // ctx= (LdapContext)contextSource.getReadWriteContext();
-         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        // LdapContextSource contextSource = (LdapContextSource) ldapTemplate.getContextSource();
+        // LdapContext ctx =null;
+        // ctx= (LdapContext)contextSource.getReadWriteContext();
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         SearchControls searchControls = new SearchControls();
         searchControls.setSearchScope(scope);
         //查询多少条
@@ -373,7 +404,7 @@ public class LdapUtil {
 //                    Control.CRITICAL)};
             Control[] controls = new Control[]{new PagedResultsControl(page * pageSize,
                     Control.CRITICAL)};
-           ctx.setRequestControls(controls);
+            ctx.setRequestControls(controls);
 
             byte[] cookie = null;
 
@@ -549,6 +580,7 @@ public class LdapUtil {
 //        }
 //        return certTreeVos;
 //    }
+
     /**
      * @param ldapTemplate 查询模板
      * @param scope        查询范围
@@ -574,7 +606,7 @@ public class LdapUtil {
 
 
         map.put(StaticValue.RDN_NUM_KEY, totalNodeCount);
-        map.put(StaticValue.RDN_CHILD_NUM_KEY,  total);
+        map.put(StaticValue.RDN_CHILD_NUM_KEY, total);
         return map;
     }
 
@@ -787,13 +819,13 @@ public class LdapUtil {
         controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         try {
             NamingEnumeration<SearchResult> results = ctx.search(rdn, filter, controls);
-            if (results.hasMore()) {
+            while (results.hasMore()) {
                 SearchResult result = results.next();
                 String dn = result.getNameInNamespace();
                 controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
-                results = ctx.search(dn, filter, controls);
-                while (results.hasMore()) {
-                    SearchResult childResult = results.next();
+                NamingEnumeration<SearchResult> chldResults = ctx.search(dn, filter, controls);
+                while (chldResults.hasMore()) {
+                    SearchResult childResult = chldResults.next();
                     String childDn = childResult.getNameInNamespace();
                     // 删除子对象
                     delChildRdn(childDn, filter, ctx, controls);
@@ -907,6 +939,7 @@ public class LdapUtil {
                                 ldifWriter.println(key + ": " + attrValue);
                             }
                         }
+                        ldifWriter.println(StaticValue.N);
                     }
                     //获取最近一次 LDAP 操作的响应控制器。
                     Control[] responseControls = ctx.getResponseControls();
@@ -1029,23 +1062,77 @@ public class LdapUtil {
     public static boolean importLap(LdapTemplate ldapTemplate, MultipartFile file, String name, Integer type) {
         LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
         SearchControls searchControls = new SearchControls();
-
+        InputStream inputStream = null;
+        BufferedReader reader = null;
         try {
-            byte[] bytes = file.getBytes();
+//            byte[] bytes = file.getBytes();
             String line;
-            InputStream inputStream = file.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            inputStream = file.getInputStream();
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+//            String code=StaticValue.UTF_8;
+//            try {
+//                code = FileCodeUtil.codeStr(inputStream);
+//            } catch (IOException e) {
+//                log.error(e.getMessage());
+//                throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+//            }
+            Integer count = StaticValue.SPLIT_COUNT;
 
             StringBuilder sb = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
+            boolean result = StaticValue.FALSE;
+            line = reader.readLine();
+            while (line != null) {
+                if (line.contains(StaticValue.DNK) || line.contains(StaticValue.DNM)) {
+                    count++;
+                }
+                if (count == StaticValue.HUNDRED) {
+                    result = StaticValue.TRUE;
+                    count = StaticValue.SPLIT_COUNT;
+                    // 解析 LDIF 文件
+                    analysisLdapFile(ctx, sb, type);
+                    sb = new StringBuilder();
+                }
+                boolean isLine = StaticValue.FALSE;
+                if (ObjectUtils.isEmpty(line)
+                        || line.contains(StaticValue.BINARY)) {
+                    //证书 、CRL 需要将换行的数据换在一行
+                    while (StaticValue.TRUE) {
+                        sb.append(line);
+                        isLine = StaticValue.TRUE;
+                        if (line.contains(StaticValue.BINARY)) {
+                            sb.delete(sb.length() - line.length(), sb.length());
+                            break;
+                        }
+                        line = reader.readLine();
+                    }
+                }
                 sb.append(StaticValue.N);
+                result = StaticValue.FALSE;
+                if (!isLine)
+                    line = reader.readLine();
             }
-            // 解析 LDIF 文件
-            analysisLdapFile(ctx, sb, type);
+            if (!result) {
+                analysisLdapFile(ctx, sb, type);
+            }
+
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                }
+            }
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                }
+            }
         }
 
         return StaticValue.TRUE;
@@ -1060,9 +1147,13 @@ public class LdapUtil {
     private static void analysisLdapFile(LdapContext ctx, StringBuilder sb, Integer type) {
         String[] entries = sb.toString().split(StaticValue.N + StaticValue.N);
         for (String entry : entries) {
+
             // 解析 LDIF 条目的属性
             Attributes attributes = new BasicAttributes();
             Integer count = parseAttributes(entry, attributes);
+            if (count == StaticValue.SPLIT_COUNT) {
+                continue;
+            }
             try {
                 //获取DN的值
                 String dn = attributes.get(StaticValue.DN).get().toString();
@@ -1140,17 +1231,22 @@ public class LdapUtil {
         //解析
         for (String line : lines) {
             if (ObjectUtils.isEmpty(line)) {
-                if (line.startsWith(StaticValue.J)) {
-                    // 注释行
-                    continue;
-                }
+//                if (line.startsWith(StaticValue.J)) {
+//                    // 注释行
+//                    continue;
+//                }
+                continue;
             }
-
-            String[] parts = line.split(StaticValue.mh, StaticValue.index);
+            line = line.replace(StaticValue.mh, StaticValue.m);
+            String[] parts = line.split(StaticValue.m, StaticValue.index);
             // TODO: 2023/4/17 判断长度
             //获取key 和 value 的值
+            if (parts.length < 2) {
+                System.out.println(line);
+            }
             String name = parts[StaticValue.SPLIT_COUNT];
             Object value = parts[StaticValue.COUNT];
+
             //判断是否是证书
             if (name.toUpperCase().equals(StaticValue.USER_CERTIFICATE.toUpperCase())) {
                 value = decodeCertificate(parts[StaticValue.COUNT]);
@@ -1248,5 +1344,22 @@ public class LdapUtil {
             log.error(e.getMessage());
             return false;
         }
+    }
+
+    public static Boolean addLdapAccount(LdapTemplate newLdapTemplate, String ldapSearchFilter, String
+            ldapSearchBase, LdapAccountDto ldapAccountDto) throws NamingException {
+        String accountName = ldapAccountDto.getAccount();
+        String accountPassword = ldapAccountDto.getPwd();
+        // 创建一个新的LDAP条目
+        Attributes attributes = new BasicAttributes();
+        attributes.put(new BasicAttribute("objectClass", "inetOrgPerson"));
+        attributes.put(new BasicAttribute("cn", accountName));
+        attributes.put(new BasicAttribute("sn", accountName));
+        attributes.put(new BasicAttribute("userPassword", accountPassword));
+        // 将新的LDAP条目添加到LDAP目录树中
+        LdapContext ctx = (LdapContext) newLdapTemplate.getContextSource().getReadOnlyContext();
+        String rdn = "cn=" + accountName + "," + ldapSearchBase;
+        ctx.createSubcontext(rdn, attributes);
+        return false;
     }
 }

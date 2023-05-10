@@ -178,7 +178,7 @@ public class LoginServiceImpl implements LoginService {
                 fis = new FileInputStream(downFile);
                 bis = new BufferedInputStream(fis);
                 OutputStream os = httpServletResponse.getOutputStream();
-                int i = bis.read(buffer);
+                 int i = bis.read(buffer);
                 while (i != -1) {
                     os.write(buffer, 0, i);
                     i = bis.read(buffer);

@@ -1,6 +1,7 @@
 package cn.ldap.ldap.common.util;
 
 import com.baomidou.mybatisplus.extension.api.R;
+import sun.nio.cs.ext.GBK;
 
 import javax.swing.text.SimpleAttributeSet;
 import java.text.DateFormat;
@@ -12,7 +13,15 @@ import java.text.DateFormat;
  * @Version 1.0
  */
 public class StaticValue {
-    public final static String  NOT_CONNECT="Connection refused: connect";
+
+    public final static String UTF_8="UTF-8";
+    public final static String UTF_8_BOM="UTF-8_BOM";
+    public final static String UNICODE= "Unicode";
+    public final static String UTF_16BE="UTF-16BE";
+    public final static String UTF_16="UTF-16";
+    public final static String GBK="GBK";
+    public final static String DATA = "data";
+    public final static String NOT_CONNECT = "Connection refused: connect";
     public final static String SERIALNUMBER = "(serialNumber=*)";
     public final static String CACRL = "(cn=cacrl*)";
     public final static String CRL = "(cn=crl*)";
@@ -45,6 +54,10 @@ public class StaticValue {
     public final static String NUM_SUBORDINATES = "1.1";
     public final static String RDN = "rdn";
     public final static String DN = "dn";
+    public final static String DNK = "dn: ";
+    public final static String DNM = "dn:";
+    public final static String _BINARY= ";binary";
+    public final static String BINARY = ";binary::";
     public final static String USER_CERTIFICATE = "userCertificate;binary";
     public final static String RDN_NUM_KEY = "rdnNum";
     public final static String RDN_CHILD_NUM_KEY = "rdnChildNum";
@@ -53,10 +66,21 @@ public class StaticValue {
     public final static String ADD = "\\+";
     public final static String LINE = "-";
     public final static String REPLACE = "";
+    public final static Integer HUNDRED = 100;
     public final static Integer SPLIT_COUNT = 0;
     public final static Integer LDAP_COUNT = 1;
+    public final static Integer ZEE = 0;
     public final static Integer ONE = 1;
+    public final static Integer _ONE = -1;
     public final static Integer TWO = 2;
+    public final static Integer _TWO = -2;
+    public final static Integer _17 = -17;
+    public final static Integer _27 = -27;
+    public final static Integer _101 = -101;
+    public final static Integer _98 = -98;
+    public final static Integer _69 = -69;
+    public final static Integer _65 = -65;
+    public final static Integer THREE = 3;
     public final static Integer AUDIT_STATUS = 1;
     public final static Integer AUDIT_NOT_STATUS = 0;
     public final static String UNKNOWN = "-";
@@ -73,6 +97,7 @@ public class StaticValue {
     public final static String RN = "\r\n";
     public final static String J = "#";
     public final static String mh = ": ";
+    public final static String m = ":";
     public final static Integer index = 2;
     public final static String LOG = "日志管理-审计日志";
     public final static String EQ = "=";
