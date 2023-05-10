@@ -64,6 +64,9 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
 
     private static final String CONNECTION_FAILD = "连接失败";
 
+    @Resource
+    private CertTreeServiceImpl certTreeService;
+
 
     /**
      * 添加从服务配置信息
@@ -133,7 +136,8 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             //连接服务
             //查询主服务数据，判断连接状态，并且分别插入到返回值中
             Map<String, Object> mainMap = new HashMap<>();
-            mainMap = LdapUtil.queryTreeRdnOrNum(mainMap, ldapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
+            LdapTemplate newLdapTemplate = certTreeService.fromPool();
+            mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
             Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
             syncStatus.setMainServerNumber(mainCount);
             //设置从服务数据初始值
@@ -142,7 +146,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
            try {
                LdapTemplate connection = connection(syncStatus.getFollowServerIp(), syncStatus.getSyncPoint(), syncStatus.getAccount(), syncStatus.getPassword());
                Map<String, Object> followMap = new HashMap<>();
-               followMap = LdapUtil.queryTreeRdnOrNum(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
+               followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
                followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
            }catch (Exception e){
                followCount = NUM;
@@ -193,7 +197,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         //查询主服务数据，判断连接状态，并且分别插入到返回值中
         Map<String, Object> mainMap = new HashMap<>();
         LdapTemplate connection = connection(provider,searchbase,binddn,credentials);
-        mainMap = LdapUtil.queryTreeRdnOrNum(mainMap, connection, SCOPE,searchbase , FILTER);
+        mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, connection, SCOPE,searchbase , FILTER);
         Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
         syncStatus.setMainServerNumber(mainCount);
         //设置从服务数据初始值
@@ -202,7 +206,8 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         try {
 
             Map<String, Object> followMap = new HashMap<>();
-            followMap = LdapUtil.queryTreeRdnOrNum(followMap, ldapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
+            LdapTemplate newLdapTemplate = certTreeService.fromPool();
+            followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
             followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
         }catch (Exception e){
             followCount = NUM;

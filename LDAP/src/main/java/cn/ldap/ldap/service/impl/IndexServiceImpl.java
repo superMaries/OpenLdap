@@ -250,7 +250,7 @@ public class IndexServiceImpl implements IndexService {
      //  log.info("Number of active connections: " + pooledContextSource.getNumActive());
      //   log.info("Number of idle connections: " + pooledContextSource.getNumIdle());
         LdapTemplate newLdapTemplate = certTreeService.fromPool();
-        long crlTotal = LdapUtil.queryTotal(newLdapTemplate, ldapSearchFilter, ldapSearchBase, StaticValue.CRL, StaticValue.CACRL);
+        long crlTotal = LdapUtil.queryLdapNum(newLdapTemplate, ldapSearchFilter, ldapSearchBase, StaticValue.CRL, StaticValue.CACRL);
 
         log.info("查询结束，数量为:{}",crlTotal);
 
