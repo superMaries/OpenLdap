@@ -53,22 +53,24 @@ public class LdapUtil {
         List<LdapAccountVo> ldapList = new ArrayList<>();
         LdapContext ctx = (LdapContext) newLdapTemplate.getContextSource().getReadOnlyContext();
         SearchControls controls = new SearchControls();
-        controls.setSearchScope(SearchControls.OBJECT_SCOPE);
+        controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
         String[] attrIDs = {"uid", "userPassword"};
         controls.setReturningAttributes(attrIDs);
 
         try {
-            NamingEnumeration<SearchResult> answer = ctx.search(baseDn, "(objectClass=inetOrgPerson)", controls);
-            boolean hasMore = answer.hasMore();
-            while (hasMore) {
+            NamingEnumeration<SearchResult> answer = ctx.search(baseDn, "(objectClass=person)", controls);
+//            boolean hasMore = answer.hasMore();
+            while (answer.hasMore()) {
                 LdapAccountVo vo = new LdapAccountVo();
                 SearchResult sr = answer.next();
-                Attributes attrs = sr.getAttributes();
-                System.out.println("Username: " + attrs.get("uid").get());
-                System.out.println("Password: " + new String((byte[]) attrs.get("userPassword").get()));
-                vo.setAccount(attrs.get("uid").toString());
-                vo.setAccount(new String((byte[]) attrs.get("userPassword").get()));
-                answer.hasMore();
+//                Attributes attrs = sr.getAttributes();
+                String account = sr.getNameInNamespace();
+//                System.out.println("Username: " + attrs.get("uid").get());
+//                System.out.println("Password: " + new String((byte[]) attrs.get("userPassword").get()));
+                vo.setAccount(account);
+//                vo.setAccount(attrs.get("uid").toString());
+//                vo.setPwd(new String((byte[]) attrs.get("userPassword").get()));
+//                answer.hasMore();
                 ldapList.add(vo);
             }
         } catch (NamingException e) {
@@ -1351,15 +1353,30 @@ public class LdapUtil {
         String accountName = ldapAccountDto.getAccount();
         String accountPassword = ldapAccountDto.getPwd();
         // 创建一个新的LDAP条目
-        Attributes attributes = new BasicAttributes();
-        attributes.put(new BasicAttribute("objectClass", "inetOrgPerson"));
-        attributes.put(new BasicAttribute("cn", accountName));
-        attributes.put(new BasicAttribute("sn", accountName));
-        attributes.put(new BasicAttribute("userPassword", accountPassword));
+        Attributes attrs = new BasicAttributes();
+        Attribute oc = new BasicAttribute("objectClass");
+        oc.add("top");
+        oc.add("person");
+        attrs.put(oc);
+        attrs.put("cn", accountName);
+        attrs.put("sn", accountName);
+        attrs.put("userPassword", accountPassword);
+
+
         // 将新的LDAP条目添加到LDAP目录树中
         LdapContext ctx = (LdapContext) newLdapTemplate.getContextSource().getReadOnlyContext();
         String rdn = "cn=" + accountName + "," + ldapSearchBase;
-        ctx.createSubcontext(rdn, attributes);
+        ctx.createSubcontext(rdn, attrs);
+        //设置权限
+        setAuth(ctx, rdn, 2);
+        return false;
+    }
+
+    public static boolean setAuth(LdapContext ctx, String rdn, Integer authCode) throws NamingException {
+        ModificationItem[] mods = new ModificationItem[1];
+        mods[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE,
+                new BasicAttribute("userAccess", "readWrite"));
+        ctx.modifyAttributes(rdn, mods);
         return false;
     }
 }

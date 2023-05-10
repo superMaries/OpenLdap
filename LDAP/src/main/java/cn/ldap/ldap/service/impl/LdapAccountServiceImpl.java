@@ -2,6 +2,7 @@ package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.config.LdapConfig;
 import cn.ldap.ldap.common.dto.LdapAccountDto;
+import cn.ldap.ldap.common.dto.LdapBindTreeDto;
 import cn.ldap.ldap.common.enums.LdapAccuntAuthEnum;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
@@ -9,6 +10,7 @@ import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.LdapAccountVo;
 import cn.ldap.ldap.common.vo.PageVo;
 import cn.ldap.ldap.common.vo.ResultVo;
+import cn.ldap.ldap.common.vo.TreeVo;
 import cn.ldap.ldap.service.LdapAccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,10 +21,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.naming.NamingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.naming.ldap.LdapContext;
+import java.util.*;
 
 /**
  * @title: LdapAccountServiceImpl
@@ -66,7 +66,7 @@ public class LdapAccountServiceImpl implements LdapAccountService {
      * @param pageVo 分页条件
      */
     @Override
-    public ResultVo< Map<String, Object>> queryLdapAccount(PageVo pageVo) {
+    public ResultVo<Map<String, Object>> queryLdapAccount(PageVo pageVo) {
         List<LdapAccountVo> ldapList = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
         //查询账号
@@ -78,13 +78,15 @@ public class LdapAccountServiceImpl implements LdapAccountService {
         Integer startNum = Math.toIntExact((pageVo.getPageIndex() - 1) * pageVo.getPageSize());
         //结束的数量
         Integer endNum = Math.toIntExact(pageVo.getPageIndex() * pageVo.getPageSize());
+
         if (startNum < count) {
+            endNum = Math.toIntExact(Math.min(endNum, count));
             ldapList = ldapList.subList(startNum, endNum);
         } else {
-            ldapList = new ArrayList<>();
+            return ResultUtil.success(Collections.emptyList());
         }
-        map.put(StaticValue.TOTAL,count);
-        map.put(StaticValue.DATA,ldapList);
+        map.put(StaticValue.TOTAL, count);
+        map.put(StaticValue.DATA, ldapList);
         return ResultUtil.success(map);
     }
 
@@ -97,6 +99,8 @@ public class LdapAccountServiceImpl implements LdapAccountService {
         try {
             LdapTemplate newLdapTemplate = fromPool();
             result = LdapUtil.addLdapAccount(newLdapTemplate, ldapSearchFilter, ldapSearchBase, ldapAccountDto);
+
+
         } catch (NamingException e) {
             log.error(e.getMessage());
             result = false;
@@ -109,15 +113,30 @@ public class LdapAccountServiceImpl implements LdapAccountService {
      */
     @Override
     public ResultVo<Boolean> delLdapAccount(LdapAccountDto ldapAccountDto) {
-        return null;
+        LdapTemplate newLdapTemplate = fromPool();
+        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        LdapUtil.queryChildRdn(ldapAccountDto.getAccount(), ldapSearchFilter, ctx);
+        return ResultUtil.success(StaticValue.TRUE);
     }
 
     /**
      * 编辑账号
+     * 只修改密码和权限
      */
     @Override
     public ResultVo<Boolean> editLdapAccount(LdapAccountDto ldapAccountDto) {
-        return null;
+        LdapBindTreeDto bindTreeDto = new LdapBindTreeDto();
+        bindTreeDto.setRdn(ldapAccountDto.getAccount());
+        TreeVo treeVo = new TreeVo();
+        treeVo.setKey("userPassword");
+        treeVo.setValue(ldapAccountDto.getPwd());
+        treeVo.setTitle(ldapAccountDto.getPwd());
+        List<TreeVo> vos = new ArrayList<>();
+        vos.add(treeVo);
+        bindTreeDto.setAttributes(vos);
+        boolean b = LdapUtil.updateLdapBindTree(ldapTemplate, bindTreeDto, ldapSearchFilter);
+
+        return ResultUtil.success(b);
     }
 
 
