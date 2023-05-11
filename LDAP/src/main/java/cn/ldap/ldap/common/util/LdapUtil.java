@@ -1355,28 +1355,32 @@ public class LdapUtil {
         String accountPassword = ldapAccountDto.getPwd();
         // 创建一个新的LDAP条目
         Attributes attrs = new BasicAttributes();
-        Attribute oc = new BasicAttribute("objectClass");
-        oc.add("top");
-        oc.add("person");
+        Attribute oc = new BasicAttribute(StaticValue.OBJECT_CLASS);
+        oc.add(StaticValue.TOP);
+        oc.add(StaticValue.PERSON);
         attrs.put(oc);
-        attrs.put("cn", accountName);
-        attrs.put("sn", accountName);
-        attrs.put("userPassword", accountPassword);
-
+        attrs.put(StaticValue.CN, ldapAccountDto.getNode());
+        attrs.put(StaticValue.SN, ldapAccountDto.getNode());
+        attrs.put(StaticValue.USER_PASSWORD, accountPassword);
 
         // 将新的LDAP条目添加到LDAP目录树中
         LdapContext ctx = (LdapContext) newLdapTemplate.getContextSource().getReadOnlyContext();
-        String rdn = "cn=" + accountName + "," + ldapSearchBase;
-        ctx.createSubcontext(rdn, attrs);
+        String rdn = accountName + StaticValue.DH + ldapAccountDto.getNode();
+        try {
+            ctx.createSubcontext(rdn, attrs);
+        } catch (NamingException e) {
+            log.error(e.getMessage());
+            throw new SysException(e.getMessage());
+        }
         //设置权限
-        setAuth(ctx, rdn, 2);
-        return false;
+        setAuth(ctx, rdn, ldapAccountDto.getAuth());
+        return StaticValue.TRUE;
     }
 
     public static boolean setAuth(LdapContext ctx, String rdn, Integer authCode) throws NamingException {
         ModificationItem[] mods = new ModificationItem[1];
         mods[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE,
-                new BasicAttribute("userAccess", "readWrite"));
+                new BasicAttribute("access", "write"));
         ctx.modifyAttributes(rdn, mods);
         return false;
     }
