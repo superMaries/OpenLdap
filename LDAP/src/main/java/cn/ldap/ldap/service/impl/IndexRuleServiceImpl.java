@@ -393,7 +393,8 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         }
     }
 
-    public void deleteTLS(){
+    public void
+    deleteTLS(){
         try {
             // 读取文件
             File inputFile = new File(configPath);
