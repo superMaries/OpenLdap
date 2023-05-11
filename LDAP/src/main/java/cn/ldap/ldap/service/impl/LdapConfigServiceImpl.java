@@ -138,26 +138,52 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         }
         StringBuilder stringBuilder = new StringBuilder();
         String fileName = configPath;
+        Boolean found = false;
+        Boolean acc = false;
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
-            String lineStr = null;
-            while ((lineStr = bufferedReader.readLine()) != null) {
-                if (lineStr.trim().startsWith(START)) {
-                    break;
+            String lineStr = bufferedReader.readLine();
+
+            while (lineStr != null) {
+                if (mainConfig.getOpenAcl().equals("false") && lineStr.equals("access to * by * none")){
+                    stringBuilder.append("").append(FEED);
+                    acc =true;
+                }else if (lineStr.startsWith(START)) {
+                    stringBuilder//配置log文件目录
+                            .append(LOG_FILE).append(SPACE_DATA).append(mainConfig.getLogLevelDirectory()).append(FEED);
+                            //配置之日志输出等级
+                           // .append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
+                    found = true;
+                }else if (lineStr.startsWith(LOG_LEVEL)){
+                    stringBuilder.append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
+                    found =true;
+                }else {
+                    stringBuilder.append(lineStr).append(FEED);
                 }
-                String oldData = lineStr;
-                stringBuilder.append(oldData).append(FEED);
+               lineStr= bufferedReader.readLine();
+              //  String oldData = lineStr;
+              //  stringBuilder.append(oldData).append(FEED);
+            }
+            bufferedReader.close();
+
+            if (!found){
+                stringBuilder.append(LOG_FILE).append(SPACE_DATA).append(mainConfig.getLogLevelDirectory()).append(FEED)
+                        //配置之日志输出等级
+                        .append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
             }
 
+            if (!acc){
+                stringBuilder.append("access to * by * none").append(FEED);
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        String data = splicingConfigParam(stringBuilder, mainConfig);
+        String data = stringBuilder.toString();
         try {
             //采用流的方式进行写入配置
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
             bufferedWriter.write(data);
-            bufferedWriter.flush();
+       //     bufferedWriter.flush();
             bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
