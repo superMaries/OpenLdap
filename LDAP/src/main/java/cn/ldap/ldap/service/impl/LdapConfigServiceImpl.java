@@ -128,6 +128,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             if (BeanUtil.isEmpty(mainConfig.getOpenAcl())){
                 return ResultUtil.fail(ACL_FAIL);
             }
+            paramConfig.setOpenAcl(mainConfig.getOpenAcl());
             paramConfigService.updateById(paramConfig);
         }
 

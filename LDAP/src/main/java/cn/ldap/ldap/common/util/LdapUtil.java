@@ -11,14 +11,12 @@ import cn.ldap.ldap.common.vo.TreeVo;
 import isc.authclt.IscJcrypt;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ldap.core.AttributesMapper;
-import org.springframework.ldap.core.DirContextProcessor;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.OrFilter;
 import org.springframework.ldap.query.LdapQuery;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
 
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
@@ -30,14 +28,13 @@ import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
 import static org.springframework.ldap.query.LdapQueryBuilder.query;
 
 /**
@@ -48,6 +45,8 @@ import static org.springframework.ldap.query.LdapQueryBuilder.query;
  */
 @Slf4j
 public class LdapUtil {
+
+
 
 
     public static List<LdapAccountVo> queryLdapAccount(LdapTemplate newLdapTemplate, String filter, String baseDn) {
@@ -1350,7 +1349,7 @@ public class LdapUtil {
     }
 
     public static Boolean addLdapAccount(LdapTemplate newLdapTemplate, String ldapSearchFilter, String
-            ldapSearchBase, LdapAccountDto ldapAccountDto) throws NamingException {
+            ldapSearchBase, LdapAccountDto ldapAccountDto,String filePath) throws NamingException {
         String accountName = ldapAccountDto.getAccount();
         String accountPassword = ldapAccountDto.getPwd();
         // 创建一个新的LDAP条目
@@ -1369,15 +1368,30 @@ public class LdapUtil {
         String rdn = "cn=" + accountName + "," + ldapSearchBase;
         ctx.createSubcontext(rdn, attrs);
         //设置权限
-        setAuth(ctx, rdn, 2);
-        return false;
+        setAuth(ctx, rdn, 2,filePath);
+        return true;
     }
 
-    public static boolean setAuth(LdapContext ctx, String rdn, Integer authCode) throws NamingException {
-        ModificationItem[] mods = new ModificationItem[1];
-        mods[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE,
-                new BasicAttribute("userAccess", "readWrite"));
-        ctx.modifyAttributes(rdn, mods);
+    public static boolean setAuth(LdapContext ctx, String rdn, Integer authCode,String filePath) throws NamingException {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            throw new SysException(FILE_NOT_EXIST);
+        }
+        String data = "access to * by dn="+"\""+rdn+"\""+" write by * read";
+        try {
+            //采用流的方式进行写入配置
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filePath));
+            bufferedWriter.write(data);
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        ModificationItem[] mods = new ModificationItem[1];
+//        mods[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE,
+//                new BasicAttribute("userAccess", "readWrite"));
+//        ctx.modifyAttributes(rdn, mods);
         return false;
     }
 }
