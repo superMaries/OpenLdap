@@ -14,12 +14,12 @@ import java.text.DateFormat;
  */
 public class StaticValue {
 
-    public final static String UTF_8="UTF-8";
-    public final static String UTF_8_BOM="UTF-8_BOM";
-    public final static String UNICODE= "Unicode";
-    public final static String UTF_16BE="UTF-16BE";
-    public final static String UTF_16="UTF-16";
-    public final static String GBK="GBK";
+    public final static String UTF_8 = "UTF-8";
+    public final static String UTF_8_BOM = "UTF-8_BOM";
+    public final static String UNICODE = "Unicode";
+    public final static String UTF_16BE = "UTF-16BE";
+    public final static String UTF_16 = "UTF-16";
+    public final static String GBK = "GBK";
     public final static String DATA = "data";
     public final static String NOT_CONNECT = "Connection refused: connect";
     public final static String SERIALNUMBER = "(serialNumber=*)";
@@ -56,7 +56,7 @@ public class StaticValue {
     public final static String DN = "dn";
     public final static String DNK = "dn: ";
     public final static String DNM = "dn:";
-    public final static String _BINARY= ";binary";
+    public final static String _BINARY = ";binary";
     public final static String BINARY = ";binary::";
     public final static String USER_CERTIFICATE = "userCertificate;binary";
     public final static String RDN_NUM_KEY = "rdnNum";
@@ -102,7 +102,12 @@ public class StaticValue {
     public final static String LOG = "日志管理-审计日志";
     public final static String EQ = "=";
     public final static String OBJECT_CLASS = "objectClass";
-
+    public final static String TOP = "top";
+    public final static String PERSON = "person";
+    public final static String CN = "cn";
+    public final static String SN = "sn";
+    public final static String USER_PASSWORD = "userPassword";
+    public final static String DH = ",";
     public final static Integer LDAP_SCOPE = 3;
 
     public final static Integer EXPORT_LOCAL = 1;

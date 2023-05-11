@@ -11,12 +11,12 @@ import lombok.Data;
 @Data
 public class LdapAccountDto {
     private String account;
+    private String node;
     private String pwd;
     /**
      * 1 读
-     * 2 写
-     * 3 读写
+     * 2 读写
      */
-    private String auth;
+    private Integer auth;
 
 }
