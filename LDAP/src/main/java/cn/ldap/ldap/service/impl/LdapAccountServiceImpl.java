@@ -3,7 +3,9 @@ package cn.ldap.ldap.service.impl;
 import cn.ldap.ldap.common.config.LdapConfig;
 import cn.ldap.ldap.common.dto.LdapAccountDto;
 import cn.ldap.ldap.common.dto.LdapBindTreeDto;
+import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.LdapAccuntAuthEnum;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.util.StaticValue;
@@ -18,6 +20,7 @@ import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.pool2.factory.PooledContextSource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import javax.naming.NamingException;
@@ -88,6 +91,17 @@ public class LdapAccountServiceImpl implements LdapAccountService {
         } else {
             return ResultUtil.success(Collections.emptyList());
         }
+
+        String configFileData = LdapUtil.getConfigFileData(filePath).toString();
+        ldapList.forEach(ldap -> {
+            String data = "access to *  by dn=" + "\"" + ldap.getAccount() + "\" write  by * read";
+            if (configFileData.contains(ldap.getAccount())) {
+                ldap.setAuth(LdapAccuntAuthEnum.WRITE.getMsg());
+            } else {
+                ldap.setAuth(LdapAccuntAuthEnum.READ.getMsg());
+            }
+        });
+
         map.put(StaticValue.TOTAL, count);
         map.put(StaticValue.DATA, ldapList);
         return ResultUtil.success(map);
@@ -101,8 +115,7 @@ public class LdapAccountServiceImpl implements LdapAccountService {
         Boolean result = null;
         try {
             LdapTemplate newLdapTemplate = fromPool();
-            result = LdapUtil.addLdapAccount(newLdapTemplate, ldapSearchFilter, ldapSearchBase, ldapAccountDto,filePath);
-
+            result = LdapUtil.addLdapAccount(newLdapTemplate, ldapSearchFilter, ldapSearchBase, ldapAccountDto, filePath);
 
         } catch (NamingException e) {
             log.error(e.getMessage());
@@ -117,7 +130,8 @@ public class LdapAccountServiceImpl implements LdapAccountService {
     @Override
     public ResultVo<Boolean> delLdapAccount(LdapAccountDto ldapAccountDto) {
         LdapTemplate newLdapTemplate = fromPool();
-        LdapContext ctx = (LdapContext) ldapTemplate.getContextSource().getReadOnlyContext();
+        LdapContext ctx = (LdapContext) newLdapTemplate.getContextSource().getReadOnlyContext();
+//        LdapUtil.queryChildRdn(ldapAccountDto.getAccount(), ldapSearchFilter, ctx);
         LdapUtil.queryChildRdn(ldapAccountDto.getAccount(), ldapSearchFilter, ctx);
         return ResultUtil.success(StaticValue.TRUE);
     }
@@ -125,21 +139,38 @@ public class LdapAccountServiceImpl implements LdapAccountService {
     /**
      * 编辑账号
      * 只修改密码和权限
+     * 密码不传递 设置权限
+     * 权限不传递 设置密码
      */
     @Override
     public ResultVo<Boolean> editLdapAccount(LdapAccountDto ldapAccountDto) {
-        LdapBindTreeDto bindTreeDto = new LdapBindTreeDto();
-        bindTreeDto.setRdn(ldapAccountDto.getAccount());
-        TreeVo treeVo = new TreeVo();
-        treeVo.setKey("userPassword");
-        treeVo.setValue(ldapAccountDto.getPwd());
-        treeVo.setTitle(ldapAccountDto.getPwd());
-        List<TreeVo> vos = new ArrayList<>();
-        vos.add(treeVo);
-        bindTreeDto.setAttributes(vos);
-        boolean b = LdapUtil.updateLdapBindTree(ldapTemplate, bindTreeDto, ldapSearchFilter);
-
-        return ResultUtil.success(b);
+        log.info("编辑账号|重置密码参数为", ldapAccountDto);
+        if (ObjectUtils.isEmpty(ldapAccountDto.getAccount())) {
+            throw new SysException(ExceptionEnum.PARAM_ERROR);
+        }
+        if (!ObjectUtils.isEmpty(ldapAccountDto.getPwd())) {
+            LdapBindTreeDto bindTreeDto = new LdapBindTreeDto();
+            bindTreeDto.setRdn(ldapAccountDto.getAccount());
+            TreeVo treeVo = new TreeVo();
+            treeVo.setKey(StaticValue.USER_PASSWORD);
+            treeVo.setValue(ldapAccountDto.getPwd());
+            treeVo.setTitle(ldapAccountDto.getPwd());
+            List<TreeVo> vos = new ArrayList<>();
+            vos.add(treeVo);
+            bindTreeDto.setAttributes(vos);
+            boolean b = LdapUtil.updateLdapBindTree(ldapTemplate, bindTreeDto, ldapSearchFilter);
+            return ResultUtil.success(b);
+        }
+        if (!ObjectUtils.isEmpty(ldapAccountDto.getAuth())) {
+            try {
+                boolean b = LdapUtil.setAuth(ldapAccountDto.getAccount(), ldapAccountDto.getAuth(), filePath);
+                return ResultUtil.success(b);
+            } catch (NamingException e) {
+                log.error(e.getMessage());
+                return ResultUtil.success(StaticValue.FALSE);
+            }
+        }
+        return ResultUtil.success(StaticValue.TRUE);
     }
 
 

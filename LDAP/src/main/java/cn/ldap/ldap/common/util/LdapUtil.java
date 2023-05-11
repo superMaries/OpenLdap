@@ -4,6 +4,7 @@ import cn.ldap.ldap.common.dto.*;
 import cn.ldap.ldap.common.enums.CertificateEnum;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.ImportEnum;
+import cn.ldap.ldap.common.enums.LdapAccuntAuthEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.vo.CertTreeVo;
 import cn.ldap.ldap.common.vo.LdapAccountVo;
@@ -366,10 +367,7 @@ public class LdapUtil {
      */
 
 
-    public static List<CertTreeVo> queryCertTree(LdapTemplate ldapTemplate, String ldapSearchFilter,
-                                                 String ldapSearchBase, Integer scope,
-                                                 Integer pageSize, Integer page,
-                                                 Map<String, Object> map) {
+    public static List<CertTreeVo> queryCertTree(LdapTemplate ldapTemplate, String ldapSearchFilter, String ldapSearchBase, Integer scope, Integer pageSize, Integer page, Map<String, Object> map) {
 
         List<CertTreeVo> certTreeVos = new ArrayList<>();
         //DirContext ctx = null;
@@ -406,16 +404,14 @@ public class LdapUtil {
             //设置每页查询的数量
 //            Control[] controls = new Control[]{new PagedResultsControl(StaticValue.LDAP_PAGE_SIZE,
 //                    Control.CRITICAL)};
-            Control[] controls = new Control[]{new PagedResultsControl(page * pageSize,
-                    Control.CRITICAL)};
+            Control[] controls = new Control[]{new PagedResultsControl(page * pageSize, Control.CRITICAL)};
             ctx.setRequestControls(controls);
 
             byte[] cookie = null;
 
             do {
                 //分页查询
-                NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, ldapSearchFilter,
-                        searchControls);
+                NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, ldapSearchFilter, searchControls);
                 //统计总数
                 while (results.hasMore()) {
                     SearchResult result = results.next();
@@ -723,17 +719,14 @@ public class LdapUtil {
                 Attribute next = attributesAll.next();
                 String key = next.getID();
                 //查询到key对应的values 的值
-                List<TreeVo> keys = attributeList.stream()
-                        .filter(it -> it.getKey().equals(key))
-                        .collect(Collectors.toList());
+                List<TreeVo> keys = attributeList.stream().filter(it -> it.getKey().equals(key)).collect(Collectors.toList());
                 if (ObjectUtils.isEmpty(keys)) {
                     continue;
                 }
                 next.clear();
                 for (TreeVo value : keys) {
                     //判断是否是证书
-                    if (StaticValue.USER_CERTIFICATE.toLowerCase()
-                            .equals(key.toLowerCase())) {
+                    if (StaticValue.USER_CERTIFICATE.toLowerCase().equals(key.toLowerCase())) {
                         String cert = IscSignUtil.otherToBase64(value.getValue());
                         byte[] certByte = decodeCertificate(cert);
                         next.add(certByte);
@@ -1097,8 +1090,7 @@ public class LdapUtil {
                     sb = new StringBuilder();
                 }
                 boolean isLine = StaticValue.FALSE;
-                if (ObjectUtils.isEmpty(line)
-                        || line.contains(StaticValue.BINARY)) {
+                if (ObjectUtils.isEmpty(line) || line.contains(StaticValue.BINARY)) {
                     //证书 、CRL 需要将换行的数据换在一行
                     while (StaticValue.TRUE) {
                         sb.append(line);
@@ -1112,8 +1104,7 @@ public class LdapUtil {
                 }
                 sb.append(StaticValue.N);
                 result = StaticValue.FALSE;
-                if (!isLine)
-                    line = reader.readLine();
+                if (!isLine) line = reader.readLine();
             }
             if (!result) {
                 analysisLdapFile(ctx, sb, type);
@@ -1197,8 +1188,7 @@ public class LdapUtil {
                             while (all.hasMore()) {
                                 Object o = all.nextElement();
                                 String attrValue = o.toString();
-                                mods[i++] = new ModificationItem(DirContext.ADD_ATTRIBUTE,
-                                        new BasicAttribute(id, o));
+                                mods[i++] = new ModificationItem(DirContext.ADD_ATTRIBUTE, new BasicAttribute(id, o));
                             }
                         }
                         //更新
@@ -1280,16 +1270,14 @@ public class LdapUtil {
         Attributes attributes = new BasicAttributes();
         for (CreateAttDto att : createAttDtos) {
             String name = att.getKey();
-            if (StaticValue.CREATE_USER_CERTIFICATE.toLowerCase()
-                    .equals(name.toLowerCase())) {
+            if (StaticValue.CREATE_USER_CERTIFICATE.toLowerCase().equals(name.toLowerCase())) {
                 name = StaticValue.USER_CERTIFICATE;
             }
             Attribute attribute = new BasicAttribute(name);
             attributes.put(attribute);
             List<String> values = att.getValues();
             for (String value : values) {
-                if (StaticValue.USER_CERTIFICATE.toLowerCase()
-                        .equals(name.toLowerCase())) {
+                if (StaticValue.USER_CERTIFICATE.toLowerCase().equals(name.toLowerCase())) {
                     //证书
                     String cert = IscSignUtil.otherToBase64(value);
                     byte[] certificate = decodeCertificate(cert);
@@ -1350,8 +1338,7 @@ public class LdapUtil {
         }
     }
 
-    public static Boolean addLdapAccount(LdapTemplate newLdapTemplate, String ldapSearchFilter, String
-            ldapSearchBase, LdapAccountDto ldapAccountDto,String filePath) throws NamingException {
+    public static Boolean addLdapAccount(LdapTemplate newLdapTemplate, String ldapSearchFilter, String ldapSearchBase, LdapAccountDto ldapAccountDto, String filePath) throws NamingException {
         String accountName = ldapAccountDto.getAccount();
         String accountPassword = ldapAccountDto.getPwd();
         // 创建一个新的LDAP条目
@@ -1374,30 +1361,76 @@ public class LdapUtil {
             throw new SysException(e.getMessage());
         }
         //设置权限
-        setAuth(ctx, rdn, 2,filePath);
-        return true;
+        return setAuth(rdn, ldapAccountDto.getAuth(), filePath);
     }
 
-    public static boolean setAuth(LdapContext ctx, String rdn, Integer authCode,String filePath) throws NamingException {
+    public static boolean setAuth(String rdn, Integer authCode, String filePath) throws NamingException {
         File file = new File(filePath);
         if (!file.exists()) {
             throw new SysException(FILE_NOT_EXIST);
         }
-        String data = "access to * by dn="+"\""+rdn+"\""+" write by * read";
+        String authName = LdapAccuntAuthEnum.getTitleByCode(authCode);
+        if (ObjectUtils.isEmpty(authName)) {
+            authName = LdapAccuntAuthEnum.READ.getTitle();
+        }
+//        String data = "access to *" + "\n" +
+//                "    by dn=" + "\"" + rdn + "\" write" + "\n" +
+//                "    by * read";
+        String data = "access to *  by dn=" + "\"" + rdn + "\" write  by * read";
+        //获取文件内容
+        StringBuilder configFileData = getConfigFileData(filePath);
+        String fileContent = configFileData.toString();
+        if (LdapAccuntAuthEnum.WRITE.getCode() != authCode) {
+            //移除改字符串
+            fileContent = fileContent.replaceAll(data, "");
+        } else {
+            //判断是否存在 然后进行判断是否有改该行字符串
+            if (true) {
+                //没有  添加
+                if (!fileContent.contains(data)) {
+                    configFileData = configFileData.append(StaticValue.N).append(data);
+                    fileContent = configFileData.toString();
+                }
+            }
+        }
         try {
-            //采用流的方式进行写入配置
+//        采用流的方式进行写入配置
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filePath));
-            bufferedWriter.write(data);
+            bufferedWriter.write(fileContent);
             bufferedWriter.flush();
             bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+//
 //        ModificationItem[] mods = new ModificationItem[1];
 //        mods[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE,
-//                new BasicAttribute("userAccess", "readWrite"));
+//                new BasicAttribute("access", "readWrite"));
 //        ctx.modifyAttributes(rdn, mods);
-        return false;
+        return StaticValue.TRUE;
+    }
+
+    /**
+     * 读取文件内容
+     *
+     * @param filePath 文件地址
+     * @return
+     */
+    public static StringBuilder getConfigFileData(String filePath) {
+        try {
+            File inputFile = new File(filePath);
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            StringBuilder sb = new StringBuilder();
+            String line = reader.readLine();
+            while (line != null) {
+                sb.append(line).append("\n");
+                line = reader.readLine();
+            }
+            reader.close();
+            return sb;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+        }
     }
 }

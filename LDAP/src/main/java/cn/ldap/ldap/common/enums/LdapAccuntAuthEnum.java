@@ -2,6 +2,7 @@ package cn.ldap.ldap.common.enums;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @title: LdapAccuntAuthEnum
@@ -13,17 +14,17 @@ public enum LdapAccuntAuthEnum {
     /**
      * 读
      */
-    READ(1, "读"),
+    READ(1, "读","read"),
     /**
      * 写
      */
 
-    WRITE(2, "写"),
+    WRITE(2, "写","write"),
 
     /**
      * 读写
      */
-    READ_AND_WRITE(3, "读写"),
+//    READ_AND_WRITE(3, "读写"),
     ;
 
     /**
@@ -37,7 +38,7 @@ public enum LdapAccuntAuthEnum {
      * @return 提示
      */
     private String msg;
-
+    private String title;
     /**
      * 编码
      * @return 编码
@@ -45,7 +46,17 @@ public enum LdapAccuntAuthEnum {
     public Integer getCode() {
         return code;
     }
-
+    public String getTitle() {
+        return title;
+    }
+    public static String getTitleByCode(Integer code) {
+        for (LdapAccuntAuthEnum auth : LdapAccuntAuthEnum.values()) {
+           if (Objects.equals(auth.getCode(), code)){
+                    return auth.getTitle();
+           }
+        }
+        return null;
+    }
     /**
      * 提示
      *
@@ -61,9 +72,10 @@ public enum LdapAccuntAuthEnum {
      * @param code
      * @param msg
      */
-    LdapAccuntAuthEnum(int code, String msg) {
+    LdapAccuntAuthEnum(int code, String msg,String title) {
         this.msg = msg;
         this.code = code;
+        this.title=title;
     }
 
     /**
