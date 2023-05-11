@@ -47,6 +47,9 @@ public class LdapAccountServiceImpl implements LdapAccountService {
     @Value("${ldap.searchBase}")
     private String ldapSearchBase;
 
+    @Value("${filePath.configPath}")
+    private String filePath;
+
 
 //    public LdapAccountServiceImpl() {
 //        newLdapTemplate = fromPool();
@@ -98,7 +101,7 @@ public class LdapAccountServiceImpl implements LdapAccountService {
         Boolean result = null;
         try {
             LdapTemplate newLdapTemplate = fromPool();
-            result = LdapUtil.addLdapAccount(newLdapTemplate, ldapSearchFilter, ldapSearchBase, ldapAccountDto);
+            result = LdapUtil.addLdapAccount(newLdapTemplate, ldapSearchFilter, ldapSearchBase, ldapAccountDto,filePath);
 
 
         } catch (NamingException e) {

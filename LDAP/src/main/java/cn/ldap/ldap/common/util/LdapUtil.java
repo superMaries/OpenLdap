@@ -38,6 +38,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
 import static org.springframework.ldap.query.LdapQueryBuilder.query;
 
 /**
@@ -1350,7 +1351,7 @@ public class LdapUtil {
     }
 
     public static Boolean addLdapAccount(LdapTemplate newLdapTemplate, String ldapSearchFilter, String
-            ldapSearchBase, LdapAccountDto ldapAccountDto) throws NamingException {
+            ldapSearchBase, LdapAccountDto ldapAccountDto,String filePath) throws NamingException {
         String accountName = ldapAccountDto.getAccount();
         String accountPassword = ldapAccountDto.getPwd();
         // 创建一个新的LDAP条目
@@ -1373,15 +1374,30 @@ public class LdapUtil {
             throw new SysException(e.getMessage());
         }
         //设置权限
-        setAuth(ctx, rdn, ldapAccountDto.getAuth());
-        return StaticValue.TRUE;
+        setAuth(ctx, rdn, 2,filePath);
+        return true;
     }
 
-    public static boolean setAuth(LdapContext ctx, String rdn, Integer authCode) throws NamingException {
-        ModificationItem[] mods = new ModificationItem[1];
-        mods[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE,
-                new BasicAttribute("access", "write"));
-        ctx.modifyAttributes(rdn, mods);
+    public static boolean setAuth(LdapContext ctx, String rdn, Integer authCode,String filePath) throws NamingException {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            throw new SysException(FILE_NOT_EXIST);
+        }
+        String data = "access to * by dn="+"\""+rdn+"\""+" write by * read";
+        try {
+            //采用流的方式进行写入配置
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filePath));
+            bufferedWriter.write(data);
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        ModificationItem[] mods = new ModificationItem[1];
+//        mods[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE,
+//                new BasicAttribute("userAccess", "readWrite"));
+//        ctx.modifyAttributes(rdn, mods);
         return false;
     }
 }
