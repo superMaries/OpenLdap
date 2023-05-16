@@ -13,7 +13,6 @@ import org.springframework.ldap.pool2.validation.DirContextValidator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-
 @Component
 public class LdapConfig {
     @Value("${ldap.url}")
@@ -85,6 +84,8 @@ public class LdapConfig {
     //------------
 
 
+
+
     @PostConstruct
     public void printPoolInfo() {
         System.out.println("Max idle connections per key: " + pooledContextSource.getPoolConfig().getMaxIdlePerKey());
@@ -93,6 +94,5 @@ public class LdapConfig {
         System.out.println("Number of active connections: " + pooledContextSource.getNumActive());
         System.out.println("Number of idle connections: " + pooledContextSource.getNumIdle());
     }
-
 
 }

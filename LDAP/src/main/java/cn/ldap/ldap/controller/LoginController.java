@@ -153,4 +153,16 @@ public class LoginController {
         return loginService.readOnly(loginDto);
     }
 
+
+    /**
+     * 下载用户手册
+     *
+     * @return
+     * @throws IOException
+     */
+    @GetMapping("downloadQuestion")
+//    @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.LOOK_MANUAl)
+    public Boolean downloadQuestion(HttpServletResponse httpServletResponse) throws IOException {
+        return loginService.downloadManual(httpServletResponse);
+    }
 }

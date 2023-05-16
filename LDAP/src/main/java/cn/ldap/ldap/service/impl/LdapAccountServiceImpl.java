@@ -1,6 +1,5 @@
 package cn.ldap.ldap.service.impl;
 
-import cn.ldap.ldap.common.config.LdapConfig;
 import cn.ldap.ldap.common.dto.LdapAccountDto;
 import cn.ldap.ldap.common.dto.LdapBindTreeDto;
 import cn.ldap.ldap.common.enums.ExceptionEnum;

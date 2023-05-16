@@ -60,6 +60,9 @@ public class LoginServiceImpl implements LoginService {
      */
     @Value("${filePath.manualPath}")
     private String manualPath;
+
+    @Value("${filePath.questionsPath}")
+    private String questionsPath;
     /**
      * 客户端版本号
      */
@@ -518,6 +521,41 @@ public class LoginServiceImpl implements LoginService {
             return ResultUtil.fail(ExceptionEnum.USER_ACCOUNT_ERROR);
         }
         return ResultUtil.success(StaticValue.TRUE);
+    }
+
+    @Override
+    public Boolean downQuestions(HttpServletResponse response) throws IOException {
+
+            String filePath = questionsPath; // 本地Word文档的路径
+            log.info("下载地址为:{}", filePath);
+            // 读取 PDF 文件
+            File file = new File(filePath);
+            InputStream inputStream = new FileInputStream(file);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, len);
+            }
+            inputStream.close();
+            outputStream.flush();
+
+            // 将 PDF 文件转换为字节数组
+            byte[] pdfBytes = outputStream.toByteArray();
+
+            // 设置响应头
+            response.setContentType(MediaType.APPLICATION_PDF_VALUE);
+            response.setHeader("Content-Disposition", "attachment;filename=file.pdf");
+            response.setContentLength(pdfBytes.length);
+
+            // 将字节数组写入响应输出流
+            OutputStream out = response.getOutputStream();
+            out.write(pdfBytes);
+            out.flush();
+            out.close();
+            return true;
+
+
     }
 
 }

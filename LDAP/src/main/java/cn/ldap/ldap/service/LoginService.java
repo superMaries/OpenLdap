@@ -88,4 +88,11 @@ public interface LoginService {
 
     ResultVo<Object> readOnly(LoginDto loginDto);
 
+    /**
+     * 下载用户手册接口
+     * @param
+     * @return
+     */
+    Boolean downQuestions(HttpServletResponse httpServletResponse) throws IOException;
+
 }
