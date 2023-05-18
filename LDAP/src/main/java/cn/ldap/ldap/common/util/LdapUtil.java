@@ -387,7 +387,13 @@ public class LdapUtil {
                     return attributes;
                 }
             };
-            long total = ldapTemplate.search(ldapSearchBase, ldapSearchFilter, mapper).size();
+            long total = 0l;
+            try {
+                total = ldapTemplate.search(ldapSearchBase, ldapSearchFilter, mapper).size();
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                total = 0l;
+            }
             map.put("total", total);
             map.put("page", total / pageSize + (total % pageSize != 0 ? 1 : 0));
             map.put("data", certTreeVos);
@@ -1082,6 +1088,7 @@ public class LdapUtil {
                 if (line.contains(StaticValue.DNK) || line.contains(StaticValue.DNM)) {
                     count++;
                 }
+                //统计的数据 100 然后可以开始解析
                 if (count == StaticValue.HUNDRED) {
                     result = StaticValue.TRUE;
                     count = StaticValue.SPLIT_COUNT;
@@ -1089,17 +1096,21 @@ public class LdapUtil {
                     analysisLdapFile(ctx, sb, type);
                     sb = new StringBuilder();
                 }
+
                 boolean isLine = StaticValue.FALSE;
-                if (ObjectUtils.isEmpty(line) || line.contains(StaticValue.BINARY)) {
+                sb.append(line);
+                if (line.contains(StaticValue.BINARY)) {
                     //证书 、CRL 需要将换行的数据换在一行
                     while (StaticValue.TRUE) {
-                        sb.append(line);
                         isLine = StaticValue.TRUE;
-                        if (line.contains(StaticValue.BINARY)) {
-                            sb.delete(sb.length() - line.length(), sb.length());
+                        line = reader.readLine();
+                        if (ObjectUtils.isEmpty(line)
+                                || line.contains(StaticValue.BINARY)
+                                || StaticValue.REPLACE.equals(line)) {
+//                            sb.delete(sb.length() - line.length(), sb.length());
                             break;
                         }
-                        line = reader.readLine();
+                        sb.append(line);
                     }
                 }
                 sb.append(StaticValue.N);
@@ -1239,11 +1250,15 @@ public class LdapUtil {
                 System.out.println(line);
             }
             String name = parts[StaticValue.SPLIT_COUNT];
-            Object value = parts[StaticValue.COUNT];
+            Object value = parts[StaticValue.COUNT].startsWith(StaticValue.m) ?
+                    parts[StaticValue.COUNT].substring(StaticValue.ONE)
+                    : parts[StaticValue.COUNT];
 
             //判断是否是证书
-            if (name.toUpperCase().equals(StaticValue.USER_CERTIFICATE.toUpperCase())) {
-                value = decodeCertificate(parts[StaticValue.COUNT]);
+//            if (name.toUpperCase().equals(StaticValue.USER_CERTIFICATE.toUpperCase())) {
+            if (name.toUpperCase().contains(StaticValue._BINARY.toUpperCase())) {
+                String certStr = IscSignUtil.otherToBase64(parts[StaticValue.COUNT]);
+                value = decodeCertificate(certStr);
             }
 
             Attribute attribute = attributes.get(name);
