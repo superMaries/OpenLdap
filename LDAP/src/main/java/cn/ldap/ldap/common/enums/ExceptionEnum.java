@@ -84,6 +84,7 @@ public enum ExceptionEnum {
 
     VALIDATE_ERROR(5013, "验证书链错误"),
     HEADER_ERROR(5014, "未有签名验签的值"),
+    NOT_DIRECTORY(5015,"该文件不是个文件夹"),
 
     //LDAP接口中的错误 全部定义8开头
     LDAP_RDN_NOT_EXIT(8001, "删除RDN错误"),

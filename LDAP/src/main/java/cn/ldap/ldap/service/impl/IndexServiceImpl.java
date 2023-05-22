@@ -1,8 +1,10 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.hutool.log.Log;
 import cn.ldap.ldap.common.dto.CertTreeDto;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
 import cn.ldap.ldap.common.dto.NetSpeedRespVo;
+import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.NetWorkUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
@@ -20,7 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
-import java.io.IOException;
+import javax.print.attribute.standard.Finishings;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -29,6 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
+import static cn.ldap.ldap.common.enums.ExceptionEnum.NOT_DIRECTORY;
 
 /**
  * @title: IndexServiceImpl
@@ -53,12 +59,36 @@ public class IndexServiceImpl implements IndexService {
     @Autowired
     private LdapTemplate ldapTemplate;
 
-  //  @Autowired
-  //  private PooledContextSource pooledContextSource;
 
     @Resource
     private CertTreeServiceImpl certTreeService;
 
+
+    @Value("${command.binFile}")
+    private String binFile;
+
+    @Value("${ldap.userDn}")
+    private String account;
+
+    @Value("${ldap.password}")
+    private String password;
+
+    @Value("${ldap.searchBase}")
+    private String searchBase;
+
+    private static final String FRONT_COMMAND = "./ldapsearch -D ";
+
+    private static final String CRL_FILTER = "(&(objectClass=*)(|(cn=crl*)(cn=cacrl*)))";
+
+    private static final String CERT_FILTER = "(&(objectClass=*)(serialNumber=*))";
+
+    private static final String ALL_FILTER = "(objectClass=*)";
+
+    private static final String BEHIND_COMMAND= " |grep \"#\" |wc -l ";
+
+    private String FEED = " ";
+
+    private static final String CD = "cd ";
     /**
      * 获取设备状态信息
      *
@@ -178,7 +208,47 @@ public class IndexServiceImpl implements IndexService {
      */
     @Override
     public ResultVo<Long> ldapCrlNum(CertTreeDto tree) {
-        return ResultUtil.success(queryCrlTotal(tree));
+        Long result = 0L;
+        try {
+            log.info("切换到可执行命令文件夹:{}",binFile);
+            File file = new File(binFile);
+            if (!file.exists()){
+                throw new SysException(FILE_NOT_EXIST);
+            }
+            if (!file.isDirectory()){
+                throw new SysException(NOT_DIRECTORY);
+            }
+
+            //拼接linux命令
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                    .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
+                    .append("\"").append(FEED).append("\"").append(CRL_FILTER).append("\"").append(BEHIND_COMMAND);
+
+            log.info("linux运行命令为:{}",stringBuilder);
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("sh","-c",stringBuilder.toString());
+            Process exec = builder.start();
+            InputStream inputStream = exec.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                Long aLong = Long.valueOf(line.trim());
+                log.info("Linux查询数量为:{}",aLong);
+                if (aLong < 10){
+                    result = 0L;
+                }else {
+                    result = aLong - 10;
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ResultUtil.success(result);
+      //  return ResultUtil.success(queryCrlTotal(tree));
     }
 
     /**
@@ -188,8 +258,49 @@ public class IndexServiceImpl implements IndexService {
      */
     @Override
     public ResultVo<Long> ldapCertNum(CertTreeDto tree) {
-        return ResultUtil.success(queryCertTotal(tree));
+        Long result = 0L;
+        try {
+
+            File file = new File(binFile);
+            if (!file.exists()){
+                throw new SysException(FILE_NOT_EXIST);
+            }
+            if (!file.isDirectory()){
+                throw new SysException(NOT_DIRECTORY);
+            }
+
+            //拼接linux命令
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                    .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
+                    .append("\"").append(FEED).append("\"").append(CERT_FILTER).append("\"").append(BEHIND_COMMAND);
+
+            log.info("linux运行命令为:{}",stringBuilder);
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("sh","-c",stringBuilder.toString());
+            Process exec = builder.start();
+            InputStream inputStream = exec.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                Long aLong = Long.valueOf(line);
+                log.info("Linux查询数量为:{}",aLong);
+                if (aLong < 10){
+                    result = 0L;
+                }else {
+                    result = aLong - 10;
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ResultUtil.success(result);
+        //  return ResultUtil.success(queryCertTotal(tree));
     }
+
 
     /**
      * 返回ldap 总数接口
@@ -198,7 +309,45 @@ public class IndexServiceImpl implements IndexService {
      */
     @Override
     public ResultVo<Long> ldapTotal(CertTreeDto tree) {
-        return ResultUtil.success(queryTotal(tree));
+        Long result = 0L;
+        try {
+
+            File file = new File(binFile);
+            if (!file.exists()){
+                throw new SysException(FILE_NOT_EXIST);
+            }
+            if (!file.isDirectory()){
+                throw new SysException(NOT_DIRECTORY);
+            }
+
+            //拼接linux命令
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                    .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
+                    .append("\"").append(FEED).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
+
+            log.info("linux运行命令为:{}",stringBuilder);
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("sh","-c",stringBuilder.toString());
+            Process exec = builder.start();
+            InputStream inputStream = exec.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                Long aLong = Long.valueOf(line.trim());
+                if (aLong < 10){
+                    result = 0L;
+                }else {
+                    result = aLong - 10;
+                }
+            }
+
+        }  catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return ResultUtil.success(result);
     }
 
     /**
