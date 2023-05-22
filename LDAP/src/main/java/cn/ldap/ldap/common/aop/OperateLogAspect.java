@@ -439,8 +439,15 @@ public class OperateLogAspect {
         }
         operationLog.setRemark(remark);
 //        operationLog.setUserId(userInfo.getId());
-        operationLog.setOperateType(operateAnnotation.operateType().getName());
-        operationLog.setOperateMenu(operateAnnotation.operateModel().getName());
+
+        //对原始数据+返回编码+签名值进行再次签名
+        String newSrc = operationLog.operateSrcToString();//operationLog.getSignValue() + operationLog.getOperateState();
+
+        String sign = Sm2Util.sign(InitConfigData.getPrivateKey(), newSrc);
+        operationLog.setSignValueEx(sign);
+
+//        operationLog.setOperateType(operateAnnotation.operateType().getName());
+//        operationLog.setOperateMenu(operateAnnotation.operateModel().getName());
         operationMapper.insert(operationLog);
         threadLocal.remove();
     }

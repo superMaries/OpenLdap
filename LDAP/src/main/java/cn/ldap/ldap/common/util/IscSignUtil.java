@@ -44,6 +44,7 @@ public class IscSignUtil {
             //移处start 和 end 结束标记
             cert = replaceStartAndEnd(cert);
 
+            cert = replaceX509(cert);
             //是base 64 字符串
             if (Pattern.matches(StaticValue.BASE64_PATTERN, cert)) {
 
@@ -55,6 +56,8 @@ public class IscSignUtil {
 
                 //移处start 和 end 结束标记
                 cert = replaceStartAndEnd(cert);
+
+                cert = replaceX509(cert);
                 //是base 64 字符串 抛出异常
                 if (Pattern.matches(StaticValue.BASE64_PATTERN, cert)) {
                     log.error("字符格式错误");
@@ -85,6 +88,22 @@ public class IscSignUtil {
                     .replaceAll(StaticValue.RN, StaticValue.REPLACE)
                     .replaceAll(StaticValue.N, StaticValue.REPLACE)
                     .replaceAll(StaticValue.END_CERTIFICATE, StaticValue.REPLACE);
+        }
+        return cert;
+    }
+
+    public static String replaceX509(String cert) {
+        cert = cert.replaceAll(StaticValue.RN, StaticValue.REPLACE);
+        if (cert.startsWith(StaticValue.BEGIN_X509)
+                && cert.contains(StaticValue.END_X509)) {
+            /**
+             * 将证书中的-----BEGIN CERTIFICATE-----
+             * 和 -----END CERTIFICATE----- 移除
+             */
+            cert = cert.replaceAll(StaticValue.BEGIN_X509, StaticValue.REPLACE)
+                    .replaceAll(StaticValue.RN, StaticValue.REPLACE)
+                    .replaceAll(StaticValue.N, StaticValue.REPLACE)
+                    .replaceAll(StaticValue.END_X509, StaticValue.REPLACE);
         }
         return cert;
     }

@@ -107,25 +107,25 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     @Override
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
         ParamConfig paramConfig = paramConfigService.getOne(null);
-        if (!ObjectUtil.isEmpty(paramConfig)){
-            if (!BeanUtil.isEmpty(mainConfig.getLogLevel())){
+        if (!ObjectUtil.isEmpty(paramConfig)) {
+            if (!BeanUtil.isEmpty(mainConfig.getLogLevel())) {
                 paramConfig.setLogLevel(mainConfig.getLogLevel());
             }
-            if (!BeanUtil.isEmpty(mainConfig.getLogLevelDirectory())){
+            if (!BeanUtil.isEmpty(mainConfig.getLogLevelDirectory())) {
                 paramConfig.setLogFile(mainConfig.getLogLevelDirectory());
                 int i = mainConfig.getLogLevelDirectory().lastIndexOf("/");
                 String filePath = mainConfig.getLogLevelDirectory().substring(0, i);
                 String[] split = mainConfig.getLogLevelDirectory().split("/");
                 File file = new File(filePath);
-                if (!file.exists()){
+                if (!file.exists()) {
                     return ResultUtil.fail(FILE_PATH_NOT_EXIST);
                 }
-                String fileName = split[split.length-1];
-                if (""!=fileName && !fileName.endsWith(".log")){
+                String fileName = split[split.length - 1];
+                if ("" != fileName && !fileName.endsWith(".log")) {
                     return ResultUtil.fail(FILE_LOG);
                 }
             }
-            if (BeanUtil.isEmpty(mainConfig.getOpenAcl())){
+            if (BeanUtil.isEmpty(mainConfig.getOpenAcl())) {
                 return ResultUtil.fail(ACL_FAIL);
             }
             paramConfig.setOpenAcl(mainConfig.getOpenAcl());
@@ -145,34 +145,34 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             String lineStr = bufferedReader.readLine();
 
             while (lineStr != null) {
-                if (mainConfig.getOpenAcl().equals("false") && lineStr.equals("access to * by * none")){
+                if (mainConfig.getOpenAcl().equals("false") && lineStr.equals("access to * by * none")) {
                     stringBuilder.append("").append(FEED);
-                    acc =true;
-                }else if (lineStr.startsWith(START)) {
+                    acc = true;
+                } else if (lineStr.startsWith(START)) {
                     stringBuilder//配置log文件目录
                             .append(LOG_FILE).append(SPACE_DATA).append(mainConfig.getLogLevelDirectory()).append(FEED);
-                            //配置之日志输出等级
-                           // .append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
+                    //配置之日志输出等级
+                    // .append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
                     found = true;
-                }else if (lineStr.startsWith(LOG_LEVEL)){
+                } else if (lineStr.startsWith(LOG_LEVEL)) {
                     stringBuilder.append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
-                    found =true;
-                }else {
+                    found = true;
+                } else {
                     stringBuilder.append(lineStr).append(FEED);
                 }
-               lineStr= bufferedReader.readLine();
-              //  String oldData = lineStr;
-              //  stringBuilder.append(oldData).append(FEED);
+                lineStr = bufferedReader.readLine();
+                //  String oldData = lineStr;
+                //  stringBuilder.append(oldData).append(FEED);
             }
             bufferedReader.close();
 
-            if (!found){
+            if (!found) {
                 stringBuilder.append(LOG_FILE).append(SPACE_DATA).append(mainConfig.getLogLevelDirectory()).append(FEED)
                         //配置之日志输出等级
                         .append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
             }
 
-            if (!acc){
+            if (!acc) {
                 stringBuilder.append("access to * by * none").append(FEED);
             }
         } catch (FileNotFoundException e) {
@@ -183,7 +183,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             //采用流的方式进行写入配置
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
             bufferedWriter.write(data);
-       //     bufferedWriter.flush();
+            //     bufferedWriter.flush();
             bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -228,7 +228,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         }
     }
 
-    public void updatePortStatus(String status){
+    public void updatePortStatus(String status) {
         List<PortLink> list = portLinkService.list();
         for (PortLink portLink : list) {
             portLink.setStatus(status);
@@ -289,10 +289,11 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new SysException(FILE_NOT_EXIST);
         }
         List<SSLConfig> list = sslConfigService.list();
-        if (CollectionUtils.isEmpty(list) || list.size()>1){
+        if (CollectionUtils.isEmpty(list) || list.size() > 1) {
             return ResultUtil.fail(ExceptionEnum.DATABASE_ERROR);
         }
         SSLConfig sslConfig = list.get(0);
@@ -313,10 +314,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new SysException(FILE_NOT_EXIST);
+
         }
         List<SSLConfig> list = sslConfigService.list();
-        if (CollectionUtils.isEmpty(list) || list.size()>1){
+        if (CollectionUtils.isEmpty(list) || list.size() > 1) {
             return ResultUtil.fail(ExceptionEnum.DATABASE_ERROR);
         }
         SSLConfig sslConfig = list.get(0);
@@ -337,10 +340,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
-            e.printStackTrace();
+
+            log.error(e.getMessage());
+            throw new SysException(FILE_NOT_EXIST);
         }
         List<SSLConfig> list = sslConfigService.list();
-        if (CollectionUtils.isEmpty(list) || list.size()>1){
+        if (CollectionUtils.isEmpty(list) || list.size() > 1) {
             return ResultUtil.fail(ExceptionEnum.DATABASE_ERROR);
         }
         SSLConfig sslConfig = list.get(0);
@@ -358,10 +363,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     public String splicingConfigParam(StringBuilder stringBuilder, MainConfig mainConfig) {
 
         String command = "";
-        if (mainConfig.getOpenAcl().equals("true")){
+        if (mainConfig.getOpenAcl().equals("true")) {
             String openAcl = "access to * by * read";
-            command=openAcl;
-        }else {
+            command = openAcl;
+        } else {
             String closeAcl = "access to * by * none";
             command = closeAcl;
         }
