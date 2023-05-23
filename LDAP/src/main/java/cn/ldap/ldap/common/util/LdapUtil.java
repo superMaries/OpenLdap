@@ -1287,12 +1287,21 @@ public class LdapUtil {
             String name = att.getKey();
             if (StaticValue.CREATE_USER_CERTIFICATE.toLowerCase().equals(name.toLowerCase())) {
                 name = StaticValue.USER_CERTIFICATE;
+            } else if (StaticValue.certificateRevocationList.toLowerCase().contains(name.toLowerCase())) {
+                name = StaticValue.certificateRevocationList;
+            } else if (StaticValue.authorityRevocationList.toLowerCase().contains(name.toLowerCase())) {
+                name = StaticValue.authorityRevocationList;
+            } else if (StaticValue.deltaRevocationList.toLowerCase().contains(name.toLowerCase())) {
+                name = StaticValue.deltaRevocationList;
             }
             Attribute attribute = new BasicAttribute(name);
             attributes.put(attribute);
             List<String> values = att.getValues();
             for (String value : values) {
-                if (StaticValue.USER_CERTIFICATE.toLowerCase().equals(name.toLowerCase())) {
+                if (StaticValue.USER_CERTIFICATE.toLowerCase().equals(name.toLowerCase())
+                        || StaticValue.certificateRevocationList.toLowerCase().contains(name.toLowerCase())
+                        || StaticValue.authorityRevocationList.toLowerCase().contains(name.toLowerCase())
+                        || StaticValue.deltaRevocationList.toLowerCase().contains(name.toLowerCase())) {
                     //证书
                     String cert = IscSignUtil.otherToBase64(value);
                     byte[] certificate = decodeCertificate(cert);

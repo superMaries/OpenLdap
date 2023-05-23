@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.api.R;
 import sun.nio.cs.ext.GBK;
 
 import javax.swing.text.SimpleAttributeSet;
+import java.security.cert.CRL;
 import java.text.DateFormat;
 
 /**
@@ -120,7 +121,13 @@ public class StaticValue {
 
 
     public final static String CREATE_USER_CERTIFICATE = "userCertificate";
+    public final static String certificateRevocationList = "certificateRevocationList;binary";
+    public final static String authorityRevocationList = "authorityRevocationList;binary";
 
+    public final static String deltaRevocationList = "deltaRevocationList;binary";
+
+    public final static String BEGIN_X509 = "-----BEGIN X509 CRL-----";
+    public final static String END_X509= "-----END X509 CRL-----";
     /**
      * base64 正则
      */
