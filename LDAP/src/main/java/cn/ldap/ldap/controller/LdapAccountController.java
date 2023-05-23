@@ -1,6 +1,9 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.LdapAccountDto;
+import cn.ldap.ldap.common.enums.OperateMenuEnum;
+import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.LdapAccountVo;
 import cn.ldap.ldap.common.vo.PageVo;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -52,6 +55,7 @@ public class LdapAccountController {
      * 添加账号
      */
     @PostMapping("add")
+    @OperateAnnotation(operateModel = OperateMenuEnum.LDAP_ACCOUNT, operateType = OperateTypeEnum.ACCOUNT_ADD)
     public ResultVo<Boolean> addLdapAccount(@RequestBody LdapAccountDto ldapAccountDto) {
         return ldapAccountService.addLdapAccount(ldapAccountDto);
     }
@@ -60,6 +64,7 @@ public class LdapAccountController {
      * 编辑账号
      */
     @PostMapping("edit")
+    @OperateAnnotation(operateModel = OperateMenuEnum.LDAP_ACCOUNT, operateType = OperateTypeEnum.ACCOUNT_UPDATE_PASSWORD)
     public ResultVo<Boolean> editLdapAccount(@RequestBody LdapAccountDto ldapAccountDto) {
         return ldapAccountService.editLdapAccount(ldapAccountDto);
     }
@@ -68,6 +73,7 @@ public class LdapAccountController {
      * 删除
      */
     @PostMapping("del")
+    @OperateAnnotation(operateModel = OperateMenuEnum.LDAP_ACCOUNT, operateType = OperateTypeEnum.ACCOUNT_DELETE)
     public ResultVo<Boolean> delLdapAccount(@RequestBody LdapAccountDto ldapAccountDto) {
         return ldapAccountService.delLdapAccount(ldapAccountDto);
     }

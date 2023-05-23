@@ -2,8 +2,10 @@ package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.FromSyncDto;
+import cn.ldap.ldap.common.dto.QueryFollowNumDto;
 import cn.ldap.ldap.common.dto.SyncDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
+import cn.ldap.ldap.common.entity.SyncStatus;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -106,6 +108,11 @@ public class SyncController {
     @PostMapping("queryServiceConfig")
     public ResultVo<Map<String, String>> queryServiceConfig() {
         return syncStatusService.queryServiceConfig();
+    }
+
+    @PostMapping("queryFollowNum")
+    public ResultVo<SyncStatus> queryFollowNum(@RequestBody QueryFollowNumDto queryFollowNumDto){
+        return syncStatusService.queryFollowNum(queryFollowNumDto);
     }
 
 

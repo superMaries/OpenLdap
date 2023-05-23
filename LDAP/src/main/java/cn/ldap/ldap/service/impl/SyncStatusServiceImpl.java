@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.ldap.ldap.common.dto.QueryFollowNumDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
 import cn.ldap.ldap.common.entity.SyncStatus;
 import cn.ldap.ldap.common.enums.ConfigEnum;
@@ -26,8 +27,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,7 +56,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
     private static final String RDN_CHILD_NUM = "rdnChildNum";
 
 
-    private static final Integer NUM = 0;
+    private static final Long NUM = 0L;
 
     private static final String SYNC = "已同步";
 
@@ -66,6 +66,26 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
 
     @Resource
     private CertTreeServiceImpl certTreeService;
+
+    @Resource
+    private IndexServiceImpl indexService;
+
+    @Value("${command.binFile}")
+    private String binFile;
+
+    private static final String FRONT_COMMAND = "./ldapsearch -H ";
+
+
+    private static final String AND_D = "-D";
+
+    private static final String ALL_FILTER = "(objectClass=*)";
+
+    private static final String BEHIND_COMMAND= " |grep \"#\" |wc -l ";
+
+    private String FEED = " ";
+
+    private static final String CD = "cd ";
+
 
 
     /**
@@ -172,9 +192,14 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
     @Override
     public ResultVo<Object> mainQuery() {
         //查询数据库中所有 从服务的连接信息
-        List<SyncStatus> dataList = list();
 
-        return ResultUtil.success();
+
+        List<SyncStatus> dataList = list();
+        for (SyncStatus syncStatus : dataList) {
+            Long aLong = indexService.mainQueryLinux(syncStatus.getSyncPoint());
+            syncStatus.setMainServerNumber(aLong);
+        }
+        return ResultUtil.success(dataList);
     }
 
     @Override
@@ -206,17 +231,17 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         Map<String, Object> mainMap = new HashMap<>();
         LdapTemplate connection = connection(provider,searchbase,binddn,credentials);
         mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, connection, SCOPE,searchbase , FILTER);
-        Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
+        Long mainCount = Long.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
         syncStatus.setMainServerNumber(mainCount);
         //设置从服务数据初始值
-        Integer followCount = 0;
+        Long followCount = 0L;
         //查询从服务数据，判断连接状态，并且分别插入到返回值中
         try {
 
             Map<String, Object> followMap = new HashMap<>();
             LdapTemplate newLdapTemplate = certTreeService.fromPool();
             followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
-            followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
+            followCount = Long.valueOf(followMap.get(RDN_CHILD_NUM).toString());
         }catch (Exception e){
             followCount = NUM;
             syncStatus.setFollowServerNumber(followCount);
@@ -288,6 +313,56 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         }
         return ResultUtil.success(map);
 
+    }
+
+    @Override
+    public ResultVo<SyncStatus> queryFollowNum(QueryFollowNumDto queryFollowNumDto) {
+        Long result = 0L;
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append(queryFollowNumDto.getUrl())
+                    .append(FEED).append(AND_D).append(FEED).append("\"").append(queryFollowNumDto.getUserName())
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(queryFollowNumDto.getPassword())
+                    .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(queryFollowNumDto.getSyncPoint())
+                    .append("\"").append(FEED).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
+
+            log.info("linux运行命令为:{}",stringBuilder);
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("sh","-c",stringBuilder.toString());
+            Process exec = builder.start();
+            InputStream inputStream = exec.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                Long aLong = Long.valueOf(line.trim());
+                if (aLong < 10){
+                    result = 0L;
+                }else {
+                    result = aLong - 10;
+                }
+            }
+
+        }  catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        SyncStatus syncStatus = new SyncStatus();
+        syncStatus.setSyncPoint(queryFollowNumDto.getSyncPoint());
+        syncStatus.setAccount(queryFollowNumDto.getUserName());
+        syncStatus.setPassword(queryFollowNumDto.getPassword());
+        syncStatus.setMainServerNumber(queryFollowNumDto.getMainCount());
+        if (result.equals(0L) && queryFollowNumDto.getMainCount().equals(0L)){
+            syncStatus.setSyncStatusStr(SYNC);
+        }else if ((!result.equals(0L) && queryFollowNumDto.getMainCount().equals(0L)) || ( result.equals(0L) && !queryFollowNumDto.getMainCount().equals(0L))){
+            syncStatus.setSyncStatusStr(CONNECTION_FAILD);
+        }else if (result.equals(queryFollowNumDto.getMainCount())){
+            syncStatus.setSyncStatusStr(SYNC);
+        }else {
+            syncStatus.setSyncStatusStr(NOT_SYNC);
+        }
+        syncStatus.setFollowServerNumber(result);
+        syncStatus.setFollowServerIp(queryFollowNumDto.getUrl());
+        return ResultUtil.success(syncStatus);
     }
 
     /**

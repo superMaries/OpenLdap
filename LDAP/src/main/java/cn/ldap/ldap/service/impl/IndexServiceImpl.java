@@ -350,6 +350,38 @@ public class IndexServiceImpl implements IndexService {
         return ResultUtil.success(result);
     }
 
+    public Long mainQueryLinux(String searchBase){
+        Long result = 0L;
+        try {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
+                .append("\"").append(FEED).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
+
+        log.info("linux运行命令为:{}",stringBuilder);
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command("sh","-c",stringBuilder.toString());
+        Process exec = builder.start();
+        InputStream inputStream = exec.getInputStream();
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+        String line;
+        while ((line = bufferedReader.readLine()) != null){
+            Long aLong = Long.valueOf(line.trim());
+            if (aLong < 10){
+                result = 0L;
+            }else {
+                result = aLong - 10;
+            }
+        }
+
+    }  catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+        return result;
+    }
+
     /**
      * 根据字段名称查询对应的总数
      *

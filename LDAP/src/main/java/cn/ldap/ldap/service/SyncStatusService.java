@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service;
 
+import cn.ldap.ldap.common.dto.QueryFollowNumDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
 import cn.ldap.ldap.common.entity.SyncStatus;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -32,4 +33,6 @@ public interface SyncStatusService extends IService<SyncStatus> {
 
 
     ResultVo<Map<String, String>> queryServiceConfig();
+
+    ResultVo<SyncStatus> queryFollowNum(QueryFollowNumDto queryFollowNumDto);
 }
