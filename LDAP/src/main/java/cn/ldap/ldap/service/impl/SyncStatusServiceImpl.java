@@ -114,59 +114,67 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         return ResultUtil.success();
     }
 
+//    @Override
+//    public ResultVo<Object> mainQuery() {
+//        //查询数据库中所有 从服务的连接信息
+//        List<SyncStatus> dataList = list();
+//        log.info("查询配置数据为:{}", JSON.toJSONString(dataList));
+//        //判断集合是否为空
+//        if (CollectionUtils.isEmpty(dataList)) {
+//            return ResultUtil.fail(ExceptionEnum.COLLECTION_EMPTY);
+//        }
+//
+//        List<SyncStatus> resultList = new ArrayList<>();
+//        //遍历集合，通过集合获取连接信息，准备连接服务进行查询
+//        for (SyncStatus syncStatus : dataList) {
+//            if (ObjectUtils.isEmpty(syncStatus.getFollowServerIp())
+//                    || ObjectUtils.isEmpty(syncStatus.getSyncPoint())
+//                    || ObjectUtils.isEmpty(syncStatus.getAccount()) || ObjectUtils.isEmpty(syncStatus.getPassword())) {
+//                return ResultUtil.fail(ExceptionEnum.LDAP_DATA_ERROR);
+//            }
+//            //连接服务
+//            //查询主服务数据，判断连接状态，并且分别插入到返回值中
+//            Map<String, Object> mainMap = new HashMap<>();
+//            LdapTemplate newLdapTemplate = certTreeService.fromPool();
+//            mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
+//            Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
+//            syncStatus.setMainServerNumber(mainCount);
+//            //设置从服务数据初始值
+//            Integer followCount = 0;
+//            //查询从服务数据，判断连接状态，并且分别插入到返回值中
+//            try {
+//                LdapTemplate connection = connection(syncStatus.getFollowServerIp(), syncStatus.getSyncPoint(), syncStatus.getAccount(), syncStatus.getPassword());
+//                Map<String, Object> followMap = new HashMap<>();
+//                followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
+//                followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
+//            }catch (Exception e){
+//                followCount = NUM;
+//                syncStatus.setFollowServerNumber(followCount);
+//                syncStatus.setSyncStatusStr(CONNECTION_FAILD);
+//                resultList.add(syncStatus);
+//                continue;
+//            }
+//            syncStatus.setFollowServerNumber(followCount);
+//            if (followCount.equals(NUM)) {
+//                syncStatus.setSyncStatusStr(CONNECTION_FAILD);
+//            }
+//            if (mainCount.equals(followCount)) {
+//                syncStatus.setSyncStatusStr(SYNC);
+//            } else {
+//                syncStatus.setSyncStatusStr(NOT_SYNC);
+//            }
+//            resultList.add(syncStatus);
+//        }
+//        return ResultUtil.success(resultList);
+//    }
+
 
     @Override
     public ResultVo<Object> mainQuery() {
         //查询数据库中所有 从服务的连接信息
         List<SyncStatus> dataList = list();
-        log.info("查询配置数据为:{}", JSON.toJSONString(dataList));
-        //判断集合是否为空
-        if (CollectionUtils.isEmpty(dataList)) {
-            return ResultUtil.fail(ExceptionEnum.COLLECTION_EMPTY);
-        }
 
-        List<SyncStatus> resultList = new ArrayList<>();
-        //遍历集合，通过集合获取连接信息，准备连接服务进行查询
-        for (SyncStatus syncStatus : dataList) {
-            if (ObjectUtils.isEmpty(syncStatus.getFollowServerIp())
-                    || ObjectUtils.isEmpty(syncStatus.getSyncPoint())
-                    || ObjectUtils.isEmpty(syncStatus.getAccount()) || ObjectUtils.isEmpty(syncStatus.getPassword())) {
-                return ResultUtil.fail(ExceptionEnum.LDAP_DATA_ERROR);
-            }
-            //连接服务
-            //查询主服务数据，判断连接状态，并且分别插入到返回值中
-            Map<String, Object> mainMap = new HashMap<>();
-            LdapTemplate newLdapTemplate = certTreeService.fromPool();
-            mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
-            Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
-            syncStatus.setMainServerNumber(mainCount);
-            //设置从服务数据初始值
-            Integer followCount = 0;
-            //查询从服务数据，判断连接状态，并且分别插入到返回值中
-           try {
-               LdapTemplate connection = connection(syncStatus.getFollowServerIp(), syncStatus.getSyncPoint(), syncStatus.getAccount(), syncStatus.getPassword());
-               Map<String, Object> followMap = new HashMap<>();
-               followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
-               followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
-           }catch (Exception e){
-               followCount = NUM;
-               syncStatus.setFollowServerNumber(followCount);
-               syncStatus.setSyncStatusStr(CONNECTION_FAILD);
-               resultList.add(syncStatus);
-               continue;
-           }
-            syncStatus.setFollowServerNumber(followCount);
-            if (followCount.equals(NUM)) {
-                syncStatus.setSyncStatusStr(CONNECTION_FAILD);
-            }
-            if (mainCount.equals(followCount)) {
-                syncStatus.setSyncStatusStr(SYNC);
-            } else {
-                syncStatus.setSyncStatusStr(NOT_SYNC);
-            }
-            resultList.add(syncStatus);
-        }
-        return ResultUtil.success(resultList);
+        return ResultUtil.success();
     }
 
     @Override

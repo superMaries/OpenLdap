@@ -61,6 +61,7 @@ public enum ExceptionEnum {
     FILE_IO_ERROR(810, "文件流处理失败"),
     STR_ERROR(811, "字符格式错误"),
     NODE_NOT_EXIT(812, "节点不存在，重新配置"),
+    CER_ERROR(813,"证书或密钥为空，请上传"),
 
     SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
@@ -84,6 +85,7 @@ public enum ExceptionEnum {
 
     VALIDATE_ERROR(5013, "验证书链错误"),
     HEADER_ERROR(5014, "未有签名验签的值"),
+    NOT_DIRECTORY(5015,"该文件不是个文件夹"),
 
     //LDAP接口中的错误 全部定义8开头
     LDAP_RDN_NOT_EXIT(8001, "删除RDN错误"),
