@@ -1406,7 +1406,8 @@ public class LdapUtil {
         String fileContent = configFileData.toString();
         if (LdapAccuntAuthEnum.WRITE.getCode() != authCode) {
             //移除改字符串
-            fileContent = fileContent.replaceAll(data, "");
+            String fileContentEx = fileContent.replace(data, "");
+            fileContent=fileContentEx;
         } else {
             //判断是否存在 然后进行判断是否有改该行字符串
             if (true) {

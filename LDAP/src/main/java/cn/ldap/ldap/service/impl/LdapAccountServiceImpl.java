@@ -127,11 +127,12 @@ public class LdapAccountServiceImpl implements LdapAccountService {
      * 删除
      */
     @Override
-    public ResultVo<Boolean> delLdapAccount(LdapAccountDto ldapAccountDto) {
+    public ResultVo<Boolean> delLdapAccount(LdapAccountDto ldapAccountDto) throws NamingException {
         LdapTemplate newLdapTemplate = fromPool();
         LdapContext ctx = (LdapContext) newLdapTemplate.getContextSource().getReadOnlyContext();
 //        LdapUtil.queryChildRdn(ldapAccountDto.getAccount(), ldapSearchFilter, ctx);
         LdapUtil.queryChildRdn(ldapAccountDto.getAccount(), ldapSearchFilter, ctx);
+        LdapUtil.setAuth(ldapAccountDto.getAccount(),LdapAccuntAuthEnum.READ.getCode(),filePath);
         return ResultUtil.success(StaticValue.TRUE);
     }
 

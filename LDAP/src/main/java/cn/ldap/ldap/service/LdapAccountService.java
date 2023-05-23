@@ -5,6 +5,7 @@ import cn.ldap.ldap.common.vo.LdapAccountVo;
 import cn.ldap.ldap.common.vo.PageVo;
 import cn.ldap.ldap.common.vo.ResultVo;
 
+import javax.naming.NamingException;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public interface LdapAccountService {
     /**
      * 删除密码
      */
-    ResultVo<Boolean> delLdapAccount(LdapAccountDto ldapAccountDto);
+    ResultVo<Boolean> delLdapAccount(LdapAccountDto ldapAccountDto) throws NamingException;
     /**
      * 编辑账号
      */

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.naming.NamingException;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +69,7 @@ public class LdapAccountController {
      * 删除
      */
     @PostMapping("del")
-    public ResultVo<Boolean> delLdapAccount(@RequestBody LdapAccountDto ldapAccountDto) {
+    public ResultVo<Boolean> delLdapAccount(@RequestBody LdapAccountDto ldapAccountDto) throws NamingException {
         return ldapAccountService.delLdapAccount(ldapAccountDto);
     }
 }
