@@ -61,6 +61,7 @@ public enum ExceptionEnum {
     FILE_IO_ERROR(810, "文件流处理失败"),
     STR_ERROR(811, "字符格式错误"),
     NODE_NOT_EXIT(812, "节点不存在，重新配置"),
+    CER_ERROR(813,"证书或密钥为空，请上传"),
 
     SIGN_DATA_ERROR(880, "数据不正常，验签错误"),
     //失败
