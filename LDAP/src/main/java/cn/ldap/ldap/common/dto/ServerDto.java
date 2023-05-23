@@ -22,4 +22,16 @@ public class ServerDto {
      * SSL认证策略 never单向 demand 双向
      */
     private String sslAuthStrategy;
+    /**
+     * ca证书
+     */
+    private String caCer;
+    /**
+     * 服务器证书
+     */
+    private String serverCer;
+    /**
+     * 密钥
+     */
+    private String key;
 }

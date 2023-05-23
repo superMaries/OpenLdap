@@ -21,10 +21,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.ini4j.Profile;
 import org.ini4j.Wini;
+import org.omg.CORBA.SystemException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.*;
@@ -75,6 +78,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
      */
     @Value("${filePath.configPath}")
     private String configPath;
+
 
     /**
      * 配置文件所在路径
@@ -145,25 +149,27 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
                 || (!serverDto.getOperation() && !serverDto.getSafeOperation())) {
             return ResultUtil.fail(ExceptionEnum.PARAM_EMPTY);
         }
+
+        //数据库存储数据
         SSLConfig sslConfig = sslConfigService.getOne(null);
         if (ObjectUtils.isEmpty(sslConfig)) {
-            SSLConfig sslConfigNew = new SSLConfig();
+          //  SSLConfig sslConfigNew = new SSLConfig();
             if (!BeanUtil.isEmpty(serverDto.getOperation())) {
-                sslConfigNew.setOperation(serverDto.getOperation());
+                sslConfig.setOperation(serverDto.getOperation());
             }
             if (!BeanUtil.isEmpty(serverDto.getPort())) {
-                sslConfigNew.setPort(serverDto.getPort());
+                sslConfig.setPort(serverDto.getPort());
             }
             if (!BeanUtil.isEmpty(serverDto.getSafeOperation())) {
-                sslConfigNew.setSafeOperation(serverDto.getSafeOperation());
+                sslConfig.setSafeOperation(serverDto.getSafeOperation());
             }
             if (!BeanUtil.isEmpty(serverDto.getSafePort())) {
-                sslConfigNew.setSafePort(serverDto.getSafePort());
+                sslConfig.setSafePort(serverDto.getSafePort());
             }
             if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
-                sslConfigNew.setSslAuthStrategy(serverDto.getSslAuthStrategy());
+                sslConfig.setSslAuthStrategy(serverDto.getSslAuthStrategy());
             }
-            sslConfigService.save(sslConfigNew);
+          //  sslConfigService.save(sslConfigNew);
         } else {
             if (!BeanUtil.isEmpty(serverDto.getOperation())) {
                 sslConfig.setOperation(serverDto.getOperation());
@@ -180,7 +186,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
                 sslConfig.setSslAuthStrategy(serverDto.getSslAuthStrategy());
             }
-            sslConfigService.updateById(sslConfig);
+          //  sslConfigService.updateById(sslConfig);
         }
 
         //定义一个命令
@@ -202,7 +208,16 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             if (serverDto.getPort().equals(serverDto.getSafePort())){
                 return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
             }
-            validCert();
+            if (ObjectUtils.isEmpty(serverDto.getCaCer()) || ObjectUtils.isEmpty(serverDto.getServerCer()) ||ObjectUtils.isEmpty(serverDto.getKey())){
+                return ResultUtil.fail(ExceptionEnum.CER_ERROR);
+            }
+            try {
+                validCert(serverDto.getServerCer(), serverDto.getCaCer());
+            }catch (SystemException systemException){
+                return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
+            }
+
+            makeCer(serverDto.getCaCer(),serverDto.getServerCer(),serverDto.getKey());
             //安全协议命令
             command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort()+YIN + SPACE + LAST_COMMAND;
             updateOther(STANDART_SERVER);
@@ -214,12 +229,23 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             if (serverDto.getPort().equals(serverDto.getSafePort())){
                 return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
             }
-            validCert();
+
+            if (ObjectUtils.isEmpty(serverDto.getCaCer()) || ObjectUtils.isEmpty(serverDto.getServerCer()) ||ObjectUtils.isEmpty(serverDto.getKey())){
+                return ResultUtil.fail(ExceptionEnum.CER_ERROR);
+            }
+            try {
+                validCert(serverDto.getServerCer(), serverDto.getCaCer());
+            }catch (SystemException systemException){
+                return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
+            }
+
+            makeCer(serverDto.getCaCer(),serverDto.getServerCer(),serverDto.getKey());
             //双重协议命令
             command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + UNDER_COMMAND + serverDto.getPort()+YIN + SPACE + LAST_COMMAND;
             objectResultVo = twice(command, serverDto);
         }
-
+        //保存或者修改
+        sslConfigService.saveOrUpdate(sslConfig);
         if (serverDto.getSafeOperation()) {
             syncConfig(serverDto);
         }else {
@@ -229,43 +255,44 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         return objectResultVo;
     }
 
-    public ResultVo<Object> validCert(){
+    public ResultVo<Object> validCert(String caCer,String serverCer){
         //CA证书
-        String caCert = "";
-        String certLine = "";
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + CASERVER_CERT))) {
-            while (null != (certLine=bufferedReader.readLine())) {
+     //   String caCert = "";
+   //     String certLine = "";
+//        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + CASERVER_CERT))) {
+//            while (null != (certLine=bufferedReader.readLine())) {
+//
+//                if (null !=certLine &&!certLine.startsWith(CERT_Start_DROP) ) {
+//                    caCert += certLine;
+//                }
+//            }
+//        } catch (IOException e) {
+//            log.error("文件流错误:{}", e.getMessage());
+//            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+//        }
+//        //服务器证书
+//        String serverCert = "";
+//        String line = "";
+//        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + SERVER_CERT))) {
+//
+//            while (null !=(line= bufferedReader.readLine())) {
+//
+//                if (null != line &&!line.startsWith(CERT_Start_DROP)) {
+//                    serverCert += line;
+//                }
+//            }
+//        } catch (IOException e) {
+//            log.error("文件流错误:{}", e.getMessage());
+//            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
+//        }
 
-                if (null !=certLine &&!certLine.startsWith(CERT_Start_DROP) ) {
-                    caCert += certLine;
-                }
-            }
-        } catch (IOException e) {
-            log.error("文件流错误:{}", e.getMessage());
-            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
-        }
-        //服务器证书
-        String serverCert = "";
-        String line = "";
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + SERVER_CERT))) {
-
-            while (null !=(line= bufferedReader.readLine())) {
-
-                if (null != line &&!line.startsWith(CERT_Start_DROP)) {
-                    serverCert += line;
-                }
-            }
-        } catch (IOException e) {
-            log.error("文件流错误:{}", e.getMessage());
-            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
-        }
-        log.info("处理前CA证书:{}",caCert);
-        log.info("处理前服务器证书:{}",serverCert);
-        caCert = IscSignUtil.otherToBase64(caCert);
-        log.info("CA证书:{}",caCert);
-        serverCert = IscSignUtil.otherToBase64(serverCert);
-        log.info("服务器证书:{}",serverCert);
+       String caCert = IscSignUtil.otherToBase64(caCer);
+      //  log.info("CA证书:{}",caCert);
+       String serverCert = IscSignUtil.otherToBase64(serverCer);
+     //   log.info("服务器证书:{}",serverCert);
         //验证书链
+        log.info("处理后CA证书:{}",caCert);
+        log.info("处理后服务器证书:{}",serverCert);
         boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
         if (StaticValue.FALSE == validateCertChain) {
             throw new SysException(ExceptionEnum.VALIDATE_ERROR);
@@ -427,6 +454,31 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             outputFile.renameTo(inputFile);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 封装证书
+     */
+    public void makeCer(String caCer,String serverCer,String key){
+        caCer = IscSignUtil.otherToBase64(caCer);
+        serverCer = IscSignUtil.otherToBase64(serverCer);
+        key = IscSignUtil.otherToBase64(key);
+        writeCer(caCer,CASERVER_CERT);
+        writeCer(serverCer,SERVER_CERT);
+        writeCer(key,SERVER_KEY);
+    }
+
+    public void writeCer(String data,String name){
+        String filePath = certPath+name;
+        ;
+        try {
+            FileWriter fileWriter = new FileWriter(filePath);
+            fileWriter.write(data);
+            fileWriter.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
