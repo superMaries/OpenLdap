@@ -1,5 +1,6 @@
 package cn.ldap.ldap.controller;
 
+import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.LdapAccountDto;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.naming.NamingException;
 import java.util.List;
 import java.util.Map;
 
@@ -74,6 +76,10 @@ public class LdapAccountController {
     @PostMapping("del")
     @OperateAnnotation(operateModel = OperateMenuEnum.LDAP_ACCOUNT, operateType = OperateTypeEnum.ACCOUNT_DELETE)
     public ResultVo<Boolean> delLdapAccount(@RequestBody LdapAccountDto ldapAccountDto) {
-        return ldapAccountService.delLdapAccount(ldapAccountDto);
+        try {
+            return ldapAccountService.delLdapAccount(ldapAccountDto);
+        } catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
