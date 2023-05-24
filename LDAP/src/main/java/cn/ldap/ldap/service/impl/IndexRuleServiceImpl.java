@@ -293,7 +293,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         //验证书链
         log.info("处理后CA证书:{}",caCert);
         log.info("处理后服务器证书:{}",serverCert);
-        boolean validateCertChain = CryptUtil.validateCertChain(serverCert, caCert);
+        boolean validateCertChain = CryptUtil.validateCertChain(caCert, serverCert);
         if (StaticValue.FALSE == validateCertChain) {
             throw new SysException(ExceptionEnum.VALIDATE_ERROR);
         }

@@ -24,12 +24,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+
+import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
+import static cn.ldap.ldap.common.enums.ExceptionEnum.NOT_DIRECTORY;
 
 /**
  * @title: CertTreeServiceImpl
@@ -53,6 +55,31 @@ public class CertTreeServiceImpl implements CertTreeService {
     private static final String FEED = "\n";
 
     private static final String LAST = ".ldif";
+
+
+    @Value("${command.binFile}")
+    private String binFile;
+
+    @Value("${ldap.userDn}")
+    private String account;
+
+    @Value("${ldap.password}")
+    private String password;
+
+    @Value("${ldap.searchBase}")
+    private String searchBase;
+
+    private static final String FRONT_COMMAND = "./ldapsearch -D ";
+
+    private static final String ONE = " -s one";
+
+    private static final String ALL_FILTER = "(objectClass=*)";
+
+    private static final String BEHIND_COMMAND= " |grep \"#\" |wc -l ";
+
+    private String SPACE = " ";
+
+    private static final String CD = "cd ";
 
     /**
      * 查询目录树接口
@@ -133,8 +160,85 @@ public class CertTreeServiceImpl implements CertTreeService {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
         Map<String, Object> map = new HashMap<>();
-        LdapTemplate newLdapTemplate = fromPool();
-        map = LdapUtil.queryTreeRdnOrNumEx(map, newLdapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
+
+
+
+        Long resultFather = 0L;
+
+        Long resultSon = 0L;
+        try {
+            log.info("切换到可执行命令文件夹:{}",binFile);
+            File file = new File(binFile);
+            if (!file.exists()){
+                throw new SysException(FILE_NOT_EXIST);
+            }
+            if (!file.isDirectory()){
+                throw new SysException(NOT_DIRECTORY);
+            }
+
+            //拼接linux命令
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(password)
+                    .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
+                    .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(ONE).append(BEHIND_COMMAND);
+
+            log.info("linux运行命令为:{}",stringBuilder);
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("sh","-c",stringBuilder.toString());
+            Process exec = builder.start();
+            InputStream inputStream = exec.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                Long aLong = Long.valueOf(line.trim());
+                log.info("Linux查询数量为:{}",aLong);
+                if (aLong < 10){
+                    resultSon = 0L;
+                }else {
+                    resultSon = aLong - 10;
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+try{
+
+        StringBuilder stringBuilderFather = new StringBuilder();
+        stringBuilderFather.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(password)
+                .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
+                .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
+
+        log.info("linux运行命令为:{}",stringBuilderFather);
+        ProcessBuilder builderFather = new ProcessBuilder();
+    builderFather.command("sh","-c",stringBuilderFather.toString());
+        Process exec = builderFather.start();
+        InputStream inputStreamFather = exec.getInputStream();
+        BufferedReader bufferedReaderFather = new BufferedReader(new InputStreamReader(inputStreamFather));
+
+        String line;
+        while ((line = bufferedReaderFather.readLine()) != null){
+            Long aLong = Long.valueOf(line.trim());
+            log.info("Linux查询数量为:{}",aLong);
+            if (aLong < 10){
+                resultFather = 0L;
+            }else {
+                resultFather = aLong - 10;
+            }
+        }
+
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+        map.put(StaticValue.RDN_NUM_KEY, resultSon);
+        map.put(StaticValue.RDN_CHILD_NUM_KEY, resultFather);
+        //--------------------------------------------------------------------
+       // LdapTemplate newLdapTemplate = fromPool();
+        //map = LdapUtil.queryTreeRdnOrNumEx(map, newLdapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
         return ResultUtil.success(map);
     }
 

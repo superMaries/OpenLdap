@@ -70,6 +70,11 @@ public enum OperateTypeEnum {
 
     //服务管理
     SERVICE_QUERY(1001, "服务管理"),
+
+    ACCOUNT_ADD(1101,"账户管理添加"),
+    ACCOUNT_DELETE(1102,"账户管理删除"),
+    ACCOUNT_UPDATE_PASSWORD(1103,"账户管理重置密码"),
+    ACCOUNT_UPDATE_AUTH(1104,"账户管理修改权限"),
     ;
 
     public static Map<String, String> getMap() {

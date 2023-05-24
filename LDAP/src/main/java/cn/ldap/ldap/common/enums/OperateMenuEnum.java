@@ -26,6 +26,8 @@ public enum OperateMenuEnum {
     INDEX(7, "索引管理"),
 
     SERVICE_MANAGER(8, "服务管理"),
+
+    LDAP_ACCOUNT(9,"账户管理"),
     ;
 
     /**
