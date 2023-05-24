@@ -62,10 +62,12 @@ public class LdapUtil {
 
         try {
             NamingEnumeration<SearchResult> answer = ctx.search(baseDn, "(objectClass=person)", controls);
-//            boolean hasMore = answer.hasMore();
+//            boolean hasMore = answer.hasMore();、
+            log.info("查询：{}", answer.hasMore());
             while (answer.hasMore()) {
                 LdapAccountVo vo = new LdapAccountVo();
                 SearchResult sr = answer.next();
+                log.info("信息为：{}", sr);
 //                Attributes attrs = sr.getAttributes();
                 String account = sr.getNameInNamespace();
 //                System.out.println("Username: " + attrs.get("uid").get());
@@ -77,7 +79,7 @@ public class LdapUtil {
                 ldapList.add(vo);
             }
         } catch (NamingException e) {
-            log.error(e.getMessage());
+            log.error("查询账户异常：{}", e.getMessage());
         }
         return ldapList;
     }
@@ -370,6 +372,7 @@ public class LdapUtil {
     public static List<CertTreeVo> queryCertTree(LdapTemplate ldapTemplate, String ldapSearchFilter, String ldapSearchBase, Integer scope, Integer pageSize, Integer page, Map<String, Object> map) {
 
         List<CertTreeVo> certTreeVos = new ArrayList<>();
+
         //DirContext ctx = null;
         //ctx = ldapTemplate.getContextSource().getReadOnlyContext();
         // LdapContextSource contextSource = (LdapContextSource) ldapTemplate.getContextSource();
@@ -381,23 +384,25 @@ public class LdapUtil {
         //查询多少条
 
         if (map != null) {
-            AttributesMapper mapper = new AttributesMapper() {
-                @Override
-                public Object mapFromAttributes(Attributes attributes) throws NamingException {
-                    return attributes;
-                }
-            };
-            long total = 0l;
-            try {
-                total = ldapTemplate.search(ldapSearchBase, ldapSearchFilter, mapper).size();
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                total = 0l;
-            }
-            map.put("total", total);
-            map.put("page", total / pageSize + (total % pageSize != 0 ? 1 : 0));
+//            AttributesMapper mapper = new AttributesMapper() {
+//                @Override
+//                public Object mapFromAttributes(Attributes attributes) throws NamingException {
+//                    return attributes;
+//                }
+//            };
+//            long total = 0l;
+//            try {
+//                total = ldapTemplate.search(ldapSearchBase, ldapSearchFilter, mapper).size();
+//            } catch (Exception e) {
+//                log.error(e.getMessage());
+//                total = 0l;
+//            }
+//            map.put("total", total);
+//            map.put("page", total / pageSize + (total % pageSize != 0 ? 1 : 0));
             map.put("data", certTreeVos);
         }
+
+//        -------------------------
         //page 默认为1 pageSize 1000
         //      总共需要查的数据
         long endNum = page * pageSize;
@@ -419,8 +424,10 @@ public class LdapUtil {
                 //分页查询
                 NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, ldapSearchFilter, searchControls);
                 //统计总数
+                log.info("证书目录数：{}", results.hasMore());
                 while (results.hasMore()) {
                     SearchResult result = results.next();
+                    log.info("证书目录值：{}", result);
                     if (count < startNum) {
                         count++;
                         continue;
@@ -1407,7 +1414,7 @@ public class LdapUtil {
         if (LdapAccuntAuthEnum.WRITE.getCode() != authCode) {
             //移除改字符串
             String fileContentEx = fileContent.replace(data, "");
-            fileContent=fileContentEx;
+            fileContent = fileContentEx;
         } else {
             //判断是否存在 然后进行判断是否有改该行字符串
             if (true) {

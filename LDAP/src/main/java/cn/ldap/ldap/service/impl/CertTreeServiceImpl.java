@@ -75,7 +75,7 @@ public class CertTreeServiceImpl implements CertTreeService {
 
     private static final String ALL_FILTER = "(objectClass=*)";
 
-    private static final String BEHIND_COMMAND= " |grep \"#\" |wc -l ";
+    private static final String BEHIND_COMMAND = " |grep \"#\" |wc -l ";
 
     private String SPACE = " ";
 
@@ -104,7 +104,7 @@ public class CertTreeServiceImpl implements CertTreeService {
         }
         LdapTemplate newLdapTemplate = fromPool();
         List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(newLdapTemplate, treeVo.getFilter(), treeVo.getBaseDN(),
-                treeVo.getScope(), treeVo.getPageSize(), treeVo.getPage(),null);
+                treeVo.getScope(), treeVo.getPageSize(), treeVo.getPage(), null);
         return ResultUtil.success(listResultVo);
     }
 
@@ -132,17 +132,56 @@ public class CertTreeServiceImpl implements CertTreeService {
      * @return 返回树型结构
      */
     @Override
-    public ResultVo<Map<String, Object>>  queryTree(CertTreeDto treeVo) {
-        if (ObjectUtils.isEmpty(treeVo.getFilter())){
+    public ResultVo<Map<String, Object>> queryTree(CertTreeDto treeVo) {
+        if (ObjectUtils.isEmpty(treeVo.getFilter())) {
             return ResultUtil.fail(ExceptionEnum.LDAP_ERROR_FILTER);
         }
         if (ObjectUtils.isEmpty(treeVo)) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
-        Map<String, Object> map=new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         LdapTemplate newLdapTemplate = fromPool();
+
+        List<CertTreeVo> certTreeVos = new ArrayList<>();
+        long total = 0L;
+
+        try {
+
+            StringBuilder stringBuilderFather = new StringBuilder();
+            stringBuilderFather.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(password)
+                    .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
+                    .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
+
+            log.info("linux运行命令为:{}", stringBuilderFather);
+            ProcessBuilder builderFather = new ProcessBuilder();
+            builderFather.command("sh", "-c", stringBuilderFather.toString());
+            Process exec = builderFather.start();
+            InputStream inputStreamFather = exec.getInputStream();
+            BufferedReader bufferedReaderFather = new BufferedReader(new InputStreamReader(inputStreamFather));
+
+            String line;
+            while ((line = bufferedReaderFather.readLine()) != null) {
+                Long aLong = Long.valueOf(line.trim());
+                log.info("Linux查询数量为:{}", aLong);
+                if (aLong < 10) {
+                    total = 0L;
+                } else {
+                    total = aLong - 10;
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        map.put("total", total);
+        map.put("page", total / treeVo.getPageSize() + (total % treeVo.getPageSize() != 0 ? 1 : 0));
+
+
         LdapUtil.queryCertTree(newLdapTemplate, treeVo.getFilter(), treeVo.getBaseDN(),
-                treeVo.getScope(), treeVo.getPageSize(), treeVo.getPage(),map);
+                treeVo.getScope(), treeVo.getPageSize(), treeVo.getPage(), map);
 
 
         return ResultUtil.success(map);
@@ -162,17 +201,16 @@ public class CertTreeServiceImpl implements CertTreeService {
         Map<String, Object> map = new HashMap<>();
 
 
-
         Long resultFather = 0L;
 
         Long resultSon = 0L;
         try {
-            log.info("切换到可执行命令文件夹:{}",binFile);
+            log.info("切换到可执行命令文件夹:{}", binFile);
             File file = new File(binFile);
-            if (!file.exists()){
+            if (!file.exists()) {
                 throw new SysException(FILE_NOT_EXIST);
             }
-            if (!file.isDirectory()){
+            if (!file.isDirectory()) {
                 throw new SysException(NOT_DIRECTORY);
             }
 
@@ -183,20 +221,20 @@ public class CertTreeServiceImpl implements CertTreeService {
                     .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
                     .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(ONE).append(BEHIND_COMMAND);
 
-            log.info("linux运行命令为:{}",stringBuilder);
+            log.info("linux运行命令为:{}", stringBuilder);
             ProcessBuilder builder = new ProcessBuilder();
-            builder.command("sh","-c",stringBuilder.toString());
+            builder.command("sh", "-c", stringBuilder.toString());
             Process exec = builder.start();
             InputStream inputStream = exec.getInputStream();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
             String line;
-            while ((line = bufferedReader.readLine()) != null){
+            while ((line = bufferedReader.readLine()) != null) {
                 Long aLong = Long.valueOf(line.trim());
-                log.info("Linux查询数量为:{}",aLong);
-                if (aLong < 10){
+                log.info("Linux查询数量为:{}", aLong);
+                if (aLong < 10) {
                     resultSon = 0L;
-                }else {
+                } else {
                     resultSon = aLong - 10;
                 }
             }
@@ -205,39 +243,39 @@ public class CertTreeServiceImpl implements CertTreeService {
             throw new RuntimeException(e);
         }
 
-try{
+        try {
 
-        StringBuilder stringBuilderFather = new StringBuilder();
-        stringBuilderFather.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
-                .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(password)
-                .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
-                .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
+            StringBuilder stringBuilderFather = new StringBuilder();
+            stringBuilderFather.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(password)
+                    .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
+                    .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
 
-        log.info("linux运行命令为:{}",stringBuilderFather);
-        ProcessBuilder builderFather = new ProcessBuilder();
-    builderFather.command("sh","-c",stringBuilderFather.toString());
-        Process exec = builderFather.start();
-        InputStream inputStreamFather = exec.getInputStream();
-        BufferedReader bufferedReaderFather = new BufferedReader(new InputStreamReader(inputStreamFather));
+            log.info("linux运行命令为:{}", stringBuilderFather);
+            ProcessBuilder builderFather = new ProcessBuilder();
+            builderFather.command("sh", "-c", stringBuilderFather.toString());
+            Process exec = builderFather.start();
+            InputStream inputStreamFather = exec.getInputStream();
+            BufferedReader bufferedReaderFather = new BufferedReader(new InputStreamReader(inputStreamFather));
 
-        String line;
-        while ((line = bufferedReaderFather.readLine()) != null){
-            Long aLong = Long.valueOf(line.trim());
-            log.info("Linux查询数量为:{}",aLong);
-            if (aLong < 10){
-                resultFather = 0L;
-            }else {
-                resultFather = aLong - 10;
+            String line;
+            while ((line = bufferedReaderFather.readLine()) != null) {
+                Long aLong = Long.valueOf(line.trim());
+                log.info("Linux查询数量为:{}", aLong);
+                if (aLong < 10) {
+                    resultFather = 0L;
+                } else {
+                    resultFather = aLong - 10;
+                }
             }
-        }
 
-    } catch (IOException e) {
-        throw new RuntimeException(e);
-    }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         map.put(StaticValue.RDN_NUM_KEY, resultSon);
         map.put(StaticValue.RDN_CHILD_NUM_KEY, resultFather);
         //--------------------------------------------------------------------
-       // LdapTemplate newLdapTemplate = fromPool();
+        // LdapTemplate newLdapTemplate = fromPool();
         //map = LdapUtil.queryTreeRdnOrNumEx(map, newLdapTemplate, treeVo.getScope(), treeVo.getBaseDN(), treeVo.getFilter());
         return ResultUtil.success(map);
     }
@@ -264,7 +302,7 @@ try{
      */
     @Override
     public ResultVo<Boolean> updateLdapBindTree(LdapBindTreeDto ldapBindTreeDto) {
-        LdapTemplate newLdapTemplate= fromPool();
+        LdapTemplate newLdapTemplate = fromPool();
         boolean result = LdapUtil.updateLdapBindTree(newLdapTemplate, ldapBindTreeDto, ldapSearchFilter);
         return ResultUtil.success(true);
     }
@@ -295,7 +333,7 @@ try{
                 || ObjectUtils.isEmpty(exportDto.getBaseDN())
                 || ObjectUtils.isEmpty(exportDto.getScope())
                 || ObjectUtils.isEmpty(exportDto.getExportType())
-                ) {
+        ) {
             log.error("缺少参数:{}", exportDto);
             throw new SysException(ExceptionEnum.PARAM_ERROR);
         }
@@ -407,7 +445,7 @@ try{
     public List<String> queryData(ParamDto paramDto) {
         LdapTemplate newLdapTemplate = fromPool();
         List<CertTreeVo> listResultVo = LdapUtil.queryCertTree(newLdapTemplate, paramDto.getFilter(), paramDto.getBaseDN(),
-                paramDto.getScope(), paramDto.getPageSize(), paramDto.getPage(),null);
+                paramDto.getScope(), paramDto.getPageSize(), paramDto.getPage(), null);
         List<String> strings = new ArrayList<>();
         for (CertTreeVo certTreeVo : listResultVo) {
             LinkedHashMap<String, Object> map = new LinkedHashMap<>();
@@ -435,7 +473,7 @@ try{
         }
     }
 
-    public LdapTemplate fromPool(){
+    public LdapTemplate fromPool() {
         // 从连接池获取PooledContextSource对象
         PooledContextSource pooledContextSource = (PooledContextSource) ldapTemplate.getContextSource();
 // 将PooledContextSource转换为LdapContextSource
