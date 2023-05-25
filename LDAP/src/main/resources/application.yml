@@ -3,6 +3,8 @@ server:
   port: 8879
 #数据库配置
 spring:
+  main:
+    allow-circular-references: true
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
@@ -14,37 +16,46 @@ spring:
       static-path-pattern: /**
   ldap:
     #    urls: ldap://39.98.83.34:389/ #openldap连接地址
-    urls: ldap://123.57.204.10:389/ #openldap连接地址
+  #  urls: ldap://123.57.204.10:389/ #openldap连接地址
     #    username: cn=root,dc=super,dc=com #用户名
-    username: cn=Directory Manager,c=cn
+   # username: cn=Directory Manager,c=cn
     #    password: 123456 #密码
-    password: Js3qCaLdapAdmin
-    base: #dc=super
+   # password: Js3qCaLdapAdmin
+   # base: #dc=super
   datasource:
     #    url: jdbc:sqlite:D:\工具\ldap.sqlite
-    url: jdbc:sqlite:E:\博雅\项目\LDAP\项目\ldap\ldap.sqlite
+    url: jdbc:sqlite:/Users/suntao/Documents/soft/database/ldap.sqlite
     driver-class-name: org.sqlite.JDBC
     username:
     password:
-
   servlet:
     multipart:
       max-request-size: 1024MB
       max-file-size: 1024MB
 
 
-
+#所有配置文件路径
 filePath:
-  clientToolPath: C:\Users\77512\Desktop\数字证书管理工具V1.12.22.1024-1.exe
-  manualPath: C:\Users\77512\Desktop\安全备份系统安装手册-V3tax.docx
-  #configPath: C:\Users\77512\Desktop\aaaa\slapd.conf
-  configPath: C:\Users\17529\Desktop\1\slapd.conf
-  certPath: D:\工具\
-  runPath: C:\Users\77512\Desktop\aaaa\slapd.service
-  shPath:
+  clientToolPath: /Users/suntao/Documents/soft/file/ldap/数字证书管理工具V1.12.22.1024-1.exe
+  manualPath: /Users/suntao/Documents/soft/file/ldap/安全备份系统安装手册-V3tax.pdf
+  configPath: /Users/suntao/Documents/soft/file/slapd.conf
+  certPath: /Users/suntao/Documents/soft/file/
+  runPath: /Users/suntao/Documents/soft/file/ldap/slapd.service
+  shPath: /Users/suntao/Documents/soft/file/ldap/ldapStart.sh
+  questionsPath: /Users/suntao/Documents/soft/file/ldap/安全备份系统安装手册-V3tax.pdf
 ldap:
   searchFilter: (objectClass=*)
   searchBase: c=cn
+  url: ldap://39.98.83.34:389/
+  base:
+  userDn: cn=Directory Manager,c=cn
+  password: Js3qCaLdapAdmin
+  pool:
+    minIdle: 0
+    maxIdle: 16
+    maxActive: 16
+    maxWait: 100000
+#版本号
 version:
   serviceVersion: "服务版本-2023-03-31 V1.0"
   clientVersion: 1.12.22.1024-1
@@ -54,11 +65,30 @@ login:
   timeout: 10000
 
 token:
-  validTime: 1
+  validTime: 100
 
-
+#从服务链接
 ldapLink:
-  url: 123.57.204.10
+  url: 39.98.83.34
   port: 389
   userName: cn=Directory Manager,c=cn
   password: Js3qCaLdapAdmin
+#是否展示所有objectClass属性
+
+objectClassConfig:
+  open: "all"
+
+#logging:
+#  level: info
+#  file: /Users/suntao/Documents/project/LDAP/system.log
+
+logging:
+  level:
+    root: info # 根日志输出等级
+    com.example: debug # com.example 包下的日志输出等级
+  file:
+    name: /Users/suntao/Documents/project/LDAP/system.log # 日志输出路径
+
+#ldap后台命令所在文件
+command:
+  binFile: "/usr/local/openldap/bin"

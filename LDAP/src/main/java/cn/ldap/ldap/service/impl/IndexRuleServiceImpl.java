@@ -2,6 +2,7 @@ package cn.ldap.ldap.service.impl;
 
 import cn.byzk.util.CryptUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.codec.Base64Decoder;
 import cn.ldap.ldap.common.dto.ServerDto;
 import cn.ldap.ldap.common.entity.IndexRule;
 import cn.ldap.ldap.common.entity.PortLink;
@@ -19,6 +20,7 @@ import cn.ldap.ldap.service.SSLConfigService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
 import org.ini4j.Profile;
 import org.ini4j.Wini;
 import org.omg.CORBA.SystemException;
@@ -32,6 +34,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.io.*;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
 
@@ -45,8 +48,6 @@ import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
 public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule> implements IndexRuleService {
 
 
-
-
     private static final String CERT_Start_DROP = "---";
 
     private static final String SPACE = " ";
@@ -57,7 +58,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
     private static final String AFTER_COMMAND = "\"ldap://0.0.0.0:";
 
-    private static final String UNDER_COMMAND="ldap://0.0.0.0:";
+    private static final String UNDER_COMMAND = "ldap://0.0.0.0:";
 
 
     private static final String BEHIND = "nohup /usr/local/openldap/libexec/slapd -h";
@@ -152,8 +153,11 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
         //数据库存储数据
         SSLConfig sslConfig = sslConfigService.getOne(null);
+        sslConfig.setCaName(certPath + CASERVER_CERT);
+        sslConfig.setServerName(certPath + SERVER_CERT);
+        sslConfig.setKeyName(certPath + SERVER_KEY);
         if (ObjectUtils.isEmpty(sslConfig)) {
-          //  SSLConfig sslConfigNew = new SSLConfig();
+            //  SSLConfig sslConfigNew = new SSLConfig();
             if (!BeanUtil.isEmpty(serverDto.getOperation())) {
                 sslConfig.setOperation(serverDto.getOperation());
             }
@@ -169,7 +173,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
                 sslConfig.setSslAuthStrategy(serverDto.getSslAuthStrategy());
             }
-          //  sslConfigService.save(sslConfigNew);
+            //  sslConfigService.save(sslConfigNew);
         } else {
             if (!BeanUtil.isEmpty(serverDto.getOperation())) {
                 sslConfig.setOperation(serverDto.getOperation());
@@ -186,7 +190,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
                 sslConfig.setSslAuthStrategy(serverDto.getSslAuthStrategy());
             }
-          //  sslConfigService.updateById(sslConfig);
+            //  sslConfigService.updateById(sslConfig);
         }
 
         //定义一个命令
@@ -194,71 +198,71 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         ResultVo<Object> objectResultVo = null;
         //标准协议
         if (serverDto.getOperation() && !serverDto.getSafeOperation()) {
-            if (serverDto.getPort().equals(serverDto.getSafePort())){
+            if (serverDto.getPort().equals(serverDto.getSafePort())) {
                 return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
             }
             //标准协议命令
-            command = BEHIND + SPACE +AFTER_COMMAND+ serverDto.getPort()+YIN + SPACE + LAST_COMMAND;
+            command = BEHIND + SPACE + AFTER_COMMAND + serverDto.getPort() + YIN + SPACE + LAST_COMMAND;
             updateOther(SAFE_SERVER);
             objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
             log.info("标准协议配置为:{}", command);
         }
         //安全协议
         if (!serverDto.getOperation() && serverDto.getSafeOperation()) {
-            if (serverDto.getPort().equals(serverDto.getSafePort())){
+            if (serverDto.getPort().equals(serverDto.getSafePort())) {
                 return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
             }
-            if (ObjectUtils.isEmpty(serverDto.getCaCer()) || ObjectUtils.isEmpty(serverDto.getServerCer()) ||ObjectUtils.isEmpty(serverDto.getKey())){
+            if (ObjectUtils.isEmpty(serverDto.getCaCer()) || ObjectUtils.isEmpty(serverDto.getServerCer()) || ObjectUtils.isEmpty(serverDto.getKey())) {
                 return ResultUtil.fail(ExceptionEnum.CER_ERROR);
             }
             try {
                 validCert(serverDto.getServerCer(), serverDto.getCaCer());
-            }catch (SystemException systemException){
+            } catch (SystemException systemException) {
                 return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
             }
 
-            makeCer(serverDto.getCaCer(),serverDto.getServerCer(),serverDto.getKey());
+            makeCer(serverDto.getCaCer(), serverDto.getServerCer(), serverDto.getKey());
             //安全协议命令
-            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort()+YIN + SPACE + LAST_COMMAND;
+            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + YIN + SPACE + LAST_COMMAND;
             updateOther(STANDART_SERVER);
             objectResultVo = onlyOne(command, serverDto, SAFE_SERVER);
             log.info("安全协议开启端口:{}", command);
         }
         //安全协议标准协议全部开启
         if (serverDto.getOperation() && serverDto.getSafeOperation()) {
-            if (serverDto.getPort().equals(serverDto.getSafePort())){
+            if (serverDto.getPort().equals(serverDto.getSafePort())) {
                 return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
             }
 
-            if (ObjectUtils.isEmpty(serverDto.getCaCer()) || ObjectUtils.isEmpty(serverDto.getServerCer()) ||ObjectUtils.isEmpty(serverDto.getKey())){
+            if (ObjectUtils.isEmpty(serverDto.getCaCer()) || ObjectUtils.isEmpty(serverDto.getServerCer()) || ObjectUtils.isEmpty(serverDto.getKey())) {
                 return ResultUtil.fail(ExceptionEnum.CER_ERROR);
             }
             try {
                 validCert(serverDto.getServerCer(), serverDto.getCaCer());
-            }catch (SystemException systemException){
+            } catch (SystemException systemException) {
                 return ResultUtil.fail(ExceptionEnum.VALIDATE_ERROR);
             }
 
-            makeCer(serverDto.getCaCer(),serverDto.getServerCer(),serverDto.getKey());
+            makeCer(serverDto.getCaCer(), serverDto.getServerCer(), serverDto.getKey());
             //双重协议命令
-            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + UNDER_COMMAND + serverDto.getPort()+YIN + SPACE + LAST_COMMAND;
+            command = BEHIND + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + UNDER_COMMAND + serverDto.getPort() + YIN + SPACE + LAST_COMMAND;
             objectResultVo = twice(command, serverDto);
         }
         //保存或者修改
         sslConfigService.saveOrUpdate(sslConfig);
         if (serverDto.getSafeOperation()) {
             syncConfig(serverDto);
-        }else {
+        } else {
             deleteTLS();
         }
 
         return objectResultVo;
     }
 
-    public ResultVo<Object> validCert(String caCer,String serverCer){
+    public ResultVo<Object> validCert(String caCer, String serverCer) {
         //CA证书
-     //   String caCert = "";
-   //     String certLine = "";
+        //   String caCert = "";
+        //     String certLine = "";
 //        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(certPath + CASERVER_CERT))) {
 //            while (null != (certLine=bufferedReader.readLine())) {
 //
@@ -286,13 +290,13 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 //            throw new SysException(ExceptionEnum.FILE_IO_ERROR);
 //        }
 
-       String caCert = IscSignUtil.otherToBase64(caCer);
-      //  log.info("CA证书:{}",caCert);
-       String serverCert = IscSignUtil.otherToBase64(serverCer);
-     //   log.info("服务器证书:{}",serverCert);
+        String caCert = IscSignUtil.otherToBase64(caCer);
+        //  log.info("CA证书:{}",caCert);
+        String serverCert = IscSignUtil.otherToBase64(serverCer);
+        //   log.info("服务器证书:{}",serverCert);
         //验证书链
-        log.info("处理后CA证书:{}",caCert);
-        log.info("处理后服务器证书:{}",serverCert);
+        log.info("处理后CA证书:{}", caCert);
+        log.info("处理后服务器证书:{}", serverCert);
         boolean validateCertChain = CryptUtil.validateCertChain(caCert, serverCert);
         if (StaticValue.FALSE == validateCertChain) {
             throw new SysException(ExceptionEnum.VALIDATE_ERROR);
@@ -301,14 +305,15 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     }
 
 
-
-    public void updateOther(String serverName){//修改数据库操作
+    public void updateOther(String serverName) {//修改数据库操作
         Boolean status = false;
         QueryWrapper<PortLink> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(PortLink::getServerName, serverName);
         PortLink portLink = portLinkService.getOne(queryWrapper);
         portLink.setStatus(status.toString());
-        portLinkService.updateById(portLink);}
+        portLinkService.updateById(portLink);
+    }
+
     /**
      * 开启单协议方法
      *
@@ -332,9 +337,9 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         QueryWrapper<PortLink> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(PortLink::getServerName, serverName);
         PortLink portLink = portLinkService.getOne(queryWrapper);
-        if (serverName.equals(STANDART_SERVER)){
+        if (serverName.equals(STANDART_SERVER)) {
             portLink.setPort(serverDto.getPort());
-        }else {
+        } else {
             portLink.setPort(serverDto.getSafePort());
         }
         portLink.setStatus(result.toString());
@@ -421,7 +426,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     }
 
     public void
-    deleteTLS(){
+    deleteTLS() {
         try {
             // 读取文件
             File inputFile = new File(configPath);
@@ -461,18 +466,43 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     /**
      * 封装证书
      */
-    public void makeCer(String caCer,String serverCer,String key){
+    public void makeCer(String caCer, String serverCer, String key) {
         caCer = IscSignUtil.otherToBase64(caCer);
         serverCer = IscSignUtil.otherToBase64(serverCer);
-        key = IscSignUtil.otherToBase64(key);
-        writeCer(caCer,CASERVER_CERT);
-        writeCer(serverCer,SERVER_CERT);
-        writeCer(key,SERVER_KEY);
+        String serverKey = "";
+        byte[] decode = Base64Decoder.decode(key.getBytes());
+        String decStr = new String(decode);
+        boolean isBase64 = Base64.isBase64(decStr);
+        if (isBase64) {
+            serverKey = decStr;
+        } else {
+            serverKey = key;
+        }
+        writeCer(caCer, CASERVER_CERT);
+        writeCer(serverCer, SERVER_CERT);
+        writekey(serverKey, SERVER_KEY);
     }
 
-    public void writeCer(String data,String name){
-        String filePath = certPath+name;
-        ;
+    public void writeCer(String data, String name) {
+        String beginCertificate = StaticValue.BEGIN_CERTIFICATE;
+        String endCertificate = StaticValue.END_CERTIFICATE;
+        String filePath = certPath + name;
+        String writeData = beginCertificate + StaticValue.N + data + StaticValue.N + endCertificate;
+        try {
+            FileWriter fileWriter = new FileWriter(filePath);
+            fileWriter.write(writeData);
+            fileWriter.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void writekey(String data, String name) {
+//        String beginKey = "-----BEGIN RSA PRIVATE KEY-----";
+//        String entKey = "-----END RSA PRIVATE KEY-----";
+        String filePath = certPath + name;
+        //  String writeData = beginKey+StaticValue.N+data+StaticValue.N+entKey;
+
         try {
             FileWriter fileWriter = new FileWriter(filePath);
             fileWriter.write(data);
@@ -481,8 +511,6 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             throw new RuntimeException(e);
         }
     }
-
-
 
 
     /**
