@@ -469,18 +469,10 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     public void makeCer(String caCer, String serverCer, String key) {
         caCer = IscSignUtil.otherToBase64(caCer);
         serverCer = IscSignUtil.otherToBase64(serverCer);
-        String serverKey = "";
-        byte[] decode = Base64Decoder.decode(key.getBytes());
-        String decStr = new String(decode);
-        boolean isBase64 = Base64.isBase64(decStr);
-        if (isBase64) {
-            serverKey = decStr;
-        } else {
-            serverKey = key;
-        }
+
         writeCer(caCer, CASERVER_CERT);
         writeCer(serverCer, SERVER_CERT);
-        writekey(serverKey, SERVER_KEY);
+        writekey(key, SERVER_KEY);
     }
 
     public void writeCer(String data, String name) {
@@ -498,14 +490,24 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     }
 
     public void writekey(String data, String name) {
-//        String beginKey = "-----BEGIN RSA PRIVATE KEY-----";
-//        String entKey = "-----END RSA PRIVATE KEY-----";
+        String beginKey = "-----BEGIN RSA PRIVATE KEY-----";
+        String entKey = "-----END RSA PRIVATE KEY-----";
+        String serverKey = "";
+        byte[] decode = Base64Decoder.decode(data.getBytes());
+        String decStr = new String(decode);
+        boolean isBase64 = Base64.isBase64(decStr);
+        if (isBase64) {
+            serverKey = decStr;
+        } else {
+            serverKey = beginKey+StaticValue.N+data+StaticValue.N+entKey;
+
+        }
+
         String filePath = certPath + name;
-        //  String writeData = beginKey+StaticValue.N+data+StaticValue.N+entKey;
 
         try {
             FileWriter fileWriter = new FileWriter(filePath);
-            fileWriter.write(data);
+            fileWriter.write(serverKey);
             fileWriter.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
