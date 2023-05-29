@@ -172,7 +172,8 @@ public class CertTreeServiceImpl implements CertTreeService {
             }
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error(e.getMessage());
+            throw new SysException(ExceptionEnum.LDAP_QUERY_ERROR);
         }
 
 
@@ -240,7 +241,8 @@ public class CertTreeServiceImpl implements CertTreeService {
             }
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error(e.getMessage());
+            throw new SysException(ExceptionEnum.LDAP_QUERY_ERROR);
         }
 
         try {
@@ -270,8 +272,10 @@ public class CertTreeServiceImpl implements CertTreeService {
             }
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error(e.getMessage());
+            throw new SysException(ExceptionEnum.LDAP_QUERY_ERROR);
         }
+        map.put(StaticValue.RDN, treeVo.getBaseDN());
         map.put(StaticValue.RDN_NUM_KEY, resultSon);
         map.put(StaticValue.RDN_CHILD_NUM_KEY, resultFather);
         //--------------------------------------------------------------------

@@ -102,6 +102,7 @@ public enum ExceptionEnum {
     LDAP_URL_ERROR(8007,"地址配置错误，URL地址需要以ldap://开始"),
     LDAP_CONNECT_ERROR(8005, "连接LDAP服务异常"),
     LDAP_ERROR(8008, "LDAP服务异常"),
+    LDAP_QUERY_ERROR(8008, "LDAP查询错误"),
     LDAP_ERROR_FILTER(8009,"过滤条件为空"),
             ;
 
