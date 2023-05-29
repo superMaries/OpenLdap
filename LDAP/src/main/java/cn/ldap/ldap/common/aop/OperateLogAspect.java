@@ -199,6 +199,9 @@ public class OperateLogAspect {
             }
         }
         String clientIp = ClientInfo.getIpAdrress(request);
+        if (ObjectUtils.isEmpty(operationLogModel.getUserId())) {
+            operationLogModel.setUserId(UserRoleEnum.ACCOUNT_ADMIN.getCode());
+        }
         operationLogModel.setClientIp(clientIp);
         operationLogModel.setOperateType(operateAnnotation.operateType().getName());
         operationLogModel.setOperateMenu(operateAnnotation.operateModel().getName());
