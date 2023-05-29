@@ -16,14 +16,14 @@ public enum OperateMenuEnum {
     //首页
     INDEX_MANAGER(2, "首页"),
     //目录树
-    CATALOGUE_MANAGER(3, "目录树"),
+    CATALOGUE_MANAGER(3, "查看证书"),
     //参数配置
     PARAM_MANAGER(4, "参数配置"),
     //日志管理
     LOG_MANAGER(5, "日志管理"),
     ADMIN_MANAGER(6, "管理员管理"),
 
-    INDEX(7, "索引管理"),
+    INDEX(7, "索引配置"),
 
     SERVICE_MANAGER(8, "服务管理"),
 
