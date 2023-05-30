@@ -104,6 +104,8 @@ public enum ExceptionEnum {
     LDAP_ERROR(8008, "LDAP服务异常"),
     LDAP_QUERY_ERROR(8008, "LDAP查询错误"),
     LDAP_ERROR_FILTER(8009,"过滤条件为空"),
+    CER_NULL_ERROR(8010,"证书为空"),
+    KEY_NULL_ERROR(8011,"密钥为空")
             ;
 
     /**

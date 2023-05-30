@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.dto.QueryFollowNumDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
 import cn.ldap.ldap.common.entity.SyncStatus;
@@ -85,6 +86,23 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
     private String FEED = " ";
 
     private static final String CD = "cd ";
+
+    private static final String CA_CER = "ca.cer";
+
+    private static final String SERVER_CER = "server.cer";
+
+    private static final String SERVER_KEY = "server.key";
+
+    @Value("${filePath.followCertPath}")
+    private String followPath;
+
+
+    @Value("${ldap.userDn}")
+    private String rootAccount;
+
+    @Value("${ldap.password}")
+    private String rootPassword;
+
 
 
 
@@ -227,26 +245,31 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         syncStatus.setAccount(binddn);
         syncStatus.setPassword(credentials);
         //连接服务
+
+        Long mainCount = followQueryLinux(searchbase, binddn, credentials, provider);
+
+
         //查询主服务数据，判断连接状态，并且分别插入到返回值中
-        Map<String, Object> mainMap = new HashMap<>();
-        LdapTemplate connection = connection(provider,searchbase,binddn,credentials);
-        mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, connection, SCOPE,searchbase , FILTER);
-        Long mainCount = Long.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
+//        Map<String, Object> mainMap = new HashMap<>();
+//        LdapTemplate connection = connection(provider,searchbase,binddn,credentials);
+//        mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, connection, SCOPE,searchbase , FILTER);
+//        Long mainCount = Long.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
         syncStatus.setMainServerNumber(mainCount);
         //设置从服务数据初始值
         Long followCount = 0L;
         //查询从服务数据，判断连接状态，并且分别插入到返回值中
-        try {
-
-            Map<String, Object> followMap = new HashMap<>();
-            LdapTemplate newLdapTemplate = certTreeService.fromPool();
-            followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
-            followCount = Long.valueOf(followMap.get(RDN_CHILD_NUM).toString());
-        }catch (Exception e){
-            followCount = NUM;
-            syncStatus.setFollowServerNumber(followCount);
-            syncStatus.setSyncStatusStr(CONNECTION_FAILD);
-        }
+//        try {
+//
+//            Map<String, Object> followMap = new HashMap<>();
+//            LdapTemplate newLdapTemplate = certTreeService.fromPool();
+//            followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
+//            followCount = Long.valueOf(followMap.get(RDN_CHILD_NUM).toString());
+//        }catch (Exception e){
+//            followCount = NUM;
+//            syncStatus.setFollowServerNumber(followCount);
+//            syncStatus.setSyncStatusStr(CONNECTION_FAILD);
+//        }
+        followCount = followQueryLinuxSelf(searchbase, rootAccount, rootPassword);
         syncStatus.setFollowServerNumber(followCount);
         if (followCount.equals(NUM)) {
             syncStatus.setSyncStatusStr(CONNECTION_FAILD);
@@ -269,7 +292,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
      */
     @Override
     public ResultVo<Map<String, String>> queryServiceConfig() {
-        Map<String, String> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         if (ConfigEnum.MAIN_SERVICE.getCode().equals(InitConfigData.getServiceType())) {
             //主服务器
             Wini wini = null;
@@ -304,6 +327,53 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
                 map.put("searchbase", section.get("searchbase"));
                 map.put("userName", section.get("binddn"));
                 map.put("passWord", section.get("credentials"));
+                String provider = section.get("provider");
+                if (provider.contains("ldaps")){
+                    map.put("ifSafe",true);
+                    String tlsReqcert = section.get("tls_reqcert");
+                    if (tlsReqcert.equals("demand")){
+                        map.put("ifBothWay",false);
+                    }else {
+                        map.put("ifBothWay",true);
+                        map.put("caCer",followPath+CA_CER);
+                        String cerOrKey = getCerOrKey(followPath+CA_CER);
+                        if (!BeanUtil.isEmpty(cerOrKey)){
+                            map.put("caCerStr",cerOrKey);
+                        }else {
+                            map.put("caCerStr","");
+                        }
+                    }
+                }else {
+                    map.put("ifSafe",false);
+                    map.put("ifBothWay",null);
+                    map.put("caCer",followPath+CA_CER);
+                    map.put("serverCer",followPath+SERVER_CER);
+                    map.put("serverKey",followPath+SERVER_KEY);
+                    String caStr = getCerOrKey(followPath+CA_CER);
+                    if (!BeanUtil.isEmpty(caStr)){
+                        map.put("caCerStr",caStr);
+                    }else {
+                        map.put("caCerStr","");
+                    }
+
+
+                    String serverStr = getCerOrKey(followPath+SERVER_CER);
+                    if (!BeanUtil.isEmpty(serverStr)){
+                        map.put("serverCerStr",serverStr);
+                    }else {
+                        map.put("serverCerStr","");
+                    }
+
+                    String keyStr = getCerOrKey(followPath+SERVER_KEY);
+                    if (!BeanUtil.isEmpty(keyStr)){
+                        map.put("serverKeyStr",keyStr);
+                    }else {
+                        map.put("serverKeyStr","");
+                    }
+                }
+
+
+
             } catch (IOException e) {
                 log.error(e.getMessage());
                 throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
@@ -312,6 +382,22 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             throw new SysException(ExceptionEnum.SYSTEM_CONFIG_ERRROR);
         }
         return ResultUtil.success(map);
+
+    }
+
+    public String getCerOrKey(String name){
+        String fileName = name;
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String fileContent = sb.toString();
+        return fileContent;
 
     }
 
@@ -363,6 +449,71 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         syncStatus.setFollowServerNumber(result);
         syncStatus.setFollowServerIp(queryFollowNumDto.getUrl());
         return ResultUtil.success(syncStatus);
+    }
+
+
+    public Long followQueryLinux(String searchBase,String account,String password,String url){
+        Long result = 0L;
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append(url).append(FEED).append("-D ").append("\"").append(account)
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                    .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
+                    .append("\"").append(FEED).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
+
+            log.info("linux运行命令为:{}",stringBuilder);
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("sh","-c",stringBuilder.toString());
+            Process exec = builder.start();
+            InputStream inputStream = exec.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                Long aLong = Long.valueOf(line.trim());
+                if (aLong < 10){
+                    result = 0L;
+                }else {
+                    result = aLong - 10;
+                }
+            }
+
+        }  catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
+    }
+
+    public Long followQueryLinuxSelf(String searchBase,String account,String password){
+        Long result = 0L;
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                    .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
+                    .append("\"").append(FEED).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
+
+            log.info("linux运行命令为:{}",stringBuilder);
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("sh","-c",stringBuilder.toString());
+            Process exec = builder.start();
+            InputStream inputStream = exec.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                Long aLong = Long.valueOf(line.trim());
+                if (aLong < 10){
+                    result = 0L;
+                }else {
+                    result = aLong - 10;
+                }
+            }
+
+        }  catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
     }
 
     /**

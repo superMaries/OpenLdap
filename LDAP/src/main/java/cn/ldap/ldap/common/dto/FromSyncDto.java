@@ -27,4 +27,14 @@ public class FromSyncDto {
      * 主服务密码
      */
     private String mainServerPassword;
+
+    private Boolean ifSafe;
+
+    private Boolean ifBothWay;
+
+    private String caCer;
+
+    private String serverCer;
+
+    private String serverKey;
 }
