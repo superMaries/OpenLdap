@@ -316,6 +316,7 @@ public class SyncServiceImpl implements SyncService {
         return stringBuilder.toString();
     }
 
+    private static final String DATA_BASE = "database monitor";
     /**
      * 从服务配置数据拼接
      *
@@ -336,7 +337,8 @@ public class SyncServiceImpl implements SyncService {
                 .append(SPACE_DATA).append(BIND_METHOD).append(SIMPLE).append(FEED)
                 .append(SPACE_DATA).append(BIND_DN).append(fromSyncDto.getMainServerAccount()).append(FEED)
                 .append(SPACE_DATA).append(CREDENTIALS).append(fromSyncDto.getMainServerPassword()).append(FEED)
-                .append(SPACE_DATA).append(RETRY).append(FEED);
+                .append(SPACE_DATA).append(RETRY).append(FEED)
+                .append(DATA_BASE).append(FEED);
         return stringBuilder.toString();
     }
 
@@ -356,7 +358,8 @@ public class SyncServiceImpl implements SyncService {
                 .append(SPACE_DATA).append(CREDENTIALS).append(fromSyncDto.getMainServerPassword()).append(FEED)
                 .append(SPACE_DATA).append(RETRY).append(FEED)
                 .append(SPACE_DATA).append(TLS_TYPE).append(NEVER).append(FEED)
-                .append(SPACE_DATA).append(CA_CERT).append(followPath).append(CA_CER).append(FEED);
+                .append(SPACE_DATA).append(CA_CERT).append(followPath).append(CA_CER).append(FEED)
+                .append(DATA_BASE).append(FEED);
 
         return stringBuilder.toString();
     }
@@ -378,7 +381,8 @@ public class SyncServiceImpl implements SyncService {
                 .append(SPACE_DATA).append(TLS_TYPE).append(DEMAND).append(FEED)
                 .append(SPACE_DATA).append(CA_CERT).append(followPath).append(CA_CER).append(FEED)
                 .append(SPACE_DATA).append(CERT).append(followPath).append(SERVER_CER).append(FEED)
-                .append(SPACE_DATA).append(KEY).append(followPath).append(SERVER_KEY).append(FEED);
+                .append(SPACE_DATA).append(KEY).append(followPath).append(SERVER_KEY).append(FEED)
+                .append(DATA_BASE).append(FEED);
         return stringBuilder.toString();
     }
 

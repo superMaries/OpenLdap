@@ -333,6 +333,30 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
                     String tlsReqcert = section.get("tls_reqcert");
                     if (tlsReqcert.equals("demand")){
                         map.put("ifBothWay",false);
+                        map.put("caCer",followPath+CA_CER);
+                        map.put("serverCer",followPath+SERVER_CER);
+                        map.put("serverKey",followPath+SERVER_KEY);
+                        String caStr = getCerOrKey(followPath+CA_CER);
+                        if (!BeanUtil.isEmpty(caStr)){
+                            map.put("caCerStr",caStr);
+                        }else {
+                            map.put("caCerStr","");
+                        }
+
+
+                        String serverStr = getCerOrKey(followPath+SERVER_CER);
+                        if (!BeanUtil.isEmpty(serverStr)){
+                            map.put("serverCerStr",serverStr);
+                        }else {
+                            map.put("serverCerStr","");
+                        }
+
+                        String keyStr = getCerOrKey(followPath+SERVER_KEY);
+                        if (!BeanUtil.isEmpty(keyStr)){
+                            map.put("serverKeyStr",keyStr);
+                        }else {
+                            map.put("serverKeyStr","");
+                        }
                     }else {
                         map.put("ifBothWay",true);
                         map.put("caCer",followPath+CA_CER);
@@ -346,30 +370,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
                 }else {
                     map.put("ifSafe",false);
                     map.put("ifBothWay",null);
-                    map.put("caCer",followPath+CA_CER);
-                    map.put("serverCer",followPath+SERVER_CER);
-                    map.put("serverKey",followPath+SERVER_KEY);
-                    String caStr = getCerOrKey(followPath+CA_CER);
-                    if (!BeanUtil.isEmpty(caStr)){
-                        map.put("caCerStr",caStr);
-                    }else {
-                        map.put("caCerStr","");
-                    }
 
-
-                    String serverStr = getCerOrKey(followPath+SERVER_CER);
-                    if (!BeanUtil.isEmpty(serverStr)){
-                        map.put("serverCerStr",serverStr);
-                    }else {
-                        map.put("serverCerStr","");
-                    }
-
-                    String keyStr = getCerOrKey(followPath+SERVER_KEY);
-                    if (!BeanUtil.isEmpty(keyStr)){
-                        map.put("serverKeyStr",keyStr);
-                    }else {
-                        map.put("serverKeyStr","");
-                    }
                 }
 
 
