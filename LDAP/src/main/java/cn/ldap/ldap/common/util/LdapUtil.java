@@ -844,8 +844,15 @@ public class LdapUtil {
                 ctx.destroySubcontext(dn);
             }
             ctx.destroySubcontext(rdn);
+//
+//            Control[] controlsEx = new Control[]{new PagedResultsControl(0, true)};
+//            ctx.setRequestControls(controlsEx);
+            Control[] controlsEx = ctx.getConnectControls();
+            ctx.reconnect(controlsEx);
+
+
             ctx.close();
-        } catch (NamingException e) {
+        } catch (NamingException  e) {
             log.error(e.getMessage());
             throw new SysException(ExceptionEnum.LDAP_DEL_RDN_NOT_EXIT);
         }

@@ -289,7 +289,7 @@ public class LoginServiceImpl implements LoginService {
                         .isNull(Permission::getParentId)
                         .eq((!Objects.equals(roleId, StaticValue.ADMIN_ID)), Permission::getRoleId, roleId));
         ConfigModel configModel = configMapper.selectOne(new QueryWrapper<ConfigModel>().lambda().eq(ConfigModel::getCode, USBKey));
-        if (IF_USB.equals(configModel.getServiceType())){
+        if (!IF_USB.equals(configModel.getServiceType())){
             permissions = permissions.stream().filter(permission -> !permission.getMenuName().equals(USER_MANAGEMENT)).collect(Collectors.toList());
         }
         Integer isSync = InitConfigData.getIsSync();

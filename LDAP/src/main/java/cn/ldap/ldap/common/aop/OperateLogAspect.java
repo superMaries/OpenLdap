@@ -223,15 +223,19 @@ public class OperateLogAspect {
     private void settTreadLocal(OperateAnnotation operateAnnotation, OperationLogModel operationLogModel, StringBuffer remark, ThreadLocal<Object> threadLocal) {
         switch (operateAnnotation.operateModel()) {
             case LDAP_ACCOUNT:
-                switch (operateAnnotation.operateType()){
-                    case ACCOUNT_ADD:threadLocal.set(operationLogModel);
-                    break;
-                    case ACCOUNT_DELETE:threadLocal.set(operationLogModel);
-                    break;
-                    case ACCOUNT_UPDATE_AUTH:threadLocal.set(operationLogModel);
-                    break;
-                    case ACCOUNT_UPDATE_PASSWORD:threadLocal.set(operationLogModel);
-                    break;
+                switch (operateAnnotation.operateType()) {
+                    case ACCOUNT_ADD:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case ACCOUNT_DELETE:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case ACCOUNT_UPDATE_AUTH:
+                        threadLocal.set(operationLogModel);
+                        break;
+                    case ACCOUNT_UPDATE_PASSWORD:
+                        threadLocal.set(operationLogModel);
+                        break;
                     default:
                         log.warn("未知类型操作：{}", operateAnnotation.operateType().getName());
                 }
