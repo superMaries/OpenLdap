@@ -1,6 +1,5 @@
 package cn.ldap.ldap.common.mapper;
 
-import cn.ldap.ldap.common.entity.ConfigModel;
 import cn.ldap.ldap.common.entity.KeyModel;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;

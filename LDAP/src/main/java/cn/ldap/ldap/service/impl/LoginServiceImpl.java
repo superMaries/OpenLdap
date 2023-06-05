@@ -2,14 +2,14 @@ package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.LoginDto;
 import cn.ldap.ldap.common.dto.UserDto;
-import cn.ldap.ldap.common.entity.ConfigModel;
+//import cn.ldap.ldap.common.entity.ConfigModel;
 import cn.ldap.ldap.common.entity.Permission;
 import cn.ldap.ldap.common.entity.UserAccountModel;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserTypeEnum;
 import cn.ldap.ldap.common.exception.SysException;
-import cn.ldap.ldap.common.mapper.ConfigMapper;
+//import cn.ldap.ldap.common.mapper.ConfigMapper;
 import cn.ldap.ldap.common.mapper.UserAccountMapper;
 import cn.ldap.ldap.common.mapper.UserMapper;
 import cn.ldap.ldap.common.util.ResultUtil;
@@ -133,20 +133,20 @@ public class LoginServiceImpl implements LoginService {
 
     private static final String SING_DATA = "sign";
 
-    private static final String ORGIN="orgin";
+    private static final String ORGIN = "orgin";
 
     private static final String SHOW_ALL = "yes";
 
     private static final String USER_MANAGEMENT = "管理员管理";
 
-    private static final String USBKey = "USBKey";
+//    private static final String USBKey = "USBKey";
 
     private static final String SYNC_NAME = "同步管理";
     @Resource
     private PermissionService permissionService;
 
-    @Resource
-    private ConfigMapper configMapper;
+//    @Resource
+//    private ConfigMapper configMapper;
 
     @Resource
     private UserMapper userMapper;
@@ -181,7 +181,7 @@ public class LoginServiceImpl implements LoginService {
                 fis = new FileInputStream(downFile);
                 bis = new BufferedInputStream(fis);
                 OutputStream os = httpServletResponse.getOutputStream();
-                 int i = bis.read(buffer);
+                int i = bis.read(buffer);
                 while (i != -1) {
                     os.write(buffer, 0, i);
                     i = bis.read(buffer);
@@ -264,8 +264,6 @@ public class LoginServiceImpl implements LoginService {
     }
 
 
-
-
     /**
      * 查看菜单
      *
@@ -288,12 +286,11 @@ public class LoginServiceImpl implements LoginService {
                 (new LambdaQueryWrapper<Permission>()
                         .isNull(Permission::getParentId)
                         .eq((!Objects.equals(roleId, StaticValue.ADMIN_ID)), Permission::getRoleId, roleId));
-        ConfigModel configModel = configMapper.selectOne(new QueryWrapper<ConfigModel>().lambda().eq(ConfigModel::getCode, USBKey));
-        if (!IF_USB.equals(configModel.getServiceType())){
+        if (!IF_USB.equals(InitConfigData.getUsbKey())) {
             permissions = permissions.stream().filter(permission -> !permission.getMenuName().equals(USER_MANAGEMENT)).collect(Collectors.toList());
         }
         Integer isSync = InitConfigData.getIsSync();
-        if (NO_SYNC.equals(isSync)){
+        if (NO_SYNC.equals(isSync)) {
             permissions = permissions.stream().filter(permission -> !permission.getMenuName().equals(SYNC_NAME)).collect(Collectors.toList());
         }
 
@@ -317,19 +314,19 @@ public class LoginServiceImpl implements LoginService {
         return ResultUtil.success(permissions);
     }
 
-    /**
-     * 是否初始化
-     *
-     * @return
-     */
-    @Override
-    public ResultVo<String> whetherInit() {
-        ConfigModel config = configMapper.getConfig();
-        if (ObjectUtils.isEmpty(config)) {
-            return ResultUtil.fail(NO_CONFIG);
-        }
-        return ResultUtil.success(IS_NOT_INIT_STR);
-    }
+//    /**
+//     * 是否初始化
+//     *
+//     * @return
+//     */
+//    @Override
+//    public ResultVo<String> whetherInit() {
+//        ConfigModel config = configMapper.getConfig();
+//        if (ObjectUtils.isEmpty(config)) {
+//            return ResultUtil.fail(NO_CONFIG);
+//        }
+//        return ResultUtil.success(IS_NOT_INIT_STR);
+//    }
 
     /**
      * 获取服务模式
@@ -338,15 +335,14 @@ public class LoginServiceImpl implements LoginService {
      */
     @Override
     public ResultVo<String> getServerConfig() {
-        ConfigModel config = configMapper.getConfig();
-        if (ObjectUtils.isEmpty(config)) {
-            return ResultUtil.fail(NO_CONFIG);
-        }
-        if (MAIN_SERVICE_STATUS.equals(config.getServiceType())) {
+//        ConfigModel config = configMapper.getConfig();
+//        if (ObjectUtils.isEmpty(config)) {
+//            return ResultUtil.fail(NO_CONFIG);
+//        }
+        if (MAIN_SERVICE_STATUS.equals(InitConfigData.getServiceType())) {
             return ResultUtil.success(MAIN_SERVICE_STR);
-        } else {
-            return ResultUtil.success(FOLLOW_SERVICE_STR);
         }
+        return ResultUtil.success(FOLLOW_SERVICE_STR);
     }
 
 
@@ -469,6 +465,7 @@ public class LoginServiceImpl implements LoginService {
 
     /**
      * 退出登录
+     *
      * @param request
      * @return
      */
@@ -485,17 +482,15 @@ public class LoginServiceImpl implements LoginService {
      */
     @Override
     public ResultVo<Boolean> isShowUsbKey() {
-        ConfigModel configModel = configMapper.selectOne(new QueryWrapper<ConfigModel>().lambda().eq(ConfigModel::getCode, USBKey));
-        if (IF_USB.equals(configModel.getServiceType())){
+        if (IF_USB.equals(InitConfigData.getUsbKey())) {
             return ResultUtil.success(true);
-        } else {
-            return ResultUtil.success(false);
         }
-
+        return ResultUtil.success(false);
     }
 
     /**
      * 获取只读模式
+     *
      * @param loginDto
      * @return
      */
@@ -526,34 +521,34 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public Boolean downQuestions(HttpServletResponse response) throws IOException {
 
-            String filePath = questionsPath; // 本地Word文档的路径
-            log.info("下载地址为:{}", filePath);
-            // 读取 PDF 文件
-            File file = new File(filePath);
-            InputStream inputStream = new FileInputStream(file);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, len);
-            }
-            inputStream.close();
-            outputStream.flush();
+        String filePath = questionsPath; // 本地Word文档的路径
+        log.info("下载地址为:{}", filePath);
+        // 读取 PDF 文件
+        File file = new File(filePath);
+        InputStream inputStream = new FileInputStream(file);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, len);
+        }
+        inputStream.close();
+        outputStream.flush();
 
-            // 将 PDF 文件转换为字节数组
-            byte[] pdfBytes = outputStream.toByteArray();
+        // 将 PDF 文件转换为字节数组
+        byte[] pdfBytes = outputStream.toByteArray();
 
-            // 设置响应头
-            response.setContentType(MediaType.APPLICATION_PDF_VALUE);
-            response.setHeader("Content-Disposition", "attachment;filename=file.pdf");
-            response.setContentLength(pdfBytes.length);
+        // 设置响应头
+        response.setContentType(MediaType.APPLICATION_PDF_VALUE);
+        response.setHeader("Content-Disposition", "attachment;filename=file.pdf");
+        response.setContentLength(pdfBytes.length);
 
-            // 将字节数组写入响应输出流
-            OutputStream out = response.getOutputStream();
-            out.write(pdfBytes);
-            out.flush();
-            out.close();
-            return true;
+        // 将字节数组写入响应输出流
+        OutputStream out = response.getOutputStream();
+        out.write(pdfBytes);
+        out.flush();
+        out.close();
+        return true;
 
 
     }

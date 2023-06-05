@@ -149,28 +149,23 @@ public class OperateLogAspect {
                 //判断是amdin 还是 usebKey 登录， usebKey 登录就需要对数据进行验签
                 if (param instanceof UserDto) {
                     // usebKey登录
-                    try {
-                        String signCert = ((UserDto) param).getSignCert();
-                        String certSn = ((UserDto) param).getCertSn();
-                        LambdaQueryWrapper<UserModel> lambdaQueryWrapper = new LambdaQueryWrapper<UserModel>()
-                                .eq(UserModel::getCertSn, certSn)
-                                .eq(UserModel::getIsEnable, IF_ENABLE);
-                        List<UserModel> users = userMapper.selectList(lambdaQueryWrapper);
-                        if (ObjectUtils.isEmpty(users)) {
-                            log.error("用户不存在或已被禁用");
-                            throw new SysException(ExceptionEnum.USER_FAIL);
-                        }
-                        UserModel userModel = users.get(StaticValue.SPLIT_COUNT);
-                        operationLogModel.setUserId(userModel.getId());
+                    String signCert = ((UserDto) param).getSignCert();
+                    String certSn = ((UserDto) param).getCertSn();
+                    LambdaQueryWrapper<UserModel> lambdaQueryWrapper = new LambdaQueryWrapper<UserModel>()
+                            .eq(UserModel::getCertSn, certSn)
+                            .eq(UserModel::getIsEnable, IF_ENABLE);
+                    List<UserModel> users = userMapper.selectList(lambdaQueryWrapper);
+                    if (ObjectUtils.isEmpty(users)) {
+                        log.error("用户不存在或已被禁用");
+                        throw new SysException(ExceptionEnum.USER_FAIL);
+                    }
+                    UserModel userModel = users.get(StaticValue.SPLIT_COUNT);
+                    operationLogModel.setUserId(userModel.getId());
 
-                        //验签
-                        boolean verify = Sm2Util.verify(signCert, orgin, sign);
-                        if (!verify) {
-                            log.error("{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage());
-                            throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
-                        }
-                    } catch (Exception e) {
-                        log.error("{}:{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage(), e.getMessage());
+                    //验签
+                    boolean verify = Sm2Util.verify(signCert, orgin, sign);
+                    if (!verify) {
+                        log.error("{}", ExceptionEnum.SIGN_DATA_ERROR.getMessage());
                         throw new SysException(ExceptionEnum.SIGN_DATA_ERROR);
                     }
                 } else {

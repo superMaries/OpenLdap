@@ -27,27 +27,27 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    /**
-     * 是否初始化
-     *
-     * @return
-     */
-    @PostMapping("isInit")
-   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_IS_INIT)
-    public ResultVo<Map<String, Object> > isInit() {
-        return userService.isInit();
-    }
+//    /**
+//     * 是否初始化
+//     *
+//     * @return
+//     */
+//    @PostMapping("isInit")
+//   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.USER_IS_INIT)
+//    public ResultVo<Map<String, Object> > isInit() {
+//        return userService.isInit();
+//    }
 
-    /**
-     * 导入服务配置接口
-     * @param userDto
-     * @return
-     */
-//    @PostMapping("importConfig")
-   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.IMPORT_CONFIG)
-    public ResultVo<Boolean> importConfig(@RequestBody UserDto userDto){
-        return userService.importConfig(userDto);
-    }
+//    /**
+//     * 导入服务配置接口
+//     * @param userDto
+//     * @return
+//     */
+////    @PostMapping("importConfig")
+//   // @OperateAnnotation(operateModel = OperateMenuEnum.USER_MANAGER, operateType = OperateTypeEnum.IMPORT_CONFIG)
+//    public ResultVo<Boolean> importConfig(@RequestBody UserDto userDto){
+//        return userService.importConfig(userDto);
+//    }
 
     /**
      * 导出管理员key接口

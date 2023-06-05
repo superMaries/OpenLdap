@@ -74,15 +74,15 @@ public class LoginController {
             return loginService.queryMenus(request);
     }
 
-    /**
-     * 是否初始化
-     *
-     * @return
-     */
-    @GetMapping("whetherInit")
-    public ResultVo<String> whetherInit() {
-        return loginService.whetherInit();
-    }
+//    /**
+//     * 是否初始化
+//     *
+//     * @return
+//     */
+//    @GetMapping("whetherInit")
+//    public ResultVo<String> whetherInit() {
+//        return loginService.whetherInit();
+//    }
 
     /**
      * 获取服务模式

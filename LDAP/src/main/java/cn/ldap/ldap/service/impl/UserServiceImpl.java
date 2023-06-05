@@ -1,7 +1,7 @@
 package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.UserDto;
-import cn.ldap.ldap.common.entity.ConfigModel;
+//import cn.ldap.ldap.common.entity.ConfigModel;
 import cn.ldap.ldap.common.entity.UserModel;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.enums.UserEnableEnum;
@@ -32,67 +32,67 @@ import java.util.Map;
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserModel>
         implements UserService {
 
-    @Autowired
-    private ConfigServiceImpl configService;
+//    @Autowired
+//    private ConfigServiceImpl configService;
 
 
-    /**
-     * 是否初始化
-     *
-     * @return
-     */
-    @Override
-    public ResultVo<Map<String, Object>> isInit() {
-        return ResultUtil.success(init());
-    }
+//    /**
+//     * 是否初始化
+//     *
+//     * @return
+//     */
+//    @Override
+//    public ResultVo<Map<String, Object>> isInit() {
+//        return ResultUtil.success(init());
+//    }
 
-    public Map<String, Object> init() {
-        log.info("是否初始化");
-        Map<String, Object> mapVo = new HashMap<>();
-        mapVo.put("isInit", false);
-        List<ConfigModel> configLists = configService.list();
-        //系统未初始化,在第一步
-        if (ObjectUtils.isEmpty(configLists)) {
-            log.info("系统未初始化,在第一步");
-            mapVo.put("isInit", true);
-            mapVo.put("step", 0);
-        } else {
-            List<UserModel> users = list(null);
-            //系统未初始化,在第二步
-            if (ObjectUtils.isEmpty(users)) {
-                log.info("系统未初始化,在第二步");
-                mapVo.put("isInit", true);
-                mapVo.put("step", 1);
-                return mapVo;
-            } else if (users.size() == 1) {
-                //系统未初始化,在第三步
-                log.info("系统未初始化,在第三步");
-                mapVo.put("isInit", true);
-                mapVo.put("step", 2);
-                return mapVo;
-            }
-        }
-        return mapVo;
-    }
-
-    @Override
-    public ResultVo<Boolean> importConfig(UserDto userDto) {
-        if (ObjectUtils.isEmpty(userDto)
-                || ObjectUtils.isEmpty(userDto.getServiceType())) {
-            log.error("参数异常");
-            return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
-        }
-        ConfigModel configModel = new ConfigModel();
-//        configModel.setIsInit(1);
-        configModel.setServiceType(userDto.getServiceType());
-        try {
-            configService.save(configModel);
-            return ResultUtil.success(true);
-        } catch (Exception e) {
-            //日志
-            return ResultUtil.fail(ExceptionEnum.SQL_SAVA_ERROR);
-        }
-    }
+//    public Map<String, Object> init() {
+//        log.info("是否初始化");
+//        Map<String, Object> mapVo = new HashMap<>();
+//        mapVo.put("isInit", false);
+//        List<ConfigModel> configLists = configService.list();
+//        //系统未初始化,在第一步
+//        if (ObjectUtils.isEmpty(configLists)) {
+//            log.info("系统未初始化,在第一步");
+//            mapVo.put("isInit", true);
+//            mapVo.put("step", 0);
+//        } else {
+//            List<UserModel> users = list(null);
+//            //系统未初始化,在第二步
+//            if (ObjectUtils.isEmpty(users)) {
+//                log.info("系统未初始化,在第二步");
+//                mapVo.put("isInit", true);
+//                mapVo.put("step", 1);
+//                return mapVo;
+//            } else if (users.size() == 1) {
+//                //系统未初始化,在第三步
+//                log.info("系统未初始化,在第三步");
+//                mapVo.put("isInit", true);
+//                mapVo.put("step", 2);
+//                return mapVo;
+//            }
+//        }
+//        return mapVo;
+//    }
+//
+//    @Override
+//    public ResultVo<Boolean> importConfig(UserDto userDto) {
+//        if (ObjectUtils.isEmpty(userDto)
+//                || ObjectUtils.isEmpty(userDto.getServiceType())) {
+//            log.error("参数异常");
+//            return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
+//        }
+//        ConfigModel configModel = new ConfigModel();
+////        configModel.setIsInit(1);
+//        configModel.setServiceType(userDto.getServiceType());
+//        try {
+//            configService.save(configModel);
+//            return ResultUtil.success(true);
+//        } catch (Exception e) {
+//            //日志
+//            return ResultUtil.fail(ExceptionEnum.SQL_SAVA_ERROR);
+//        }
+//    }
 
     @Override
     public ResultVo<Boolean> importAdminKey(UserDto userDto) {

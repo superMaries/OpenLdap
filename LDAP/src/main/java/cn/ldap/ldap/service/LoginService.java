@@ -49,7 +49,7 @@ public interface LoginService {
      * 是否初始化
      * @return
      */
-    ResultVo<String> whetherInit();
+//    ResultVo<String> whetherInit();
 
     /**
      * 获取服务模式
