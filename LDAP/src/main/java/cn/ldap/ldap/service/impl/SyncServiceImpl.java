@@ -35,8 +35,6 @@ public class SyncServiceImpl implements SyncService {
     private String configPath;
 
 
-
-
     /**
      * 空格数据
      */
@@ -193,21 +191,23 @@ public class SyncServiceImpl implements SyncService {
             }
 
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            log.error(e.getMessage());
+            throw new SysException(SYSTEM_CONFIG_ERRROR);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new SysException(SYSTEM_CONFIG_ERRROR);
         }
 
-        if (!fromSyncDto.getIfSafe()){
+        if (!fromSyncDto.getIfSafe()) {
             data = splicingConfigFrom(stringBuilder, fromSyncDto);
-        }else {
-            if (fromSyncDto.getIfBothWay()){
+        } else {
+            if (fromSyncDto.getIfBothWay()) {
                 if (ObjectUtils.isEmpty(fromSyncDto.getCaCer())) {
                     throw new SysException(CER_NULL_ERROR);
                 }
                 makeOneCer(fromSyncDto.getCaCer());
                 data = splicingConfigFromSimple(stringBuilder, fromSyncDto);
-            }else {
+            } else {
                 if (ObjectUtils.isEmpty(fromSyncDto.getCaCer())) {
                     throw new SysException(CER_NULL_ERROR);
                 }
@@ -314,6 +314,7 @@ public class SyncServiceImpl implements SyncService {
     }
 
     private static final String DATA_BASE = "database monitor";
+
     /**
      * 从服务配置数据拼接
      *
@@ -325,7 +326,7 @@ public class SyncServiceImpl implements SyncService {
         //从服务配置文件
         stringBuilder.append(SYNCREPL).append(SPACE_DATA).append(RID).append(fromSyncDto.getRid()).append(FEED)
                 .append(SPACE_DATA).append(PROVIDER).append(fromSyncDto.getMainServerUrl()).append(FEED)
-                .append(SPACE_DATA).append(TYPE).append(REFRESH_AND_PERSIST).append(FEED)
+                .append(SPACE_DATA).append(TYPE).append(fromSyncDto.getType()).append(FEED)
                 .append(SPACE_DATA).append(INTERVAL).append(fromSyncDto.getSyncTime()).append(FEED)
                 .append(SPACE_DATA).append(SEARCH_BASE).append(fromSyncDto.getSyncPoint()).append(FEED)
                 .append(SPACE_DATA).append(FILTER).append(OBJ).append(FEED)
@@ -344,7 +345,7 @@ public class SyncServiceImpl implements SyncService {
         //从服务配置文件
         stringBuilder.append(SYNCREPL).append(SPACE_DATA).append(RID).append(fromSyncDto.getRid()).append(FEED)
                 .append(SPACE_DATA).append(PROVIDER).append(fromSyncDto.getMainServerUrl()).append(FEED)
-                .append(SPACE_DATA).append(TYPE).append(REFRESH_AND_PERSIST).append(FEED)
+                .append(SPACE_DATA).append(TYPE).append(fromSyncDto.getType()).append(FEED)
                 .append(SPACE_DATA).append(INTERVAL).append(fromSyncDto.getSyncTime()).append(FEED)
                 .append(SPACE_DATA).append(SEARCH_BASE).append(fromSyncDto.getSyncPoint()).append(FEED)
                 .append(SPACE_DATA).append(FILTER).append(OBJ).append(FEED)

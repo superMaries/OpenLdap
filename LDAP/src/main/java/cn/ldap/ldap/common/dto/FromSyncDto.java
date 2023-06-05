@@ -28,6 +28,9 @@ public class FromSyncDto {
      */
     private String mainServerPassword;
 
+    /**
+     * 是否是安全的
+     */
     private Boolean ifSafe;
 
     private Boolean ifBothWay;
@@ -37,4 +40,9 @@ public class FromSyncDto {
     private String serverCer;
 
     private String serverKey;
+
+    /**
+     * 同步策略
+     */
+    private String type;
 }
