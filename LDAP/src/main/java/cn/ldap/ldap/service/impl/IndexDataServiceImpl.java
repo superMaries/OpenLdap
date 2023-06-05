@@ -287,15 +287,6 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         } catch (Exception e) {
             return ResultUtil.fail();
         }
-        ProcessBuilder builder = new ProcessBuilder();
-        builder.command("sh", "-c", RESTART_COMMAND);
-        log.info("启动命令:{}",RESTART_COMMAND);
-        try {
-            builder.start();
-        } catch (IOException e) {
-            log.error("启动命令:{}",e);
-            throw new SysException(ExceptionEnum.START_ERROR);
-        }
         return ResultUtil.success();
     }
 }
