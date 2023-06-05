@@ -15,6 +15,7 @@ import cn.ldap.ldap.service.LdapConfigService;
 import cn.ldap.ldap.service.OperationLogService;
 import cn.ldap.ldap.service.ParamConfigService;
 import cn.ldap.ldap.service.SSLConfigService;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.web.bind.annotation.*;
@@ -144,5 +145,14 @@ public class ConfigController {
         return sslConfigService.queryServerConfig();
     }
 
+
+    /**
+     * 是否展示删除按钮
+     * @return
+     */
+    @PostMapping("canSeeDelete")
+    public ResultVo<Boolean> canSeeDelete(){
+        return ldapConfigService.canSeeDelete();
+    }
 
 }

@@ -7,7 +7,6 @@ import cn.ldap.ldap.common.dto.SyncDto;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.util.IscSignUtil;
-import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
@@ -15,11 +14,9 @@ import cn.ldap.ldap.service.SyncService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import javax.annotation.Resource;
 import java.io.*;
 
 import static cn.ldap.ldap.common.enums.ExceptionEnum.*;

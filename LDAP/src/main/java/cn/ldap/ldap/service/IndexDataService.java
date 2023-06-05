@@ -23,5 +23,9 @@ public interface IndexDataService extends IService<IndexDataModel> {
     ResultVo<Boolean> updateIndexData(IndexDataDto indexDataDto);
 
     ResultVo<Boolean> deleteById(Integer id);
+
+    ResultVo<Integer> queryStatus();
+
+    ResultVo refreshIndex();
 }
 

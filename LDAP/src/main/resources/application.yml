@@ -93,3 +93,7 @@ logging:
 #ldap后台命令所在文件
 command:
   binFile: "/usr/local/openldap/bin"
+
+
+canSee:
+  show: false

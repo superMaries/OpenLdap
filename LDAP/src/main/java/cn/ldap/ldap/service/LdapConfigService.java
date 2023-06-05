@@ -58,4 +58,6 @@ public interface LdapConfigService {
      */
     ResultVo<T> uploadKey(MultipartFile multipartFile);
 
+    ResultVo<Boolean> canSeeDelete();
+
 }

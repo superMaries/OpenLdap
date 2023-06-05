@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -28,9 +30,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
+import static cn.ldap.ldap.common.enums.ExceptionEnum.valueOf;
 
 /**
  * @title: IndexDataServiceImpl
@@ -66,6 +70,19 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
     @Resource
     private IndexRuleMapper indexRuleMapper;
 
+    private static final Integer NOT_REFRESH = 0;
+
+    private static final Integer REFRESH_ING = 1;
+
+    private static final Integer REFRESH_DONE = 2;
+
+    private static final String REFRESH_COMMAND = "cd /usr/local/openldap/sbin; ./slapindex -v";
+
+    private static final String RESTART_COMMAND = "systemctl restart slapd.service";
+
+    @Resource
+    private IndexDataMapper indexDataMapper;
+
     /**
      * 更新或者插入
      *
@@ -100,6 +117,14 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
             saveOrUpdate(indexDataModel);
         }
         //根据规则拿到对应数据
+        //更改全部数据
+        List<IndexDataModel> list = this.list();
+        if (!CollectionUtils.isEmpty(list)){
+            for (IndexDataModel indexDataModel : list) {
+                indexDataModel.setStatus(NOT_REFRESH);
+            }
+        }
+        saveOrUpdateBatch(list);
 
         return getData();
     }
@@ -108,6 +133,84 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
     public ResultVo<Boolean> deleteById(Integer id) {
         removeById(id);
         return getData();
+    }
+
+    @Override
+    public ResultVo<Integer> queryStatus() {
+        IndexDataModel indexDataModel = indexRuleMapper.queryStatus();
+        if (ObjectUtils.isEmpty(indexDataModel)){
+            return ResultUtil.success(NOT_REFRESH);
+        }
+        return ResultUtil.success(indexDataModel.getStatus());
+    }
+
+    @Transactional
+    @Override
+    public ResultVo refreshIndex() {
+
+        List<IndexDataModel> list = list();
+        log.info("查询到的刷新数据的集合:{}",list);
+
+        if (!CollectionUtils.isEmpty(list)){
+            for (IndexDataModel indexDataModel : list) {
+                indexDataModel.setStatus(REFRESH_ING);
+                log.info("修改的状态:{}",REFRESH_ING);
+            }
+        }
+        saveOrUpdateBatch(list);
+        log.info("刷新索引第一次保存的集合:{}",list);
+
+        ProcessBuilder builder = new ProcessBuilder();
+        log.info("刷新命令为:{}",REFRESH_COMMAND);
+        builder.command("sh", "-c", REFRESH_COMMAND);
+        try {
+            log.info("刷新命令准备开始执行---------------------------");
+            Process start = builder.start();
+           // int i = start.waitFor();
+            log.info("刷新命令执行结束------------------------------");
+           // log.info("状态码--------:{}",i);
+            // 输出命令执行结果
+            //BufferedReader reader = new BufferedReader(new InputStreamReader(start.getInputStream()));
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                log.info("刷新索引输出:{}",line);
+//            }
+            List<IndexDataModel> yesList = list;
+            log.info("修改为2的集合:{}",yesList);
+                for (IndexDataModel indexDataModel : yesList) {
+                    indexDataModel.setStatus(REFRESH_DONE);
+                    log.info("修改集合2的状态:{}",REFRESH_DONE);
+                }
+                saveOrUpdateBatch(yesList);
+                log.info("修改为2的集合的保存的大小:{}",yesList.size());
+                // fooAsync();
+
+//            if (i ==0){
+//
+//                List<IndexDataModel> yesList = list;
+//                for (IndexDataModel indexDataModel : yesList) {
+//                    indexDataModel.setStatus(REFRESH_DONE);
+//                }
+//                saveOrUpdateBatch(yesList);
+//               // fooAsync();
+//            }
+            log.info("刷新索引命令:{}",REFRESH_COMMAND);
+        } catch (IOException e) {
+            log.error("索引刷新失败");
+            throw new SysException(ExceptionEnum.REFRESH_ERROR);
+        }
+        return ResultUtil.success();
+    }
+
+    public CompletableFuture<Object> fooAsync(){
+        return CompletableFuture.supplyAsync(()->{
+            List<IndexDataModel> list = list();
+            for (IndexDataModel indexDataModel : list) {
+                indexDataModel.setStatus(REFRESH_DONE);
+            }
+            saveOrUpdateBatch(list);
+            return ResultUtil.success();
+        });
     }
 
     public ResultVo<Boolean> getData(){
@@ -161,6 +264,15 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
             bufferedWriter.write(stringBuilder.toString());
         } catch (Exception e) {
             return ResultUtil.fail();
+        }
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command("sh", "-c", RESTART_COMMAND);
+        log.info("启动命令:{}",RESTART_COMMAND);
+        try {
+            builder.start();
+        } catch (IOException e) {
+            log.error("启动命令:{}",e);
+            throw new SysException(ExceptionEnum.START_ERROR);
         }
         return ResultUtil.success();
     }

@@ -35,4 +35,7 @@ public class IndexDataModel {
      */
     @TableField("description")
     private String description;
+
+    @TableField("status")
+    private Integer status;
 }

@@ -49,4 +49,19 @@ public class IndexDataController {
         return indexDataService.deleteById(id);
     }
 
+    @PostMapping("queryStatus")
+    //@OperateAnnotation(operateModel = OperateMenuEnum.INDEX, operateType = OperateTypeEnum.INDEX_DELETE)
+    public ResultVo<Integer> queryStatus(){
+        return indexDataService.queryStatus();
+    }
+
+
+
+
+    @PostMapping("refreshIndex")
+    //@OperateAnnotation(operateModel = OperateMenuEnum.INDEX, operateType = OperateTypeEnum.INDEX_DELETE)
+    public ResultVo refreshIndex(){
+        return indexDataService.refreshIndex();
+    }
+
 }

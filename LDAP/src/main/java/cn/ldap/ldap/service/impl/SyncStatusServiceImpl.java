@@ -8,6 +8,7 @@ import cn.ldap.ldap.common.enums.ConfigEnum;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.SyncStatusMapper;
+import cn.ldap.ldap.common.util.IscSignUtil;
 import cn.ldap.ldap.common.util.LdapUtil;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.util.StaticValue;
@@ -16,6 +17,7 @@ import cn.ldap.ldap.hander.InitConfigData;
 import cn.ldap.ldap.service.SyncStatusService;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.ini4j.Profile;
@@ -338,7 +340,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
                         map.put("serverKey",followPath+SERVER_KEY);
                         String caStr = getCerOrKey(followPath+CA_CER);
                         if (!BeanUtil.isEmpty(caStr)){
-                            map.put("caCerStr",caStr);
+                            map.put("caCerStr",replaceCer(caStr));
                         }else {
                             map.put("caCerStr","");
                         }
@@ -346,7 +348,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
 
                         String serverStr = getCerOrKey(followPath+SERVER_CER);
                         if (!BeanUtil.isEmpty(serverStr)){
-                            map.put("serverCerStr",serverStr);
+                            map.put("serverCerStr",replaceCer(serverStr));
                         }else {
                             map.put("serverCerStr","");
                         }
@@ -362,7 +364,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
                         map.put("caCer",followPath+CA_CER);
                         String cerOrKey = getCerOrKey(followPath+CA_CER);
                         if (!BeanUtil.isEmpty(cerOrKey)){
-                            map.put("caCerStr",cerOrKey);
+                            map.put("caCerStr",replaceCer(cerOrKey));
                         }else {
                             map.put("caCerStr","");
                         }
@@ -515,6 +517,13 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
             throw new RuntimeException(e);
         }
         return result;
+    }
+
+    public static String replaceCer(String cer){
+        String s = cer.replaceAll("\n", "").replaceAll(" ", "")
+                .replaceAll("BEGIN", "").replaceAll("END", "")
+                .replaceAll("-", "").replaceAll("CERTIFICATE", "");
+        return s;
     }
 
     /**

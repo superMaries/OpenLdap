@@ -49,6 +49,9 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     @Value("${filePath.certPath}")
     private String certPath;
 
+    @Value("${canSee.show}")
+    private Boolean canSeeIndexDelete;
+
     @Resource
     private ParamConfigService paramConfigService;
 
@@ -207,6 +210,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
             //开启
             Runtime.getRuntime().exec(START_COMMAND, null);
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                throw new SysException(THREAD_SLEEP_ERROR);
+            }
+
             updatePortStatus(String.valueOf(StaticValue.TRUE));
             log.info("开启命令执行:{}", START_COMMAND);
             Boolean result = linuxCommand(SERVER_NAME);
@@ -218,6 +227,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         } else {
             //关闭
             Runtime.getRuntime().exec(STOP_COMMAND, null);
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                throw new SysException(THREAD_SLEEP_ERROR);
+            }
+
             updatePortStatus(String.valueOf(StaticValue.FALSE));
             Boolean result = linuxCommand(SERVER_NAME);
             if (result) {
@@ -254,6 +269,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      * @return
      */
     public Boolean linuxCommand(String serverName) {
+
         try {
             Process process = new ProcessBuilder(SYSTEM, IS_ACTIVE, serverName).start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -352,6 +368,11 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         sslConfig.setKeyName(filePath);
         sslConfigService.updateById(sslConfig);
         return ResultUtil.success();
+    }
+
+    @Override
+    public ResultVo<Boolean> canSeeDelete() {
+        return ResultUtil.success(canSeeIndexDelete);
     }
 
     /**
