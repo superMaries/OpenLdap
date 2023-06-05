@@ -110,6 +110,8 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      */
     private static final String LOGFILE_ROTATE = "logfile-rotate";
 
+    private static final String SLAP_INDEX = "slapindex";
+
     //添加配置
     @Override
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
@@ -219,6 +221,30 @@ public class LdapConfigServiceImpl implements LdapConfigService {
         if (BeanUtil.isEmpty(openOrClose)) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
+
+        //判断当前进程中是否有slapindex进程在运行
+        Boolean isRunning = false;
+        try {
+            Process exec = Runtime.getRuntime().exec("ps -ef | grep " + SLAP_INDEX);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                if (line.contains(SLAP_INDEX)) {
+                    isRunning = true;
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            throw new SysException(e.getMessage());
+        }
+
+
+        //如果有正在运行的程序会报错
+        if(isRunning){
+            return ResultUtil.fail(ExceptionEnum.INDEX_WAITTING);
+        }
+
+
         if (openOrClose) {
 
             //开启

@@ -44,6 +44,10 @@ filePath:
   shPath: /Users/suntao/Documents/soft/file/ldap/ldapStart.sh
   questionsPath: /Users/suntao/Documents/soft/file/ldap/安全备份系统安装手册-V3tax.pdf
   followCertPath: /Users/suntao/Documents/soft/file/
+  sync: 1  # 0 不展示同步  1 展示同步
+  serviceType: 1  # 0, "主服务器"  1 从服务器
+  usbKey: 1
+
 ldap:
   searchFilter: (objectClass=*)
   searchBase: c=cn

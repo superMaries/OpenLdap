@@ -109,6 +109,10 @@ public enum ExceptionEnum {
     THREAD_SLEEP_ERROR(8012,"线程睡眠异常"),
     REFRESH_ERROR(8013,"索引刷新失败"),
     START_ERROR(8014,"启动异常"),
+    SERVICE_NEED_CLOSE(8015,"想添加索引配置请先关闭服务"),
+    INDEX_IS_RUNNING(8016,"索引正在更新，请等待结束后在添加"),
+    INDEX_WAITTING(8017,"索引正在更新，等待结束后在操作")
+
             ;
 
     /**

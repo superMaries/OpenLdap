@@ -1,6 +1,7 @@
 package cn.ldap.ldap.service.impl;
 
 import cn.ldap.ldap.common.dto.IndexDataDto;
+import cn.ldap.ldap.common.dto.RefreshIndexDto;
 import cn.ldap.ldap.common.entity.IndexDataModel;
 import cn.ldap.ldap.common.entity.IndexRule;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
@@ -12,9 +13,11 @@ import cn.ldap.ldap.common.util.StaticValue;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.IndexDataService;
 import cn.ldap.ldap.service.IndexRuleService;
+import cn.ldap.ldap.service.LdapConfigService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.extern.slf4j.Slf4j;
 import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +29,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -61,6 +61,9 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
      */
     private static final String SPACE_DATA = " ";
 
+    @Resource
+    private LdapConfigServiceImpl ldapConfigServiceImpl;
+
 
     /**
      * 换行
@@ -76,12 +79,13 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
 
     private static final Integer REFRESH_DONE = 2;
 
-    private static final String REFRESH_COMMAND = "cd /usr/local/openldap/sbin; ./slapindex -v";
+    private static final String REFRESH_COMMAND = "cd /usr/local/openldap/sbin; ./slapindex ";
 
     private static final String RESTART_COMMAND = "systemctl restart slapd.service";
 
-    @Resource
-    private IndexDataMapper indexDataMapper;
+    private static final String SERVICE_NAME = "slapd.service";
+
+    private static final String SLAP_INDEX = "slapindex";
 
     /**
      * 更新或者插入
@@ -96,6 +100,33 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
                 || ObjectUtils.isEmpty(indexDataDto.getAttributeName())) {
             return ResultUtil.fail(ExceptionEnum.PARAM_ERROR);
         }
+        //先判断服务是否关闭，如果服务关闭返回信息请关闭服务
+        Boolean aBoolean = ldapConfigServiceImpl.linuxCommand(SERVICE_NAME);
+        if (aBoolean){
+            return ResultUtil.fail(ExceptionEnum.SERVICE_NEED_CLOSE);
+        }
+        //判断当前进程中是否有slapindex进程在运行
+        Boolean isRunning = false;
+        try {
+            Process exec = Runtime.getRuntime().exec("ps -ef | grep " + SLAP_INDEX);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                if (line.contains(SLAP_INDEX)) {
+                    isRunning = true;
+                    break;
+                }
+            }
+
+        } catch (IOException e) {
+            throw new SysException(e.getMessage());
+        }
+        //如果有正在运行的程序会报错
+        if(isRunning){
+            return ResultUtil.fail(ExceptionEnum.INDEX_IS_RUNNING);
+        }
+
+
         List<IndexDataModel> indexDataModels = null;
         indexDataModels = list(new LambdaQueryWrapper<IndexDataModel>()
                 .eq(!ObjectUtils.isEmpty(indexDataDto.getAttributeName()), IndexDataModel::getIndexAttribute, indexDataDto.getAttributeName())
@@ -114,17 +145,11 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
             indexDataModel.setIndexAttribute(indexDataDto.getAttributeName());
             indexDataModel.setIndexRule(indexDataDto.getIndexRule());
             indexDataModel.setDescription(indexRule.getDescription());
+            indexDataModel.setStatus(NOT_REFRESH);
             saveOrUpdate(indexDataModel);
         }
         //根据规则拿到对应数据
         //更改全部数据
-        List<IndexDataModel> list = this.list();
-        if (!CollectionUtils.isEmpty(list)){
-            for (IndexDataModel indexDataModel : list) {
-                indexDataModel.setStatus(NOT_REFRESH);
-            }
-        }
-        saveOrUpdateBatch(list);
 
         return getData();
     }
@@ -146,58 +171,55 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
 
     @Transactional
     @Override
-    public ResultVo refreshIndex() {
+    public ResultVo refreshIndex(RefreshIndexDto refreshIndexDto) {
 
-        List<IndexDataModel> list = list();
-        log.info("查询到的刷新数据的集合:{}",list);
-
-        if (!CollectionUtils.isEmpty(list)){
-            for (IndexDataModel indexDataModel : list) {
-                indexDataModel.setStatus(REFRESH_ING);
-                log.info("修改的状态:{}",REFRESH_ING);
-            }
+         QueryWrapper<IndexDataModel> queryWrapper = new QueryWrapper<>();
+         queryWrapper.lambda().eq(IndexDataModel::getId,refreshIndexDto.getId());
+         queryWrapper.lambda().eq(IndexDataModel::getIndexAttribute,refreshIndexDto.getIndex());
+        IndexDataModel one = getOne(queryWrapper);
+        if (ObjectUtils.isEmpty(one)){
+            return ResultUtil.fail(ExceptionEnum.COLLECTION_EMPTY);
         }
-        saveOrUpdateBatch(list);
-        log.info("刷新索引第一次保存的集合:{}",list);
+        log.info("查询到到数据为:{}",one);
+        one.setStatus(REFRESH_ING);
+        saveOrUpdate(one);
+        log.info("即将执行Linux命令---------------------------------！！！");
 
+        String command = REFRESH_COMMAND+refreshIndexDto.getIndex();
         ProcessBuilder builder = new ProcessBuilder();
-        log.info("刷新命令为:{}",REFRESH_COMMAND);
-        builder.command("sh", "-c", REFRESH_COMMAND);
+        log.info("刷新命令为:{}",command);
+        builder.command("sh", "-c", command);
         try {
-            log.info("刷新命令准备开始执行---------------------------");
+            log.info("刷新命令准备开始执行---------------------------"+new Date());
             Process start = builder.start();
-           // int i = start.waitFor();
-            log.info("刷新命令执行结束------------------------------");
-           // log.info("状态码--------:{}",i);
-            // 输出命令执行结果
-            //BufferedReader reader = new BufferedReader(new InputStreamReader(start.getInputStream()));
-//            String line;
-//            while ((line = reader.readLine()) != null) {
-//                log.info("刷新索引输出:{}",line);
-//            }
-            List<IndexDataModel> yesList = list;
-            log.info("修改为2的集合:{}",yesList);
-                for (IndexDataModel indexDataModel : yesList) {
-                    indexDataModel.setStatus(REFRESH_DONE);
-                    log.info("修改集合2的状态:{}",REFRESH_DONE);
-                }
-                saveOrUpdateBatch(yesList);
-                log.info("修改为2的集合的保存的大小:{}",yesList.size());
-                // fooAsync();
+            int i = start.waitFor();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(start.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                log.info("刷新索引输出:{}",line);
+            }
+            log.info("刷新命令执行结束------------------------------"+new Date());
+            log.info("状态码--------:{}",i);
 
-//            if (i ==0){
-//
-//                List<IndexDataModel> yesList = list;
-//                for (IndexDataModel indexDataModel : yesList) {
-//                    indexDataModel.setStatus(REFRESH_DONE);
-//                }
-//                saveOrUpdateBatch(yesList);
-//               // fooAsync();
-//            }
-            log.info("刷新索引命令:{}",REFRESH_COMMAND);
+
+            log.info("刷新索引命令结束:{}",command);
+            //修改数据库数据
+            log.info("准备修改数据库数据");
+            if (i == 0){
+                QueryWrapper<IndexDataModel> twiceQueryWrapper = new QueryWrapper<>();
+                twiceQueryWrapper.lambda().eq(IndexDataModel::getId,refreshIndexDto.getId());
+                twiceQueryWrapper.lambda().eq(IndexDataModel::getIndexAttribute,refreshIndexDto.getIndex());
+                IndexDataModel two = getOne(twiceQueryWrapper);
+                two.setStatus(REFRESH_DONE);
+                saveOrUpdate(two);
+                log.info("修改数据库结束:{}",two);
+            }
+
         } catch (IOException e) {
             log.error("索引刷新失败");
             throw new SysException(ExceptionEnum.REFRESH_ERROR);
+        } catch (InterruptedException e) {
+            throw new SysException(e.getMessage());
         }
         return ResultUtil.success();
     }
