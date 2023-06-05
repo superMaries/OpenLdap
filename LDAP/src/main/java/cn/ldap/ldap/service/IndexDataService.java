@@ -1,6 +1,7 @@
 package cn.ldap.ldap.service;
 
 import cn.ldap.ldap.common.dto.IndexDataDto;
+import cn.ldap.ldap.common.dto.RefreshIndexDto;
 import cn.ldap.ldap.common.entity.IndexDataModel;
 import cn.ldap.ldap.common.vo.ResultVo;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -26,6 +27,6 @@ public interface IndexDataService extends IService<IndexDataModel> {
 
     ResultVo<Integer> queryStatus();
 
-    ResultVo refreshIndex();
+    ResultVo refreshIndex(RefreshIndexDto refreshIndexDto);
 }
 

@@ -2,6 +2,7 @@ package cn.ldap.ldap.controller;
 
 import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.IndexDataDto;
+import cn.ldap.ldap.common.dto.RefreshIndexDto;
 import cn.ldap.ldap.common.entity.IndexDataModel;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
@@ -60,8 +61,8 @@ public class IndexDataController {
 
     @PostMapping("refreshIndex")
     //@OperateAnnotation(operateModel = OperateMenuEnum.INDEX, operateType = OperateTypeEnum.INDEX_DELETE)
-    public ResultVo refreshIndex(){
-        return indexDataService.refreshIndex();
+    public ResultVo refreshIndex(@RequestBody RefreshIndexDto refreshIndexDto){
+        return indexDataService.refreshIndex(refreshIndexDto);
     }
 
 }
