@@ -326,6 +326,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
                 Profile.Section section = wini.get("?");
                 map.put("interval", section.get("interval"));
                 map.put("provider", section.get("provider"));
+                map.put("type", section.get("type"));
                 map.put("searchbase", section.get("searchbase"));
                 map.put("userName", section.get("binddn"));
                 map.put("passWord", section.get("credentials"));
