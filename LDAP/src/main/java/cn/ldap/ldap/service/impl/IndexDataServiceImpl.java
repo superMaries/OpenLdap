@@ -102,8 +102,8 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         }
         //先判断服务是否关闭，如果服务关闭返回信息请关闭服务
         Boolean aBoolean = ldapConfigServiceImpl.linuxCommand(SERVICE_NAME);
-        if (!aBoolean){
-            return ResultUtil.success(ExceptionEnum.SERVICE_NEED_CLOSE);
+        if (aBoolean){
+            return ResultUtil.fail(ExceptionEnum.SERVICE_NEED_CLOSE);
         }
         //判断当前进程中是否有slapindex进程在运行
         Boolean isRunning = false;
