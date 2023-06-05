@@ -105,11 +105,18 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     private static final String LOG_FILE = "logfile";
 
     private static final String LOG_LEVEL = "loglevel";
+    /**
+     * 配置日志大小
+     */
+    private static final String LOGFILE_ROTATE = "logfile-rotate";
 
     //添加配置
     @Override
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
         ParamConfig paramConfig = paramConfigService.getOne(null);
+        if (mainConfig.getLogSize() <= 1 || mainConfig.getLogSize() > 99) {
+            throw new SysException(PARAM_ERROR, "日志大小范围在1~99");
+        }
         if (!ObjectUtil.isEmpty(paramConfig)) {
             if (!BeanUtil.isEmpty(mainConfig.getLogLevel())) {
                 paramConfig.setLogLevel(mainConfig.getLogLevel());
@@ -132,6 +139,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 return ResultUtil.fail(ACL_FAIL);
             }
             paramConfig.setOpenAcl(mainConfig.getOpenAcl());
+            paramConfig.setLogSize(mainConfig.getLogSize());
             paramConfigService.updateById(paramConfig);
         }
 
@@ -160,6 +168,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 } else if (lineStr.startsWith(LOG_LEVEL)) {
                     stringBuilder.append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
                     found = true;
+                } else if (lineStr.startsWith(LOGFILE_ROTATE)) {
+                    String data = StaticValue.THREE + SPACE_DATA + mainConfig.getLogSize() + SPACE_DATA + 0;
+                    stringBuilder.append(LOGFILE_ROTATE).append(SPACE_DATA).append(data).append(FEED);
+                    found = true;
                 } else {
                     stringBuilder.append(lineStr).append(FEED);
                 }
@@ -179,7 +191,8 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 stringBuilder.append("access to * by * none").append(FEED);
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new SysException(SYSTEM_CONFIG_ERRROR);
         }
         String data = stringBuilder.toString();
         try {

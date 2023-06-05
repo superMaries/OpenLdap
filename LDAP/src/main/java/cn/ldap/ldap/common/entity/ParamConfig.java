@@ -26,4 +26,10 @@ public class ParamConfig {
 
     @TableField("open_acl")
     private String openAcl;
+
+    /**
+     * 日志文件大小
+     */
+    @TableField("log_size")
+    private Integer logSize;
 }

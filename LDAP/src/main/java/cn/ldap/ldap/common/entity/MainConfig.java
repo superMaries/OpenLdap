@@ -14,6 +14,14 @@ public class MainConfig {
      */
     private Integer logLevel;
 
+    /**
+     *  是否开启匿名访问
+     */
     private String openAcl;
+
+    /**
+     * 日志的大小
+     */
+    private Integer logSize=99;
 
 }
