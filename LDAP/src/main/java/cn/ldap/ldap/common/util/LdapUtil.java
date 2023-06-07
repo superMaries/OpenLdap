@@ -1423,12 +1423,15 @@ public class LdapUtil {
 
         if (LdapAccuntAuthEnum.WRITE.getCode() != authCode) {
             //移除改字符串
-            String fileContentEx = fileContent.replace(data, "");
+            String fileContentEx = fileContent.replace(data+StaticValue.N, "");
             fileContent = fileContentEx;
         } else {
             //判断是否存在 然后进行判断是否有改该行字符串
             boolean isAdd = false;
             for (int i = 0; i < fileContentSplit.length; i++) {
+                if (fileContentSplit[i].startsWith("access to * by * none")) {
+                    appadStr = appadStr.append(StaticValue.N).append("#" + fileContentSplit[i]);
+                }
                 if (fileContentSplit[i].startsWith("#关闭匿名访问")) {
                     appadStr = appadStr.append(StaticValue.N).append(fileContentSplit[i]);
                     if (fileContentSplit[i + 1].startsWith("access to *")) {
@@ -1460,6 +1463,7 @@ public class LdapUtil {
                     appadStr = appadStr.append(StaticValue.N).append(fileContentSplit[i]);
                 }
             }
+            fileContent = appadStr.toString();
 //                //没有  添加
 //                if (!fileContent.contains(data)) {
 //                    configFileData = configFileData.append(StaticValue.N).append(data);
@@ -1471,8 +1475,7 @@ public class LdapUtil {
         try {
 //        采用流的方式进行写入配置
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filePath));
-//            bufferedWriter.write(fileContent);
-            bufferedWriter.write(appadStr.toString());
+            bufferedWriter.write(fileContent);
             bufferedWriter.flush();
             bufferedWriter.close();
         } catch (IOException e) {
