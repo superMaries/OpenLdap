@@ -93,8 +93,10 @@ public class LdapAccountServiceImpl implements LdapAccountService {
 
         String configFileData = LdapUtil.getConfigFileData(filePath).toString();
         ldapList.forEach(ldap -> {
-            String data = "access to *  by dn=" + "\"" + ldap.getAccount() + "\" write  by * read";
-            if (configFileData.contains(ldap.getAccount())) {
+//            String data = "access to *  by dn=" + "\"" + ldap.getAccount() + "\" write  by * read";
+            String data = "    by dn.base=" + "\"" + ldap.getAccount() + "\" write ";
+//            if (configFileData.contains(ldap.getAccount())) {
+            if (configFileData.contains(data)) {
                 ldap.setAuth(LdapAccuntAuthEnum.WRITE.getMsg());
             } else {
                 ldap.setAuth(LdapAccuntAuthEnum.READ.getMsg());

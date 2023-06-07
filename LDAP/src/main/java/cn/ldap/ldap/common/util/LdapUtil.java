@@ -852,7 +852,7 @@ public class LdapUtil {
 
 
             ctx.close();
-        } catch (NamingException  e) {
+        } catch (NamingException e) {
             log.error(e.getMessage());
             throw new SysException(ExceptionEnum.LDAP_DEL_RDN_NOT_EXIT);
         }
@@ -1411,31 +1411,68 @@ public class LdapUtil {
         if (ObjectUtils.isEmpty(authName)) {
             authName = LdapAccuntAuthEnum.READ.getTitle();
         }
-//        String data = "access to *" + "\n" +
-//                "    by dn=" + "\"" + rdn + "\" write" + "\n" +
-//                "    by * read";
-        String data = "access to *  by dn=" + "\"" + rdn + "\" write  by * read";
+
+//        String data = "access to *  by dn=" + "\"" + rdn + "\" write  by * read";
+        String data = "    by dn.base=" + "\"" + rdn + "\" write ";
         //获取文件内容
         StringBuilder configFileData = getConfigFileData(filePath);
         String fileContent = configFileData.toString();
+        String[] fileContentSplit = fileContent.split("\n");
+
+        StringBuilder appadStr = new StringBuilder();
+
         if (LdapAccuntAuthEnum.WRITE.getCode() != authCode) {
             //移除改字符串
             String fileContentEx = fileContent.replace(data, "");
             fileContent = fileContentEx;
         } else {
             //判断是否存在 然后进行判断是否有改该行字符串
-            if (true) {
-                //没有  添加
-                if (!fileContent.contains(data)) {
-                    configFileData = configFileData.append(StaticValue.N).append(data);
-                    fileContent = configFileData.toString();
+            boolean isAdd = false;
+            for (int i = 0; i < fileContentSplit.length; i++) {
+                if (fileContentSplit[i].startsWith("#关闭匿名访问")) {
+                    appadStr = appadStr.append(StaticValue.N).append(fileContentSplit[i]);
+                    if (fileContentSplit[i + 1].startsWith("access to *")) {
+                        //为了将access to * 添加在账户前面
+                        appadStr = appadStr.append(StaticValue.N).append(fileContentSplit[i + 1]);
+                        int j = i + 1;
+                        boolean b = false;
+                        log.info("设置账户读写权限");
+                        while (true) {
+                            if (fileContentSplit[j + 1].startsWith(data)) {
+                                b = true;
+                                break;
+                            }
+                            if (fileContentSplit[j + 1].startsWith("database")) {
+                                break;
+                            }
+                            j++;
+                        }
+                        if (!b) {
+                            appadStr = appadStr.append(StaticValue.N).append(data);
+                        }
+                        i = i + 1;
+                    } else {
+                        appadStr = appadStr.append(StaticValue.N).append("access to *");
+                        appadStr = appadStr.append(StaticValue.N).append(data);
+                        appadStr = appadStr.append(StaticValue.N).append("    by * read");
+                    }
+                } else {
+                    appadStr = appadStr.append(StaticValue.N).append(fileContentSplit[i]);
                 }
             }
+//                //没有  添加
+//                if (!fileContent.contains(data)) {
+//                    configFileData = configFileData.append(StaticValue.N).append(data);
+//                    fileContent = configFileData.toString();
+//                }
         }
+
+
         try {
 //        采用流的方式进行写入配置
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filePath));
-            bufferedWriter.write(fileContent);
+//            bufferedWriter.write(fileContent);
+            bufferedWriter.write(appadStr.toString());
             bufferedWriter.flush();
             bufferedWriter.close();
         } catch (IOException e) {
