@@ -142,6 +142,10 @@ public class LoginServiceImpl implements LoginService {
 //    private static final String USBKey = "USBKey";
 
     private static final String SYNC_NAME = "同步管理";
+
+    private static final String SYNC_CONFIG = "同步配置";
+
+
     @Resource
     private PermissionService permissionService;
 
@@ -294,15 +298,23 @@ public class LoginServiceImpl implements LoginService {
             permissions = permissions.stream().filter(permission -> !permission.getMenuName().equals(SYNC_NAME)).collect(Collectors.toList());
         }
 
+
         try {
             //获取子集菜单
             List<Integer> parentIds = permissions.stream().map(it -> it.getId()).collect(Collectors.toList());
             List<Permission> parentPermissionList = permissionService
                     .list(new LambdaQueryWrapper<Permission>()
                             .in(Permission::getParentId, parentIds));
+
+            if(InitConfigData.getServiceType().equals(0)){
+                parentPermissionList = parentPermissionList.stream().filter(permission -> !permission.getMenuName().equals(SYNC_CONFIG)).collect(Collectors.toList());
+            }
+
+
             //解析菜单
+            List<Permission> finalParentPermissionList = parentPermissionList;
             permissions.forEach(it -> {
-                List<Permission> childrens = parentPermissionList.stream().
+                List<Permission> childrens = finalParentPermissionList.stream().
                         filter(child -> child.getParentId().equals(it.getId()))
                         .collect(Collectors.toList());
 
@@ -311,6 +323,7 @@ public class LoginServiceImpl implements LoginService {
         } catch (Exception e) {
             log.error("获取菜单错误：{}", e.getMessage());
         }
+
         return ResultUtil.success(permissions);
     }
 
