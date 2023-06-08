@@ -109,8 +109,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      * 配置日志大小
      */
     private static final String LOGFILE_ROTATE = "logfile-rotate";
-    private static final String LOGFILE_ONLY = " logfile-only";
-
+    private static final String LOGFILE_ONLY = "logfile-only";
     private static final String SLAP_INDEX = "slapindex";
 
     //添加配置
@@ -129,10 +128,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 int i = mainConfig.getLogLevelDirectory().lastIndexOf("/");
                 String filePath = mainConfig.getLogLevelDirectory().substring(0, i);
                 String[] split = mainConfig.getLogLevelDirectory().split("/");
-//                File file = new File(filePath);
-//                if (!file.exists()) {
-//                    return ResultUtil.fail(FILE_PATH_NOT_EXIST);
-//                }
+                File file = new File(filePath);
+                if (!file.exists()) {
+                    return ResultUtil.fail(FILE_PATH_NOT_EXIST);
+                }
                 String fileName = split[split.length - 1];
                 if ("" != fileName && !fileName.endsWith(".log")) {
                     return ResultUtil.fail(FILE_LOG);
