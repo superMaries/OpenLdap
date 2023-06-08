@@ -159,7 +159,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             String lineStr = bufferedReader.readLine();
 
             while (lineStr != null) {
-                if (mainConfig.getOpenAcl().equals("false") && lineStr.equals("access to * by * none")) {
+                if (mainConfig.getOpenAcl().equals("false") && lineStr.equals("access to * by anonymous none")) {
                     stringBuilder.append("").append(FEED);
                     acc = true;
                 }else if (lineStr.startsWith(LOGFILE_ROTATE)) {
@@ -193,7 +193,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             }
 
             if (!acc) {
-                stringBuilder.append("access to * by * none").append(FEED);
+                stringBuilder.append("access to * by anonymous none").append(FEED);
             }
         } catch (FileNotFoundException e) {
             log.error(e.getMessage());
@@ -430,7 +430,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             String openAcl = "access to * by * read";
             command = openAcl;
         } else {
-            String closeAcl = "access to * by * none";
+            String closeAcl = "access to * by anonymous none";
             command = closeAcl;
         }
 
