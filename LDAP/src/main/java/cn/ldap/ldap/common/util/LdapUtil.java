@@ -1118,9 +1118,7 @@ public class LdapUtil {
                     while (StaticValue.TRUE) {
                         isLine = StaticValue.TRUE;
                         line = reader.readLine();
-                        if (ObjectUtils.isEmpty(line)
-                                || line.contains(StaticValue.BINARY)
-                                || StaticValue.REPLACE.equals(line)) {
+                        if (ObjectUtils.isEmpty(line) || line.contains(StaticValue.BINARY) || StaticValue.REPLACE.equals(line)) {
 //                            sb.delete(sb.length() - line.length(), sb.length());
                             break;
                         }
@@ -1264,9 +1262,7 @@ public class LdapUtil {
                 System.out.println(line);
             }
             String name = parts[StaticValue.SPLIT_COUNT];
-            Object value = parts[StaticValue.COUNT].startsWith(StaticValue.m) ?
-                    parts[StaticValue.COUNT].substring(StaticValue.ONE)
-                    : parts[StaticValue.COUNT];
+            Object value = parts[StaticValue.COUNT].startsWith(StaticValue.m) ? parts[StaticValue.COUNT].substring(StaticValue.ONE) : parts[StaticValue.COUNT];
 
             //判断是否是证书
 //            if (name.toUpperCase().equals(StaticValue.USER_CERTIFICATE.toUpperCase())) {
@@ -1312,10 +1308,7 @@ public class LdapUtil {
             attributes.put(attribute);
             List<String> values = att.getValues();
             for (String value : values) {
-                if (StaticValue.USER_CERTIFICATE.toLowerCase().equals(name.toLowerCase())
-                        || StaticValue.certificateRevocationList.toLowerCase().contains(name.toLowerCase())
-                        || StaticValue.authorityRevocationList.toLowerCase().contains(name.toLowerCase())
-                        || StaticValue.deltaRevocationList.toLowerCase().contains(name.toLowerCase())) {
+                if (StaticValue.USER_CERTIFICATE.toLowerCase().equals(name.toLowerCase()) || StaticValue.certificateRevocationList.toLowerCase().contains(name.toLowerCase()) || StaticValue.authorityRevocationList.toLowerCase().contains(name.toLowerCase()) || StaticValue.deltaRevocationList.toLowerCase().contains(name.toLowerCase())) {
                     //证书
                     String cert = IscSignUtil.otherToBase64(value);
                     byte[] certificate = decodeCertificate(cert);
@@ -1399,7 +1392,57 @@ public class LdapUtil {
             throw new SysException(e.getMessage());
         }
         //设置权限
-        return setAuth(rdn, ldapAccountDto.getAuth(), filePath);
+        return setAuthEx(rdn, ldapAccountDto.getAuth(), filePath);
+    }
+
+    public static boolean setAuthEx(String rdn, Integer authCode, String filePath) throws NamingException {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            throw new SysException(FILE_NOT_EXIST);
+        }
+        String authName = LdapAccuntAuthEnum.getTitleByCode(authCode);
+        if (ObjectUtils.isEmpty(authName)) {
+            authName = LdapAccuntAuthEnum.READ.getTitle();
+        }
+        //获取文件内容
+        StringBuilder configFileData = getConfigFileData(filePath);
+        String fileContent = configFileData.toString();
+        String[] fileContentSplit = fileContent.split("\n");
+
+        String data = "access to dn.subtree=" + rdn + StaticValue.N + "    by dn.base=" + "\"" + rdn + "\" write " + StaticValue.N + "    by * read";
+        if (LdapAccuntAuthEnum.WRITE.getCode() != authCode) {
+            //移除改字符串
+            String fileContentEx = fileContent.replace(data, "");
+            fileContent = fileContentEx;
+        } else {
+            StringBuilder appadStr = new StringBuilder();
+            if (!fileContent.contains(data)) {
+                //添加
+                for (int i = 0; i < fileContentSplit.length; i++) {
+                    if (fileContentSplit[i].startsWith("#关闭匿名访问")) {
+                        appadStr = appadStr.append(StaticValue.N).append(fileContentSplit[i]);
+                        appadStr = appadStr.append(StaticValue.N).append(data);
+                    } else {
+                        appadStr = appadStr.append(StaticValue.N).append(fileContentSplit[i]);
+                    }
+                }
+            }
+            fileContent = appadStr.toString();
+        }
+        String fileContentEx = fileContent.replace("access to * by * none", "#access to * by * none");
+        fileContent = fileContentEx;
+        try {
+//        采用流的方式进行写入配置
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filePath));
+            bufferedWriter.write(fileContent);
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return StaticValue.TRUE;
+
     }
 
     public static boolean setAuth(String rdn, Integer authCode, String filePath) throws NamingException {
@@ -1423,7 +1466,7 @@ public class LdapUtil {
 
         if (LdapAccuntAuthEnum.WRITE.getCode() != authCode) {
             //移除改字符串
-            String fileContentEx = fileContent.replace(data+StaticValue.N, "");
+            String fileContentEx = fileContent.replace(data + StaticValue.N, "");
             fileContent = fileContentEx;
         } else {
             //判断是否存在 然后进行判断是否有改该行字符串

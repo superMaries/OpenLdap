@@ -109,6 +109,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
      * 配置日志大小
      */
     private static final String LOGFILE_ROTATE = "logfile-rotate";
+    private static final String LOGFILE_ONLY = " logfile-only";
 
     private static final String SLAP_INDEX = "slapindex";
 
@@ -116,7 +117,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
     @Override
     public ResultVo<T> addConfig(MainConfig mainConfig) throws IOException {
         ParamConfig paramConfig = paramConfigService.getOne(null);
-        if (mainConfig.getLogSize() <= 1 || mainConfig.getLogSize() > 99) {
+        if (mainConfig.getLogSize() < 1 || mainConfig.getLogSize() > 99) {
             throw new SysException(PARAM_ERROR, "日志大小范围在1~99");
         }
         if (!ObjectUtil.isEmpty(paramConfig)) {
@@ -128,10 +129,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 int i = mainConfig.getLogLevelDirectory().lastIndexOf("/");
                 String filePath = mainConfig.getLogLevelDirectory().substring(0, i);
                 String[] split = mainConfig.getLogLevelDirectory().split("/");
-                File file = new File(filePath);
-                if (!file.exists()) {
-                    return ResultUtil.fail(FILE_PATH_NOT_EXIST);
-                }
+//                File file = new File(filePath);
+//                if (!file.exists()) {
+//                    return ResultUtil.fail(FILE_PATH_NOT_EXIST);
+//                }
                 String fileName = split[split.length - 1];
                 if ("" != fileName && !fileName.endsWith(".log")) {
                     return ResultUtil.fail(FILE_LOG);
@@ -161,6 +162,12 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 if (mainConfig.getOpenAcl().equals("false") && lineStr.equals("access to * by * none")) {
                     stringBuilder.append("").append(FEED);
                     acc = true;
+                }else if (lineStr.startsWith(LOGFILE_ROTATE)) {
+                    String data = StaticValue.THREE + SPACE_DATA + mainConfig.getLogSize() + SPACE_DATA + 0;
+                    stringBuilder.append(LOGFILE_ROTATE).append(SPACE_DATA).append(data).append(FEED);
+                    found = true;
+                } else if (lineStr.startsWith(LOGFILE_ONLY)) {
+                    stringBuilder.append(lineStr).append(FEED);
                 } else if (lineStr.startsWith(START)) {
                     stringBuilder//配置log文件目录
                             .append(LOG_FILE).append(SPACE_DATA).append(mainConfig.getLogLevelDirectory()).append(FEED);
@@ -170,11 +177,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                 } else if (lineStr.startsWith(LOG_LEVEL)) {
                     stringBuilder.append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
                     found = true;
-                } else if (lineStr.startsWith(LOGFILE_ROTATE)) {
-                    String data = StaticValue.THREE + SPACE_DATA + mainConfig.getLogSize() + SPACE_DATA + 0;
-                    stringBuilder.append(LOGFILE_ROTATE).append(SPACE_DATA).append(data).append(FEED);
-                    found = true;
-                } else {
+                }  else {
                     stringBuilder.append(lineStr).append(FEED);
                 }
                 lineStr = bufferedReader.readLine();
@@ -240,7 +243,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
 
 
         //如果有正在运行的程序会报错
-        if(isRunning){
+        if (isRunning) {
             return ResultUtil.fail(ExceptionEnum.INDEX_WAITTING);
         }
 

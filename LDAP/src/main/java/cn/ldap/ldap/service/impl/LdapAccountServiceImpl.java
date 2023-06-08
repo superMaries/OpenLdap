@@ -134,7 +134,7 @@ public class LdapAccountServiceImpl implements LdapAccountService {
         LdapContext ctx = (LdapContext) newLdapTemplate.getContextSource().getReadOnlyContext();
 //        LdapUtil.queryChildRdn(ldapAccountDto.getAccount(), ldapSearchFilter, ctx);
         LdapUtil.queryChildRdn(ldapAccountDto.getAccount(), ldapSearchFilter, ctx);
-        LdapUtil.setAuth(ldapAccountDto.getAccount(),LdapAccuntAuthEnum.READ.getCode(),filePath);
+        LdapUtil.setAuthEx(ldapAccountDto.getAccount(),LdapAccuntAuthEnum.READ.getCode(),filePath);
         return ResultUtil.success(StaticValue.TRUE);
     }
 
@@ -165,7 +165,7 @@ public class LdapAccountServiceImpl implements LdapAccountService {
         }
         if (!ObjectUtils.isEmpty(ldapAccountDto.getAuth())) {
             try {
-                boolean b = LdapUtil.setAuth(ldapAccountDto.getAccount(), ldapAccountDto.getAuth(), filePath);
+                boolean b = LdapUtil.setAuthEx(ldapAccountDto.getAccount(), ldapAccountDto.getAuth(), filePath);
                 return ResultUtil.success(b);
             } catch (NamingException e) {
                 log.error(e.getMessage());
