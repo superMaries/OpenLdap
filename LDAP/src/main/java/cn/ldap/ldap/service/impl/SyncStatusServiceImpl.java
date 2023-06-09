@@ -98,6 +98,8 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
     @Value("${filePath.followCertPath}")
     private String followPath;
 
+    @Value("${ldap.url}")
+    private String url;
 
     @Value("${ldap.userDn}")
     private String rootAccount;
@@ -492,7 +494,7 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         Long result = 0L;
         try {
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append(url).append(FEED).append(AND_D).append("\"").append(account)
                     .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
                     .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
                     .append("\"").append(FEED).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
