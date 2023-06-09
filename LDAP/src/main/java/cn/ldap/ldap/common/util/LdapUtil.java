@@ -1414,6 +1414,7 @@ public class LdapUtil {
             //移除改字符串
             String fileContentEx = fileContent.replace(data, "");
             fileContent = fileContentEx;
+            log.info("移除改字符串值：{}", fileContent);
         } else {
             StringBuilder appadStr = new StringBuilder();
             if (!fileContent.contains(data)) {
@@ -1428,9 +1429,11 @@ public class LdapUtil {
                 }
             }
             fileContent = appadStr.toString();
+            log.info("配置文件的值：{}", fileContent);
         }
         String fileContentEx = fileContent.replace("access to * by * none", "#access to * by * none");
         fileContent = fileContentEx;
+        log.info("插入配置文件的值：{}", fileContent);
         try {
 //        采用流的方式进行写入配置
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filePath));
