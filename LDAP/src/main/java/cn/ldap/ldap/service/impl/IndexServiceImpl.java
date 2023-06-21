@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import byzk.sdk.SM4Util;
 import cn.hutool.log.Log;
 import cn.ldap.ldap.common.dto.CertTreeDto;
 import cn.ldap.ldap.common.dto.DeviceStatusRespVo;
@@ -221,8 +222,9 @@ public class IndexServiceImpl implements IndexService {
 
             //拼接linux命令
             StringBuilder stringBuilder = new StringBuilder();
+            String secret = SM4Util.sm4DeData(password);
             stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
-                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(secret)
                     .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
                     .append("\"").append(FEED).append("\"").append(CRL_FILTER).append("\"").append(BEHIND_COMMAND);
 
@@ -271,8 +273,9 @@ public class IndexServiceImpl implements IndexService {
 
             //拼接linux命令
             StringBuilder stringBuilder = new StringBuilder();
+            String secret = SM4Util.sm4DeData(password);
             stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
-                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(secret)
                     .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
                     .append("\"").append(FEED).append("\"").append(CERT_FILTER).append("\"").append(BEHIND_COMMAND);
 
@@ -322,8 +325,9 @@ public class IndexServiceImpl implements IndexService {
 
             //拼接linux命令
             StringBuilder stringBuilder = new StringBuilder();
+            String secret = SM4Util.sm4DeData(password);
             stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
-                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+                    .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(secret)
                     .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
                     .append("\"").append(FEED).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
 
@@ -354,8 +358,9 @@ public class IndexServiceImpl implements IndexService {
         Long result = 0L;
         try {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
-                .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(password)
+            String secret = SM4Util.sm4DeData(password);
+            stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
+                .append("\"").append(FEED).append("-w").append(FEED).append("\"").append(secret)
                 .append("\"").append(FEED).append("-b").append(FEED).append("\"").append(searchBase)
                 .append("\"").append(FEED).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
 

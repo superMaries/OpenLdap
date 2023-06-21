@@ -1,5 +1,6 @@
 package cn.ldap.ldap.controller;
 
+import byzk.sdk.SM4Util;
 import cn.ldap.ldap.common.aop.annotations.OperateAnnotation;
 import cn.ldap.ldap.common.dto.FromSyncDto;
 import cn.ldap.ldap.common.dto.QueryFollowNumDto;
@@ -8,10 +9,12 @@ import cn.ldap.ldap.common.dto.SyncStatusDto;
 import cn.ldap.ldap.common.entity.SyncStatus;
 import cn.ldap.ldap.common.enums.OperateMenuEnum;
 import cn.ldap.ldap.common.enums.OperateTypeEnum;
+import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.SyncService;
 import cn.ldap.ldap.service.SyncStatusService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -114,7 +117,6 @@ public class SyncController {
     public ResultVo<SyncStatus> queryFollowNum(@RequestBody QueryFollowNumDto queryFollowNumDto){
         return syncStatusService.queryFollowNum(queryFollowNumDto);
     }
-
 
 }
 

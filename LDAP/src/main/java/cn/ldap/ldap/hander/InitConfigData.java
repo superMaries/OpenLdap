@@ -4,6 +4,7 @@ import cn.ldap.ldap.common.entity.KeyModel;
 import cn.ldap.ldap.common.exception.SysException;
 import cn.ldap.ldap.common.mapper.KeyMapper;
 import cn.ldap.ldap.common.util.StaticValue;
+import cn.ldap.ldap.service.impl.SyncServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,10 @@ import org.springframework.web.context.ServletContextAware;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletContext;
+import java.io.*;
 import java.util.List;
+
+import static cn.ldap.ldap.common.enums.ExceptionEnum.FILE_NOT_EXIST;
 
 /**
  * 项目启动获取参数配置
@@ -38,8 +42,24 @@ public class InitConfigData implements InitializingBean, ServletContextAware {
     private Integer configUsbKey;
 
 
+
+    /**
+     * 配置文件所在路径
+     */
+    @Value("${filePath.configPath}")
+    private String configPath;
+
+
     private static String privateKey = "";
     private static String publicKey = "";
+
+    /**
+     * 换行
+     */
+    private static final String FEED = "\n";
+
+
+    private static final String FIRST = "overlay syncprov";
 
     @Resource
     private KeyMapper keyMapper;
@@ -105,6 +125,47 @@ public class InitConfigData implements InitializingBean, ServletContextAware {
         serviceType = configServiceType;
         isSync = sync;
         usbKey = configUsbKey;
+
+        if (isSync == 1){
+
+            File file = new File(configPath);
+            if (!file.exists()) {
+                throw new SysException(FILE_NOT_EXIST);
+            }
+            StringBuilder stringBuilder = new StringBuilder();
+            String fileName = configPath;
+            log.info("设置文件");
+            try {
+                BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
+                String lineStr = null;
+                while ((lineStr = bufferedReader.readLine()) != null) {
+                    if (lineStr.trim().startsWith(FIRST)) {
+                        break;
+                    }
+                    String oldData = lineStr;
+                    stringBuilder.append(oldData).append(FEED);
+                }
+
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            SyncServiceImpl syncService = new SyncServiceImpl();
+            String data = syncService.splicingConfigParam(stringBuilder, null);
+            try {
+                log.info("写入文件");
+                //采用流的方式进行写入配置
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+                bufferedWriter.write(data);
+                bufferedWriter.flush();
+                bufferedWriter.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+
+        }
 
 
         List<KeyModel> keyModels = keyMapper.selectList(null);

@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import byzk.sdk.SM4Util;
 import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.dto.*;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
@@ -148,8 +149,9 @@ public class CertTreeServiceImpl implements CertTreeService {
         try {
 
             StringBuilder stringBuilderFather = new StringBuilder();
+            String secret = SM4Util.sm4DeData(password);
             stringBuilderFather.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
-                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(password)
+                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(secret)
                     .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
                     .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
 
@@ -217,8 +219,10 @@ public class CertTreeServiceImpl implements CertTreeService {
 
             //拼接linux命令
             StringBuilder stringBuilder = new StringBuilder();
+            String secret = SM4Util.sm4DeData(password);
+
             stringBuilder.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
-                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(password)
+                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(secret)
                     .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
                     .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(ONE).append(BEHIND_COMMAND);
 
@@ -248,8 +252,10 @@ public class CertTreeServiceImpl implements CertTreeService {
         try {
 
             StringBuilder stringBuilderFather = new StringBuilder();
+            String secret = SM4Util.sm4DeData(password);
+
             stringBuilderFather.append(CD).append(binFile).append(";").append(FRONT_COMMAND).append("\"").append(account)
-                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(password)
+                    .append("\"").append(SPACE).append("-w").append(SPACE).append("\"").append(secret)
                     .append("\"").append(SPACE).append("-b").append(SPACE).append("\"").append(treeVo.getBaseDN())
                     .append("\"").append(SPACE).append("\"").append(ALL_FILTER).append("\"").append(BEHIND_COMMAND);
 

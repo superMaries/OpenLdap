@@ -187,8 +187,17 @@ public class SyncServiceImpl implements SyncService {
                     break;
                 }
                 String oldData = lineStr;
+
+
+
                 stringBuilder.append(oldData).append(FEED);
             }
+            String string = stringBuilder.toString();
+            log.info(string);
+            if (!string.contains(DATA_BASE)){
+                stringBuilder.append(DATA_BASE).append(FEED);
+            }
+
 
         } catch (FileNotFoundException e) {
             log.error(e.getMessage());
@@ -309,7 +318,7 @@ public class SyncServiceImpl implements SyncService {
      */
     public String splicingConfigParam(StringBuilder stringBuilder, SyncDto syncDto) {
         //主服务配置文件
-        stringBuilder.append(FIRST).append(FEED).append(START).append(SPACE_DATA).append(syncDto.getTriggerSyncMaxNum()).append(SPACE_DATA).append(syncDto.getSyncTimeInterval()).append(FEED);
+        stringBuilder.append(FIRST).append(FEED);
         return stringBuilder.toString();
     }
 
@@ -335,8 +344,8 @@ public class SyncServiceImpl implements SyncService {
                 .append(SPACE_DATA).append(BIND_METHOD).append(SIMPLE).append(FEED)
                 .append(SPACE_DATA).append(BIND_DN).append(fromSyncDto.getMainServerAccount()).append(FEED)
                 .append(SPACE_DATA).append(CREDENTIALS).append(fromSyncDto.getMainServerPassword()).append(FEED)
-                .append(SPACE_DATA).append(RETRY).append(FEED)
-                .append(DATA_BASE).append(FEED);
+                .append(SPACE_DATA).append(RETRY).append(FEED);
+
         return stringBuilder.toString();
     }
 
@@ -356,9 +365,7 @@ public class SyncServiceImpl implements SyncService {
                 .append(SPACE_DATA).append(CREDENTIALS).append(fromSyncDto.getMainServerPassword()).append(FEED)
                 .append(SPACE_DATA).append(RETRY).append(FEED)
                 .append(SPACE_DATA).append(TLS_TYPE).append(NEVER).append(FEED)
-                .append(SPACE_DATA).append(CA_CERT).append(followPath).append(CA_CER).append(FEED)
-                .append(DATA_BASE).append(FEED);
-
+                .append(SPACE_DATA).append(CA_CERT).append(followPath).append(CA_CER).append(FEED);
         return stringBuilder.toString();
     }
 
@@ -379,8 +386,7 @@ public class SyncServiceImpl implements SyncService {
                 .append(SPACE_DATA).append(TLS_TYPE).append(DEMAND).append(FEED)
                 .append(SPACE_DATA).append(CA_CERT).append(followPath).append(CA_CER).append(FEED)
                 .append(SPACE_DATA).append(CERT).append(followPath).append(SERVER_CER).append(FEED)
-                .append(SPACE_DATA).append(KEY).append(followPath).append(SERVER_KEY).append(FEED)
-                .append(DATA_BASE).append(FEED);
+                .append(SPACE_DATA).append(KEY).append(followPath).append(SERVER_KEY).append(FEED);
         return stringBuilder.toString();
     }
 

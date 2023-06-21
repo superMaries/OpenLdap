@@ -1,5 +1,7 @@
 package cn.ldap.ldap.common.config;
 
+import byzk.sdk.SM4Util;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +15,9 @@ import org.springframework.ldap.pool2.validation.DirContextValidator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+
 @Component
+@Slf4j
 public class LdapConfig {
     @Value("${ldap.url}")
     private String ldapUrl;
@@ -39,17 +43,25 @@ public class LdapConfig {
     @Value("${ldap.pool.maxWait}")
     private int ldapPoolMaxWait;
 
+
     @Autowired
     private PooledContextSource pooledContextSource;
+
+    private static String pass = "";
 
 
     @Bean
     public ContextSource contextSource() {
+
+        pass = ldapPassword;
+        log.info(pass);
+        String s = SM4Util.sm4DeData(pass);
+        log.info("解密结果:{}",s);
         LdapContextSource contextSource = new LdapContextSource();
         contextSource.setUrl(ldapUrl);
         contextSource.setBase(ldapBase);
         contextSource.setUserDn(ldapUserDn);
-        contextSource.setPassword(ldapPassword);
+        contextSource.setPassword(s);
         contextSource.afterPropertiesSet();
         return contextSource;
     }
@@ -82,8 +94,6 @@ public class LdapConfig {
         return new LdapTemplate(pooledContextSource);
     }
     //------------
-
-
 
 
     @PostConstruct

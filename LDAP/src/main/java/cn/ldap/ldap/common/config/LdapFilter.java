@@ -29,6 +29,7 @@ public class LdapFilter implements WebMvcConfigurer {
         registration.excludePathPatterns("/**")
                 .excludePathPatterns("/login/**")
                 .excludePathPatterns("/config/**")
+                .excludePathPatterns("/server/**")
                 .excludePathPatterns("/login/logout");
     }
 }

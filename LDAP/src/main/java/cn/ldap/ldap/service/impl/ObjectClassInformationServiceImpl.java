@@ -1,13 +1,18 @@
 package cn.ldap.ldap.service.impl;
 
+import byzk.sdk.SM4Util;
+import cn.hutool.crypto.symmetric.SM4;
+import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import cn.ldap.ldap.common.dto.AttributeDto;
 import cn.ldap.ldap.common.enums.ExceptionEnum;
 import cn.ldap.ldap.common.util.ResultUtil;
 import cn.ldap.ldap.common.vo.ObjectDataDto;
 import cn.ldap.ldap.common.vo.ResultVo;
 import cn.ldap.ldap.service.ObjectClassInformationService;
+import cn.ldap.ldap.util.decUtil;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.ldap.sdk.schema.ObjectClassDefinition;
 import com.unboundid.ldap.sdk.schema.Schema;
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @title:
@@ -29,13 +31,12 @@ import java.util.Set;
 @Service
 public class ObjectClassInformationServiceImpl implements ObjectClassInformationService {
 
-    @Value("${ldapLink.url}")
+    @Value("${ldap.url}")
     private String url;
-    @Value("${ldapLink.port}")
-    private Integer port;
-    @Value("${ldapLink.userName}")
+
+    @Value("${ldap.userDn}")
     private String userName;
-    @Value("${ldapLink.password}")
+    @Value("${ldap.password}")
     private String password;
 
     @Value("${objectClassConfig.open}")
@@ -50,10 +51,26 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
     @Override
     public ResultVo<List<ObjectDataDto>> queryObjectAndAttribute() {
 
+        String connectionUrl = "";
+        Integer connectionPort = 0;
+
+
+        try {
+            LDAPURL ldapurl = new LDAPURL(url);
+            connectionUrl = ldapurl.getHost();
+            connectionPort = ldapurl.getPort();
+        } catch (LDAPException e) {
+            throw new RuntimeException(e);
+        }
+        String secret = SM4Util.sm4DeData(password);
+
         LDAPConnection ldapConnection = null;
+
+
+
         //和LDAP服务进行连接
         try {
-            ldapConnection = new LDAPConnection(url, port, userName, password);
+            ldapConnection = new LDAPConnection(connectionUrl, connectionPort, userName, secret);
             log.info("连接URL:{}", url);
         } catch (LDAPException e) {
             log.error("连接异常:{}", e);
@@ -83,7 +100,7 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
                 log.info("ObjectClass:{}", objectClass.getNameOrOID());
                 //获取所有ObjectClass类
                 //当获取的objectclass的名称为top，则需要过滤掉
-                if(objectClass.getNameOrOID().equals("top")){
+                if (objectClass.getNameOrOID().equals("top")) {
                     continue;
                 }
                 objectDataDto.setObjectClassName(objectClass.getNameOrOID());
@@ -150,10 +167,27 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
      */
     @Override
     public ResultVo<Object> queryAttribute(String objectClassName) {
+
+
+        String connectionUrl = "";
+        Integer connectionPort = 0;
+        try {
+            LDAPURL ldapurl = new LDAPURL(url);
+            connectionUrl = ldapurl.getHost();
+            connectionPort = ldapurl.getPort();
+
+        } catch (LDAPException e) {
+            throw new RuntimeException(e);
+        }
+
+
         LDAPConnection ldapConnection = null;
+        String secret = SM4Util.sm4DeData(password);
+
+
         //和LDAP服务进行连接
         try {
-            ldapConnection = new LDAPConnection(url, port, userName, password);
+            ldapConnection = new LDAPConnection(connectionUrl, connectionPort, userName, secret);
             log.info("连接URL:{}", url);
         } catch (LDAPException e) {
             log.error("连接异常:{}", e);

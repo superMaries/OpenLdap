@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import byzk.sdk.SM4Util;
 import cn.hutool.core.bean.BeanUtil;
 import cn.ldap.ldap.common.dto.QueryFollowNumDto;
 import cn.ldap.ldap.common.dto.SyncStatusDto;
@@ -43,21 +44,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncStatus> implements SyncStatusService {
 
-    @Resource
-    private LdapTemplate ldapTemplate;
-
     /**
      * 配置文件所在路径
      */
     @Value("${filePath.configPath}")
     private String configPath;
-
-    private static final Integer SCOPE = 2;
-
-    private static final String FILTER = "(objectClass=*)";
-
-    private static final String RDN_CHILD_NUM = "rdnChildNum";
-
 
     private static final Long NUM = 0L;
 
@@ -66,9 +57,6 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
     private static final String NOT_SYNC = "未同步";
 
     private static final String CONNECTION_FAILD = "连接失败";
-
-    @Resource
-    private CertTreeServiceImpl certTreeService;
 
     @Resource
     private IndexServiceImpl indexService;
@@ -156,59 +144,6 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
         return ResultUtil.success();
     }
 
-//    @Override
-//    public ResultVo<Object> mainQuery() {
-//        //查询数据库中所有 从服务的连接信息
-//        List<SyncStatus> dataList = list();
-//        log.info("查询配置数据为:{}", JSON.toJSONString(dataList));
-//        //判断集合是否为空
-//        if (CollectionUtils.isEmpty(dataList)) {
-//            return ResultUtil.fail(ExceptionEnum.COLLECTION_EMPTY);
-//        }
-//
-//        List<SyncStatus> resultList = new ArrayList<>();
-//        //遍历集合，通过集合获取连接信息，准备连接服务进行查询
-//        for (SyncStatus syncStatus : dataList) {
-//            if (ObjectUtils.isEmpty(syncStatus.getFollowServerIp())
-//                    || ObjectUtils.isEmpty(syncStatus.getSyncPoint())
-//                    || ObjectUtils.isEmpty(syncStatus.getAccount()) || ObjectUtils.isEmpty(syncStatus.getPassword())) {
-//                return ResultUtil.fail(ExceptionEnum.LDAP_DATA_ERROR);
-//            }
-//            //连接服务
-//            //查询主服务数据，判断连接状态，并且分别插入到返回值中
-//            Map<String, Object> mainMap = new HashMap<>();
-//            LdapTemplate newLdapTemplate = certTreeService.fromPool();
-//            mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
-//            Integer mainCount = Integer.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
-//            syncStatus.setMainServerNumber(mainCount);
-//            //设置从服务数据初始值
-//            Integer followCount = 0;
-//            //查询从服务数据，判断连接状态，并且分别插入到返回值中
-//            try {
-//                LdapTemplate connection = connection(syncStatus.getFollowServerIp(), syncStatus.getSyncPoint(), syncStatus.getAccount(), syncStatus.getPassword());
-//                Map<String, Object> followMap = new HashMap<>();
-//                followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, connection, SCOPE, syncStatus.getSyncPoint(), FILTER);
-//                followCount = Integer.valueOf(followMap.get(RDN_CHILD_NUM).toString());
-//            }catch (Exception e){
-//                followCount = NUM;
-//                syncStatus.setFollowServerNumber(followCount);
-//                syncStatus.setSyncStatusStr(CONNECTION_FAILD);
-//                resultList.add(syncStatus);
-//                continue;
-//            }
-//            syncStatus.setFollowServerNumber(followCount);
-//            if (followCount.equals(NUM)) {
-//                syncStatus.setSyncStatusStr(CONNECTION_FAILD);
-//            }
-//            if (mainCount.equals(followCount)) {
-//                syncStatus.setSyncStatusStr(SYNC);
-//            } else {
-//                syncStatus.setSyncStatusStr(NOT_SYNC);
-//            }
-//            resultList.add(syncStatus);
-//        }
-//        return ResultUtil.success(resultList);
-//    }
 
 
     @Override
@@ -254,26 +189,13 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
 
 
         //查询主服务数据，判断连接状态，并且分别插入到返回值中
-//        Map<String, Object> mainMap = new HashMap<>();
-//        LdapTemplate connection = connection(provider,searchbase,binddn,credentials);
-//        mainMap = LdapUtil.queryTreeRdnOrNumEx(mainMap, connection, SCOPE,searchbase , FILTER);
-//        Long mainCount = Long.valueOf(mainMap.get(RDN_CHILD_NUM).toString());
         syncStatus.setMainServerNumber(mainCount);
         //设置从服务数据初始值
         Long followCount = 0L;
         //查询从服务数据，判断连接状态，并且分别插入到返回值中
-//        try {
-//
-//            Map<String, Object> followMap = new HashMap<>();
-//            LdapTemplate newLdapTemplate = certTreeService.fromPool();
-//            followMap = LdapUtil.queryTreeRdnOrNumEx(followMap, newLdapTemplate, SCOPE, syncStatus.getSyncPoint(), FILTER);
-//            followCount = Long.valueOf(followMap.get(RDN_CHILD_NUM).toString());
-//        }catch (Exception e){
-//            followCount = NUM;
-//            syncStatus.setFollowServerNumber(followCount);
-//            syncStatus.setSyncStatusStr(CONNECTION_FAILD);
-//        }
-        followCount = followQueryLinuxSelf(searchbase, rootAccount, rootPassword);
+
+        String secret = SM4Util.sm4DeData(rootPassword);
+        followCount = followQueryLinuxSelf(searchbase, rootAccount, secret);
         syncStatus.setFollowServerNumber(followCount);
         if (followCount.equals(NUM)) {
             syncStatus.setSyncStatusStr(CONNECTION_FAILD);
@@ -538,15 +460,15 @@ public class SyncStatusServiceImpl extends ServiceImpl<SyncStatusMapper, SyncSta
      * @param password
      * @return
      */
-    public LdapTemplate connection(String url, String baseDN, String account, String password) {
-        LdapContextSource contextSource = new LdapContextSource();
-        contextSource.setUrl(url);
-        contextSource.setBase("");
-        contextSource.setUserDn(account);
-        contextSource.setPassword(password);
-        contextSource.afterPropertiesSet();
-        LdapTemplate ldapTemplate = new LdapTemplate(contextSource);
-        ldapTemplate.setIgnorePartialResultException(true);
-        return ldapTemplate;
-    }
+//    public LdapTemplate connection(String url, String baseDN, String account, String password) {
+//        LdapContextSource contextSource = new LdapContextSource();
+//        contextSource.setUrl(url);
+//        contextSource.setBase("");
+//        contextSource.setUserDn(account);
+//        contextSource.setPassword(password);
+//        contextSource.afterPropertiesSet();
+//        LdapTemplate ldapTemplate = new LdapTemplate(contextSource);
+//        ldapTemplate.setIgnorePartialResultException(true);
+//        return ldapTemplate;
+//    }
 }

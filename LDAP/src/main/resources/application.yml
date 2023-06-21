@@ -44,6 +44,7 @@ filePath:
   shPath: /Users/suntao/Documents/soft/file/ldap/ldapStart.sh
   questionsPath: /Users/suntao/Documents/soft/file/ldap/安全备份系统安装手册-V3tax.pdf
   followCertPath: /Users/suntao/Documents/soft/file/
+  slapdPath: /Users/suntao/Document/soft/slapd
   sync: 1  # 0 不展示同步  1 展示同步
   serviceType: 0  # 0, "主服务器"  1 从服务器
   usbKey: 1
@@ -54,7 +55,7 @@ ldap:
   url: ldap://39.98.83.34:389/
   base:
   userDn: cn=Directory Manager,c=cn
-  password: Js3qCaLdapAdmin
+  password: 40931D5D32F52C4EA0B56F973A3ED30A82A213B0C6D75A37
   pool:
     minIdle: 0
     maxIdle: 16
