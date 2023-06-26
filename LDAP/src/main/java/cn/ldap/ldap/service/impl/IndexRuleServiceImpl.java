@@ -88,8 +88,6 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     private static final String SAFE_SERVER = "安全协议服务";
 
 
-
-
     /**
      * 配置文件所在路径
      */
@@ -155,6 +153,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
      */
     @Override
     public ResultVo<Object> sslOperation(ServerDto serverDto) {
+        log.info("接口参数:{}", serverDto.toString());
         if ((BeanUtil.isEmpty(serverDto.getSafeOperation()) && BeanUtil.isEmpty(serverDto.getSafeOperation()))
                 || (!serverDto.getOperation() && !serverDto.getSafeOperation())) {
             return ResultUtil.fail(ExceptionEnum.PARAM_EMPTY);
@@ -166,6 +165,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
         List<PortLink> list = new ArrayList<>();
 
         if (ObjectUtils.isEmpty(sslConfig)) {
+            log.info("新增");
             SSLConfig sslConfigNew = new SSLConfig();
             PortLink portLinkCommon = new PortLink();
 
@@ -199,8 +199,10 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             list.add(portLinkCommon);
             list.add(portLinkSafe);
             portLinkService.saveBatch(list);
+            log.info("新增:{}", sslConfigNew);
             sslConfigService.save(sslConfigNew);
         } else {
+            log.info("保存");
             sslConfig.setCaName(certPath + CASERVER_CERT);
             sslConfig.setServerName(certPath + SERVER_CERT);
             sslConfig.setKeyName(certPath + SERVER_KEY);
@@ -219,6 +221,7 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
             if (!BeanUtil.isEmpty(serverDto.getSslAuthStrategy())) {
                 sslConfig.setSslAuthStrategy(serverDto.getSslAuthStrategy());
             }
+            log.info("保存:{}", sslConfig);
             sslConfigService.updateById(sslConfig);
         }
 
@@ -232,8 +235,8 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
                 return ResultUtil.fail(ExceptionEnum.LDAP_PORT_ERROR);
             }
             //标准协议命令
-            command = BEHIND +slapdPath + HH + SPACE + AFTER_COMMAND + serverDto.getPort() + YIN + SPACE + LAST_COMMAND + configPath + THE_END;
-            updateOther(SAFE_SERVER,serverDto.getSafePort());
+            command = BEHIND + slapdPath + HH + SPACE + AFTER_COMMAND + serverDto.getPort() + YIN + SPACE + LAST_COMMAND + configPath + THE_END;
+            updateOther(SAFE_SERVER, serverDto.getSafePort());
             objectResultVo = onlyOne(command, serverDto, STANDART_SERVER);
             log.info("标准协议配置为:{}", command);
         }
@@ -253,8 +256,8 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
             makeCer(serverDto.getCaCer(), serverDto.getServerCer(), serverDto.getKey());
             //安全协议命令
-            command = BEHIND +slapdPath + HH + SPACE + LDAPS_HEAD + serverDto.getSafePort() + YIN + SPACE + LAST_COMMAND + configPath + THE_END;
-            updateOther(STANDART_SERVER,serverDto.getPort());
+            command = BEHIND + slapdPath + HH + SPACE + LDAPS_HEAD + serverDto.getSafePort() + YIN + SPACE + LAST_COMMAND + configPath + THE_END;
+            updateOther(STANDART_SERVER, serverDto.getPort());
             objectResultVo = onlyOne(command, serverDto, SAFE_SERVER);
             log.info("安全协议开启端口:{}", command);
         }
@@ -275,11 +278,11 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
 
             makeCer(serverDto.getCaCer(), serverDto.getServerCer(), serverDto.getKey());
             //双重协议命令
-            command = BEHIND +slapdPath + HH + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + UNDER_COMMAND + serverDto.getPort() + YIN + SPACE + LAST_COMMAND + configPath + THE_END;
+            command = BEHIND + slapdPath + HH + SPACE + LDAPS_HEAD + serverDto.getSafePort() + SPACE + UNDER_COMMAND + serverDto.getPort() + YIN + SPACE + LAST_COMMAND + configPath + THE_END;
             objectResultVo = twice(command, serverDto);
         }
         //保存或者修改
-        sslConfigService.saveOrUpdate(sslConfig);
+//        sslConfigService.saveOrUpdate(sslConfig);
         if (serverDto.getSafeOperation()) {
             syncConfig(serverDto);
         } else {
@@ -306,12 +309,12 @@ public class IndexRuleServiceImpl extends ServiceImpl<IndexRuleMapper, IndexRule
     }
 
 
-    public void updateOther(String serverName,String port) {//修改数据库操作
+    public void updateOther(String serverName, String port) {//修改数据库操作
         Boolean status = false;
         QueryWrapper<PortLink> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(PortLink::getServerName, serverName);
         PortLink portLink = portLinkService.getOne(queryWrapper);
-
+        log.info("updateother数据:{}", portLink);
         if (!ObjectUtils.isEmpty(portLink)) {
             portLink.setStatus(status.toString());
             portLink.setPort(port);

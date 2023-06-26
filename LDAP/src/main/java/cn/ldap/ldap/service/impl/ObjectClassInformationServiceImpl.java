@@ -134,7 +134,11 @@ public class ObjectClassInformationServiceImpl implements ObjectClassInformation
         } else {
             for (ObjectClassDefinition objectClass : objectClasses) {
                 ObjectDataDto objectDataDto = new ObjectDataDto();
-                if (null != objectClass && objectClass.getNameOrOID().equals("gscertinfo")) {
+                if ((null != objectClass && objectClass.getNameOrOID().equals("gscertinfo")) ||
+                        null != objectClass && objectClass.getNameOrOID().equals("person")||
+                        null != objectClass && objectClass.getNameOrOID().equals("organization")||
+                        null != objectClass && objectClass.getNameOrOID().equals("organizationalUnit")||
+                        null != objectClass && objectClass.getNameOrOID().equals("cRLDistributionPoint")) {
                     objectDataDto.setObjectClassName(objectClass.getNameOrOID());
                     List<AttributeDto> result = new ArrayList<>();
                     List<String> requireAttribute = Arrays.asList(objectClass.getRequiredAttributes());

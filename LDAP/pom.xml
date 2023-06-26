@@ -10,7 +10,7 @@
     </parent>
     <groupId>cn.ldap</groupId>
     <artifactId>LDAP</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.23.0626_2</version>
     <name>LDAP</name>
     <description>LDAP</description>
     <properties>
