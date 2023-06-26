@@ -52,6 +52,11 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
     @Value("${filePath.configPath}")
     private String configPath;
 
+    @Value("${filePath.indexPath}")
+    private String indexPath;
+
+    private static final String VV = " -o ";
+
     private static final String START_WITH = "index";
 
     private static final String OBJECTCLASS = "objectClass";
@@ -79,7 +84,9 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
 
     private static final Integer REFRESH_DONE = 2;
 
-    private static final String REFRESH_COMMAND = "cd /usr/local/openldap/sbin; ./slapindex ";
+    private static final String REFRESH_COMMAND = "cd ";
+
+    private static final String REFRESH = "; ./slapindex -f ";
 
     private static final String RESTART_COMMAND = "systemctl restart slapd.service";
 
@@ -185,7 +192,7 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         saveOrUpdate(one);
         log.info("即将执行Linux命令---------------------------------！！！");
 
-        String command = REFRESH_COMMAND+refreshIndexDto.getIndex();
+        String command = REFRESH_COMMAND+indexPath+REFRESH+configPath+VV+refreshIndexDto.getIndex();
         ProcessBuilder builder = new ProcessBuilder();
         log.info("刷新命令为:{}",command);
         builder.command("sh", "-c", command);
