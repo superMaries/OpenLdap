@@ -158,7 +158,7 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             String lineStr = bufferedReader.readLine();
 
             while (lineStr != null) {
-                if (mainConfig.getOpenAcl().equals("false") && lineStr.equals("access to * by anonymous none")) {
+                if (mainConfig.getOpenAcl().equals("false") && lineStr.contains("access to * by anonymous none")) {
                     stringBuilder.append("").append(FEED);
                     acc = true;
                 }else if (lineStr.startsWith(LOGFILE_ROTATE)) {
@@ -174,7 +174,20 @@ public class LdapConfigServiceImpl implements LdapConfigService {
                     // .append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
                     found = true;
                 } else if (lineStr.startsWith(LOG_LEVEL)) {
-                    stringBuilder.append(LOG_LEVEL).append(SPACE_DATA).append(mainConfig.getLogLevel()).append(FEED);
+                    Integer level = 0;
+
+                    if (mainConfig.getLogLevel()==4){
+                        level = 1023;
+                    }
+
+                    if (mainConfig.getLogLevel()==2){
+                        level = 511;
+                    }
+
+                    if (mainConfig.getLogLevel()==256){
+                        level = 53247;
+                    }
+                    stringBuilder.append(LOG_LEVEL).append(SPACE_DATA).append(level).append(FEED);
                     found = true;
                 }  else {
                     stringBuilder.append(lineStr).append(FEED);
@@ -192,7 +205,10 @@ public class LdapConfigServiceImpl implements LdapConfigService {
             }
 
             if (!acc) {
-                stringBuilder.append("access to * by anonymous none").append(FEED);
+                if (!stringBuilder.toString().contains("access to * by anonymous none")){
+                    stringBuilder.append("access to * by anonymous none").append(FEED);
+                }
+
             }
         } catch (FileNotFoundException e) {
             log.error(e.getMessage());

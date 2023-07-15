@@ -1,5 +1,6 @@
 package cn.ldap.ldap.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import cn.ldap.ldap.common.dto.IndexDataDto;
 import cn.ldap.ldap.common.dto.RefreshIndexDto;
 import cn.ldap.ldap.common.entity.IndexDataModel;
@@ -19,6 +20,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.omg.CORBA.SystemException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,8 @@ import static cn.ldap.ldap.common.enums.ExceptionEnum.valueOf;
 @Slf4j
 public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexDataModel> implements IndexDataService {
 
+    @Resource
+    private AsyncService asyncService;
     /**
      * 配置文件所在路径
      */
@@ -176,7 +180,6 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         return ResultUtil.success(indexDataModel.getStatus());
     }
 
-    @Transactional
     @Override
     public ResultVo refreshIndex(RefreshIndexDto refreshIndexDto) {
 
@@ -189,7 +192,10 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         }
         log.info("查询到到数据为:{}",one);
         one.setStatus(REFRESH_ING);
-        saveOrUpdate(one);
+        log.info("修改后的信息:{}", JSONUtil.toJsonStr(one));
+        boolean b = updateById(one);
+        log.info("修改返回值:{}",b);
+
         log.info("即将执行Linux命令---------------------------------！！！");
 
         String command = REFRESH_COMMAND+indexPath+REFRESH+configPath+VV+refreshIndexDto.getIndex();

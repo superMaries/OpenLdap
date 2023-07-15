@@ -10,7 +10,7 @@
     </parent>
     <groupId>cn.ldap</groupId>
     <artifactId>LDAP</artifactId>
-    <version>1.0.23.0626_2</version>
+    <version>1.0.23.0703_2</version>
     <name>LDAP</name>
     <description>LDAP</description>
     <properties>
@@ -57,7 +57,7 @@
         <dependency>
             <groupId>cn.byzk.jni</groupId>
             <artifactId>enc</artifactId>
-            <version>1.2</version>
+            <version>2.0</version>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -139,10 +139,15 @@
             <version>8.0.16</version>
         </dependency>
         <!--        sqlite-->
+<!--        <dependency>-->
+<!--            <groupId>org.xerial</groupId>-->
+<!--            <artifactId>sqlite-jdbc</artifactId>-->
+<!--            <version>3.42.0.0</version>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>org.xerial</groupId>
+            <groupId>cn.sqlite</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.36.0.3</version>
+            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
