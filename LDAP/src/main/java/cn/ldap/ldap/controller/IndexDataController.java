@@ -44,10 +44,10 @@ public class IndexDataController {
     public ResultVo<List<IndexDataModel>> query() {
         return ResultUtil.success(indexDataService.list());
     }
-    @PostMapping("delete/{id}")
+    @PostMapping("delete")
     @OperateAnnotation(operateModel = OperateMenuEnum.INDEX, operateType = OperateTypeEnum.INDEX_DELETE)
-    public ResultVo<Boolean> deleteById(@PathVariable Integer id){
-        return indexDataService.deleteById(id);
+    public ResultVo<Boolean> deleteById(@RequestBody List<Integer> idList){
+        return indexDataService.deleteById(idList);
     }
 
     @PostMapping("queryStatus")

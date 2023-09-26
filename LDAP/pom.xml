@@ -10,7 +10,7 @@
     </parent>
     <groupId>cn.ldap</groupId>
     <artifactId>LDAP</artifactId>
-    <version>1.0.23.0703_2</version>
+    <version>1.0.23.0906_2</version>
     <name>LDAP</name>
     <description>LDAP</description>
     <properties>
@@ -206,6 +206,25 @@
             <artifactId>isc-palte</artifactId>
             <version>1.1.0</version>
         </dependency>
+
+
+        <dependency>
+            <groupId>de.schlichtherle.truezip</groupId>
+            <artifactId>truezip-file</artifactId>
+            <version>7.7.9</version>
+        </dependency>
+        <dependency>
+            <groupId>de.schlichtherle.truezip</groupId>
+            <artifactId>truezip-driver-zip</artifactId>
+            <version>7.7.9</version>
+        </dependency>
+        <dependency>
+            <groupId>de.schlichtherle.truezip</groupId>
+            <artifactId>truezip-driver-file</artifactId>
+            <version>7.7.9</version>
+        </dependency>
+
+
 
 
         <!--aop-->

@@ -6,6 +6,8 @@ import cn.ldap.ldap.common.entity.IndexDataModel;
 import cn.ldap.ldap.common.vo.ResultVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * 索引
  *
@@ -23,7 +25,7 @@ public interface IndexDataService extends IService<IndexDataModel> {
      */
     ResultVo<Boolean> updateIndexData(IndexDataDto indexDataDto);
 
-    ResultVo<Boolean> deleteById(Integer id);
+    ResultVo<Boolean> deleteById(List<Integer> idList);
 
     ResultVo<Integer> queryStatus();
 

@@ -22,4 +22,5 @@ public class LoginResultVo {
      */
     @JsonUnwrapped
     private UserTokenInfo userInfo;
+
 }

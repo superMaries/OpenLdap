@@ -56,7 +56,8 @@ ldap:
   url: ldap://39.98.83.34:389/
   base:
   userDn: cn=Directory Manager,c=cn
-  password: 40931D5D32F52C4EA0B56F973A3ED30A82A213B0C6D75A37
+  password: Js3qCaLdapAdmin
+ # password: 40931D5D32F52C4EA0B56F973A3ED30A82A213B0C6D75A37
   pool:
     minIdle: 0
     maxIdle: 16

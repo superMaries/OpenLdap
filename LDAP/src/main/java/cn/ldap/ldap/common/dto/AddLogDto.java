@@ -2,6 +2,12 @@ package cn.ldap.ldap.common.dto;
 
 import lombok.Data;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+
 /**
  * 日志实体
  *
@@ -53,4 +59,6 @@ public class AddLogDto extends AuditDto {
      * 签名原数据
      */
     private String signSrc;
+
+
 }

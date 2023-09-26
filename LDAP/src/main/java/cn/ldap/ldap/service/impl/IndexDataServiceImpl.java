@@ -92,11 +92,13 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
 
     private static final String REFRESH = "; ./slapindex -f ";
 
-    private static final String RESTART_COMMAND = "systemctl restart slapd.service";
+    private static final String RESTART_COMMAND = "; ./slapindex -v -f ";
 
     private static final String SERVICE_NAME = "slapd.service";
 
     private static final String SLAP_INDEX = "slapindex";
+
+    private static final String DELETE_END = " >>../var/logs/ldap.log";
 
     /**
      * 更新或者插入
@@ -113,7 +115,7 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         }
         //先判断服务是否关闭，如果服务关闭返回信息请关闭服务
         Boolean aBoolean = ldapConfigServiceImpl.linuxCommand(SERVICE_NAME);
-        if (aBoolean){
+        if (aBoolean) {
             return ResultUtil.fail(ExceptionEnum.SERVICE_NEED_CLOSE);
         }
         //判断当前进程中是否有slapindex进程在运行
@@ -133,7 +135,7 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
             throw new SysException(e.getMessage());
         }
         //如果有正在运行的程序会报错
-        if(isRunning){
+        if (isRunning) {
             return ResultUtil.fail(ExceptionEnum.INDEX_IS_RUNNING);
         }
 
@@ -148,7 +150,7 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
             return ResultUtil.fail(ExceptionEnum.DATA_EXIT);
         }
         QueryWrapper<IndexRule> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(IndexRule::getType,indexDataDto.getIndexRule());
+        queryWrapper.lambda().eq(IndexRule::getType, indexDataDto.getIndexRule());
         IndexRule indexRule = indexRuleMapper.selectOne(queryWrapper);
         //新增
         if (ObjectUtils.isEmpty(indexDataDto.getId())) {
@@ -166,15 +168,58 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
     }
 
     @Override
-    public ResultVo<Boolean> deleteById(Integer id) {
-        removeById(id);
-        return getData();
+    public ResultVo<Boolean> deleteById(List<Integer> idList) {
+
+        log.info("删除索引接口参数为:{}", idList);
+
+        //查询数据库中是否有更新中的索引，如果有的话不让删除
+        List<IndexDataModel> list = list();
+        if (!CollectionUtils.isEmpty(list)) {
+            for (IndexDataModel indexDataModel : list) {
+                if (REFRESH_ING.equals(indexDataModel.getStatus())) {
+                    return ResultUtil.fail(ExceptionEnum.INDEX_IS_RUNNING);
+                }
+            }
+        }
+        //先判断服务是否关闭，如果服务关闭返回信息请关闭服务
+        Boolean aBoolean = ldapConfigServiceImpl.linuxCommand(SERVICE_NAME);
+        if (aBoolean) {
+            return ResultUtil.fail(ExceptionEnum.SERVICE_NEED_CLOSE);
+        }
+        //判断当前进程中是否有slapindex进程在运行
+        Boolean isRunning = false;
+        try {
+            Process exec = Runtime.getRuntime().exec("ps -ef | grep " + SLAP_INDEX);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                if (line.contains(SLAP_INDEX)) {
+                    isRunning = true;
+                    break;
+                }
+            }
+
+        } catch (IOException e) {
+            throw new SysException(e.getMessage());
+        }
+        //如果有正在运行的程序会报错
+        if (isRunning) {
+            return ResultUtil.fail(ExceptionEnum.INDEX_IS_RUNNING);
+        }
+
+        //根据列表数据更改状态为删除中
+        List<IndexDataModel> list1 = list(new QueryWrapper<IndexDataModel>().lambda().in(IndexDataModel::getId, idList));
+        for (IndexDataModel indexDataModel : list1) {
+            indexDataModel.setStatus(4);
+        }
+        updateBatchById(list1);
+        return getDataA(idList);
     }
 
     @Override
     public ResultVo<Integer> queryStatus() {
         IndexDataModel indexDataModel = indexRuleMapper.queryStatus();
-        if (ObjectUtils.isEmpty(indexDataModel)){
+        if (ObjectUtils.isEmpty(indexDataModel)) {
             return ResultUtil.success(NOT_REFRESH);
         }
         return ResultUtil.success(indexDataModel.getStatus());
@@ -183,49 +228,51 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
     @Override
     public ResultVo refreshIndex(RefreshIndexDto refreshIndexDto) {
 
-         QueryWrapper<IndexDataModel> queryWrapper = new QueryWrapper<>();
-         queryWrapper.lambda().eq(IndexDataModel::getId,refreshIndexDto.getId());
-         queryWrapper.lambda().eq(IndexDataModel::getIndexAttribute,refreshIndexDto.getIndex());
+        QueryWrapper<IndexDataModel> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(IndexDataModel::getId, refreshIndexDto.getId());
+        queryWrapper.lambda().eq(IndexDataModel::getIndexAttribute, refreshIndexDto.getIndex());
         IndexDataModel one = getOne(queryWrapper);
-        if (ObjectUtils.isEmpty(one)){
+        if (ObjectUtils.isEmpty(one)) {
             return ResultUtil.fail(ExceptionEnum.COLLECTION_EMPTY);
         }
-        log.info("查询到到数据为:{}",one);
+        log.info("查询到到数据为:{}", one);
         one.setStatus(REFRESH_ING);
         log.info("修改后的信息:{}", JSONUtil.toJsonStr(one));
         boolean b = updateById(one);
-        log.info("修改返回值:{}",b);
+        log.info("修改返回值:{}", b);
 
         log.info("即将执行Linux命令---------------------------------！！！");
 
-        String command = REFRESH_COMMAND+indexPath+REFRESH+configPath+VV+refreshIndexDto.getIndex();
+        String command = REFRESH_COMMAND + indexPath + REFRESH + configPath + VV + refreshIndexDto.getIndex();
         ProcessBuilder builder = new ProcessBuilder();
-        log.info("刷新命令为:{}",command);
+        log.info("刷新命令为:{}", command);
         builder.command("sh", "-c", command);
         try {
-            log.info("刷新命令准备开始执行---------------------------"+new Date());
+            log.info("刷新命令准备开始执行---------------------------" + new Date());
             Process start = builder.start();
             int i = start.waitFor();
             BufferedReader reader = new BufferedReader(new InputStreamReader(start.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                log.info("刷新索引输出:{}",line);
+                log.info("刷新索引输出:{}", line);
             }
-            log.info("刷新命令执行结束------------------------------"+new Date());
-            log.info("状态码--------:{}",i);
+            log.info("刷新命令执行结束------------------------------" + new Date());
+            log.info("状态码--------:{}", i);
 
 
-            log.info("刷新索引命令结束:{}",command);
+            log.info("刷新索引命令结束:{}", command);
             //修改数据库数据
             log.info("准备修改数据库数据");
-            if (i == 0){
+            if (i == 0) {
                 QueryWrapper<IndexDataModel> twiceQueryWrapper = new QueryWrapper<>();
-                twiceQueryWrapper.lambda().eq(IndexDataModel::getId,refreshIndexDto.getId());
-                twiceQueryWrapper.lambda().eq(IndexDataModel::getIndexAttribute,refreshIndexDto.getIndex());
+                twiceQueryWrapper.lambda().eq(IndexDataModel::getId, refreshIndexDto.getId());
+                twiceQueryWrapper.lambda().eq(IndexDataModel::getIndexAttribute, refreshIndexDto.getIndex());
                 IndexDataModel two = getOne(twiceQueryWrapper);
                 two.setStatus(REFRESH_DONE);
                 saveOrUpdate(two);
-                log.info("修改数据库结束:{}",two);
+                log.info("修改数据库结束:{}", two);
+            }else{
+                throw new SysException(ExceptionEnum.REFRESH_ERROR);
             }
 
         } catch (IOException e) {
@@ -237,31 +284,30 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         return ResultUtil.success();
     }
 
-    public CompletableFuture<Object> fooAsync(){
-        return CompletableFuture.supplyAsync(()->{
-            List<IndexDataModel> list = list();
-            for (IndexDataModel indexDataModel : list) {
-                indexDataModel.setStatus(REFRESH_DONE);
-            }
-            saveOrUpdateBatch(list);
-            return ResultUtil.success();
-        });
-    }
 
-    public ResultVo<Boolean> getData(){
+    public ResultVo<Boolean> getData() {
         List<String> stringList = new ArrayList<>();
         List<IndexDataModel> indexDatas = this.list();
-        Map<String, List<IndexDataModel>> listMap = indexDatas.stream().collect(Collectors.groupingBy(IndexDataModel::getIndexRule));
-        Set<String> strings = listMap.keySet();
-        for (String string : strings) {
-            String collect = listMap.get(string).stream()
-                    .map(IndexDataModel::getIndexAttribute)
-                    .collect(Collectors.toList())
-                    .stream().map(it -> it + StaticValue.SPLIT).collect(Collectors.joining());
-            stringList.add( START_WITH + SPACE_DATA + collect.substring(StaticValue.SPLIT_COUNT,collect.length()-1) + SPACE_DATA +string + FEED );
+
+        String str = "";
+        if (!CollectionUtils.isEmpty(indexDatas)) {
+
+            Map<String, List<IndexDataModel>> listMap = indexDatas.stream().collect(Collectors.groupingBy(IndexDataModel::getIndexRule));
+            Set<String> strings = listMap.keySet();
+            for (String string : strings) {
+                String collect = listMap.get(string).stream()
+                        .map(IndexDataModel::getIndexAttribute)
+                        .collect(Collectors.toList())
+                        .stream().map(it -> it + StaticValue.SPLIT).collect(Collectors.joining());
+                stringList.add(START_WITH + SPACE_DATA + collect.substring(StaticValue.SPLIT_COUNT, collect.length() - 1) + SPACE_DATA + string + FEED);
+            }
+            str = stringList.stream().collect(Collectors.joining());
+        } else {
+            str = "";
         }
 
-        String str = stringList.stream().collect(Collectors.joining());
+
+        //  String str =
         //修改配置文件
         String fileName = configPath;
         //判断文件是否存在
@@ -272,21 +318,21 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         StringBuilder stringBuilder = new StringBuilder();
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
             String lineStr = null;
-            boolean is=false;
+            boolean is = false;
             while ((lineStr = bufferedReader.readLine()) != null) {
                 if (lineStr.startsWith(START_WITH)) {
                     if (lineStr.trim().contains(OBJECTCLASS)) {
                         String oldData = lineStr;
                         stringBuilder.append(oldData).append(FEED);
-                        is=true;
-                    }else {
+                        is = true;
+                    } else {
                         continue;
                     }
                 }
-                if (is){
+                if (is) {
                     String oldData = str;
                     stringBuilder.append(oldData).append(FEED);
-                    is=false;
+                    is = false;
                     continue;
                 }
                 String oldData = lineStr;
@@ -297,9 +343,113 @@ public class IndexDataServiceImpl extends ServiceImpl<IndexDataMapper, IndexData
         }
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName))) {
             bufferedWriter.write(stringBuilder.toString());
+
         } catch (Exception e) {
             return ResultUtil.fail();
         }
         return ResultUtil.success();
+    }
+
+    public ResultVo<Boolean> getDataA(List<Integer> idList) {
+
+        List<String> stringList = new ArrayList<>();
+        List<IndexDataModel> indexDatas = this.list(new QueryWrapper<IndexDataModel>().lambda().ne(IndexDataModel::getStatus,4));
+
+        String str = "";
+        if (!CollectionUtils.isEmpty(indexDatas)) {
+
+            Map<String, List<IndexDataModel>> listMap = indexDatas.stream().collect(Collectors.groupingBy(IndexDataModel::getIndexRule));
+            Set<String> strings = listMap.keySet();
+            for (String string : strings) {
+                String collect = listMap.get(string).stream()
+                        .map(IndexDataModel::getIndexAttribute)
+                        .collect(Collectors.toList())
+                        .stream().map(it -> it + StaticValue.SPLIT).collect(Collectors.joining());
+                stringList.add(START_WITH + SPACE_DATA + collect.substring(StaticValue.SPLIT_COUNT, collect.length() - 1) + SPACE_DATA + string + FEED);
+            }
+            str = stringList.stream().collect(Collectors.joining());
+        } else {
+            str = "";
+        }
+
+        //  String str =
+        //修改配置文件
+        String fileName = configPath;
+        //判断文件是否存在
+        File file = new File(configPath);
+        if (!file.exists()) {
+            throw new SysException(FILE_NOT_EXIST);
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
+            String lineStr = null;
+            boolean is = false;
+            while ((lineStr = bufferedReader.readLine()) != null) {
+                if (lineStr.startsWith(START_WITH)) {
+                    if (lineStr.trim().contains(OBJECTCLASS)) {
+                        String oldData = lineStr;
+                        stringBuilder.append(oldData).append(FEED);
+                        is = true;
+                    } else {
+                        continue;
+                    }
+                }
+                if (is) {
+                    String oldData = str;
+                    stringBuilder.append(oldData).append(FEED);
+                    is = false;
+                    continue;
+                }
+                String oldData = lineStr;
+                stringBuilder.append(oldData).append(FEED);
+            }
+        } catch (Exception e) {
+            return ResultUtil.fail();
+        }
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName))) {
+            log.info("删除索引接口写入配置文件");
+            bufferedWriter.write(stringBuilder.toString());
+            log.info("删除索引接口写入conf配置文件流关闭");
+            bufferedWriter.close();
+
+
+            log.info("删除索引接口，即将执行Linux命令---------------------------------！！！");
+
+            String command = REFRESH_COMMAND + indexPath + RESTART_COMMAND + configPath+ DELETE_END;
+            ProcessBuilder builder = new ProcessBuilder();
+            log.info("刷新命令为:{}", command);
+            builder.command("sh", "-c", command);
+            try {
+                log.info("刷新命令准备开始执行---------------------------" + System.currentTimeMillis());
+                Process start = builder.start();
+                int i = start.waitFor();
+                //BufferedReader reader = new BufferedReader(new InputStreamReader(start.getInputStream()));
+              //  String line;
+//                while ((line = reader.readLine()) != null) {
+//                    log.info("刷新索引输出:{}", line);
+//                }
+                log.info("刷新命令执行结束------------------------------" + System.currentTimeMillis());
+                log.info("状态码--------:{}", i);
+                log.info("刷新索引命令结束:{}", command);
+
+             //   reader.close();
+                //根据列表先删除数据库中索引的数据
+                log.info("删除索引接口开始删除数据表数据");
+               if (0 == i ){
+                   boolean removeResult = removeByIds(idList);
+                   if (!removeResult) {
+                       return ResultUtil.fail("删除索引失败");
+                   }
+               }else {
+                   return ResultUtil.fail("删除索引失败");
+               }
+
+            } catch (Exception e) {
+                return ResultUtil.fail();
+            }
+            return ResultUtil.success();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
